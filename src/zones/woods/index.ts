@@ -1,7 +1,7 @@
-import { ZonePlaceholder } from '../../screens/ZonePlaceholder';
 import { registerAutoPlay } from '../../test/hooks';
+import { autoPlayWoods } from './autoplay';
 
-// STUB: replaced by the real zone implementation.
-export function Zone() { return ZonePlaceholder({ zone: 'woods' }); }
-export function Challenge() { return ZonePlaceholder({ zone: 'woods', challenge: true }); }
-registerAutoPlay('woods', () => {});
+export { Zone } from './WhisperingWoods';
+export { Challenge } from './TeaPartyOrders';
+
+registerAutoPlay('woods', autoPlayWoods);

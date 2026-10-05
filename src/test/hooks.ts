@@ -13,7 +13,22 @@ export function registerAutoPlay(zone: ZoneId, fn: AutoPlay): void {
   registry.set(zone, fn);
 }
 
+export interface PerfHooks {
+  /** Mean frame time (ms) over the last ~5 s of 3D frames. */
+  avgFrameMs: () => number;
+  /** Draw calls in the most recent frame. */
+  drawCalls: () => number;
+}
+
+let perfHooks: PerfHooks | null = null;
+/** The hub registers its frame sampler here; exposed as window.__game.perf under ?test=1. */
+export function registerPerf(p: PerfHooks | null): void {
+  perfHooks = p;
+  if (typeof window !== 'undefined' && window.__game) window.__game.perf = p ?? undefined;
+}
+
 export interface GameHooks {
+  perf?: PerfHooks;
   getState: () => unknown;
   setScreen: (s: Screen) => void;
   autoPlay: (zone: ZoneId) => Promise<void>;
@@ -58,4 +73,5 @@ export function installTestHooks(): void {
       window.__skipAnim = true;
     },
   };
+  if (perfHooks) window.__game.perf = perfHooks;
 }

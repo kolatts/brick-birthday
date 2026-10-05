@@ -1,0 +1,82 @@
+{
+  "moon": {
+    "voice": "en-US-SaraNeural",
+    "pitch": "+22%",
+    "rate": "+2%"
+  },
+  "babylady": {
+    "voice": "en-US-AvaNeural",
+    "pitch": "+28%",
+    "rate": "+12%"
+  },
+  "cottontail": {
+    "voice": "en-US-JaneNeural",
+    "pitch": "+12%",
+    "rate": "+4%"
+  },
+  "narrator": {
+    "voice": "en-US-AnaNeural",
+    "pitch": "+0%",
+    "rate": "-4%"
+  },
+  "luna": {
+    "voice": "en-US-AnaNeural",
+    "pitch": "+10%",
+    "rate": "+2%"
+  },
+  "mom": {
+    "voice": "en-US-JennyNeural",
+    "pitch": "+0%",
+    "rate": "-4%"
+  },
+  "dad": {
+    "voice": "en-US-DavisNeural",
+    "pitch": "-6%",
+    "rate": "-8%"
+  },
+  "julian": {
+    "voice": "en-US-AndrewNeural",
+    "pitch": "+4%",
+    "rate": "+4%"
+  },
+  "darian": {
+    "voice": "en-US-BrandonNeural",
+    "pitch": "+2%",
+    "rate": "+0%"
+  },
+  "rudolph": {
+    "voice": "en-US-AnaNeural",
+    "pitch": "+18%",
+    "rate": "+8%"
+  },
+  "jinglebells": {
+    "voice": "en-US-AnaNeural",
+    "pitch": "+28%",
+    "rate": "+14%"
+  },
+  "fox": {
+    "voice": "en-US-AnaNeural",
+    "pitch": "+12%",
+    "rate": "+8%"
+  },
+  "deer": {
+    "voice": "en-GB-MaisieNeural",
+    "pitch": "+0%",
+    "rate": "-6%"
+  },
+  "songbird": {
+    "voice": "en-US-AnaNeural",
+    "pitch": "+34%",
+    "rate": "+16%"
+  },
+  "squirrel": {
+    "voice": "en-US-AnaNeural",
+    "pitch": "+26%",
+    "rate": "+22%"
+  },
+  "rabbit": {
+    "voice": "en-GB-MaisieNeural",
+    "pitch": "+14%",
+    "rate": "+6%"
+  }
+}

@@ -28,8 +28,21 @@ function applyVolume(): void {
   dest.volume.value = volume <= 0 ? -Infinity : 20 * Math.log10(volume) - 6;
 }
 
+const unlockHooks: (() => void)[] = [];
+/** Registers a callback run synchronously inside the first-tap gesture (e.g. to unlock other audio elements). */
+export function onUnlock(cb: () => void): void {
+  unlockHooks.push(cb);
+}
+
 /** Lazy: loads Tone.js and starts the audio context. Call from a user gesture. */
 export function unlock(): Promise<void> {
+  for (const cb of unlockHooks) {
+    try {
+      cb();
+    } catch {
+      /* ignore */
+    }
+  }
   if (unlocking) return unlocking;
   unlocking = (async () => {
     try {

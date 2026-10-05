@@ -18,6 +18,10 @@ A personalized, brick-built birthday game for Luna (iPad Safari, landscape, touc
 
 Add `?test=1` to the URL to expose `window.__game` test hooks and stub speech.
 
+## Voices
+
+All speech uses pre-generated Azure neural clips in `public/voices/` (same-origin static files), with `speechSynthesis` as fallback. `npm run voices:extract` collects lines into `scripts/voices/lines.json`; `npm run voices:generate` (needs `SPEECH_KEY` in env or gitignored `.env.local`; `-- --dry-run`, `-- --force`) synthesizes missing clips. Contract for other code: `src/audio/README-narration.md`.
+
 ## Privacy model
 
 `photos/` and `private/` are gitignored and must never be committed or bundled. Real faces and coupon passwords reach the iPad only via a **family pack** JSON file imported on the Grown-up screen (long-press the title for 3 seconds); it is stored in IndexedDB on that device. `verify:privacy` fails if git tracks those folders or if `dist/` contains pack data, passwords, API-key patterns or large embedded images. Tests use an obviously fake fixture pack.

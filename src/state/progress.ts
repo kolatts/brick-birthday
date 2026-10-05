@@ -99,6 +99,8 @@ function save(data: ProgressData): void {
 interface ProgressActions {
   earnBrick: (zone: ZoneId, n?: number) => void;
   setChallengeDone: (zone: ZoneId) => void;
+  plantTree: () => void;
+  setTeaPartyDone: () => void;
   patch: (p: Partial<ProgressData>) => void;
   totalBricks: () => number;
   goalReached: () => boolean;
@@ -114,6 +116,8 @@ export const useProgress = create<ProgressState>((set, get) => ({
   earnBrick: (zone, n = 1) =>
     set((s) => ({ bricks: { ...s.bricks, [zone]: Math.max(0, Math.min(zones[zone].bricks, s.bricks[zone] + n)) } })),
   setChallengeDone: (zone) => set((s) => ({ challengesDone: { ...s.challengesDone, [zone]: true } })),
+  plantTree: () => set((s) => ({ treesPlanted: Math.min(7, s.treesPlanted + 1) })),
+  setTeaPartyDone: () => set({ teaPartyDone: true }),
   patch: (p) => set(p),
   totalBricks: () => builtZones().reduce((sum, z) => sum + get().bricks[z.id], 0),
   goalReached: () => get().totalBricks() >= brickGoal(),

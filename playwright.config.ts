@@ -3,9 +3,13 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: 'tests/e2e',
   outputDir: 'test-results/artifacts', // keep test-results/screens untouched by Playwright's cleanup
-  fullyParallel: true,
+  // 3D scenes starve each other on the CPU renderer; run serially with generous waits.
+  fullyParallel: false,
+  workers: 1,
+  timeout: 120_000,
+  expect: { timeout: 20_000 },
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  retries: 1,
   reporter: [['list']],
   use: {
     baseURL: 'http://localhost:4173/brick-birthday/',
