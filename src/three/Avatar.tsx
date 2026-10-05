@@ -93,7 +93,11 @@ export function Avatar(props: AvatarProps) {
   const pd = pet ? petDims(id) : null;
   const plate = useMemo(() => (pet ? roundedRectGeometry(pd!.plateW, pd!.plateH, 0.14) : roundedRectGeometry(0.84, 0.78, 0.16)), [pet, pd]);
   useEffect(() => () => plate.dispose(), [plate]);
-  const plateMat = useMemo(() => new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false }), []);
+  // Portraits have transparent backgrounds: let the skin-coloured head show through around the face.
+  const plateMat = useMemo(
+    () => new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false, transparent: true, alphaTest: 0.05, depthWrite: false }),
+    [],
+  );
   useEffect(() => () => plateMat.dispose(), [plateMat]);
   useEffect(() => {
     plateMat.map = tex;
