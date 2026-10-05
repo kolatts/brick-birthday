@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
+import type { ZoneId } from './types';
 import { useUi, currentOrientation } from './state/ui';
 import { useFamilyPack } from './state/familyPack';
 import { Title } from './screens/Title';
@@ -7,6 +8,7 @@ import { Rotate } from './screens/Rotate';
 import { GrownUp } from './screens/GrownUp';
 import { ZonePlaceholder } from './screens/ZonePlaceholder';
 import { Button } from './ui/Button';
+import { zoneModules } from './zones/registry';
 
 function FinalePlaceholder() {
   const setScreen = useUi((s) => s.setScreen);
@@ -15,6 +17,17 @@ function FinalePlaceholder() {
       <h1 style={{ fontSize: 56, color: '#fff', margin: 0 }}>Finale (coming soon)</h1>
       <Button tone="cream" onClick={() => setScreen({ kind: 'hub' })}>Back to island</Button>
     </div>
+  );
+}
+
+function ZoneRoute({ zone, challenge = false }: { zone: ZoneId; challenge?: boolean }) {
+  const mod = zoneModules[zone];
+  if (!mod) return <ZonePlaceholder zone={zone} challenge={challenge} />;
+  const Comp = challenge ? mod.Challenge : mod.Zone;
+  return (
+    <Suspense fallback={<div className="screen center-col" style={{ background: '#FFF4E0' }}><h1>Loading...</h1></div>}>
+      <Comp />
+    </Suspense>
   );
 }
 
@@ -42,8 +55,8 @@ export default function App() {
     <>
       {screen.kind === 'title' && <Title />}
       {screen.kind === 'hub' && <Hub />}
-      {screen.kind === 'zone' && <ZonePlaceholder zone={screen.zone} />}
-      {screen.kind === 'challenge' && <ZonePlaceholder zone={screen.zone} challenge />}
+      {screen.kind === 'zone' && <ZoneRoute zone={screen.zone} />}
+      {screen.kind === 'challenge' && <ZoneRoute zone={screen.zone} challenge />}
       {screen.kind === 'finale' && <FinalePlaceholder />}
       {screen.kind === 'grownup' && <GrownUp />}
       {orientation === 'portrait' && <Rotate />}
