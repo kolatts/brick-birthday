@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeAge, isBirthday, ordinal } from '../../src/config/age';
+import { celebrationAge, computeAge, isBirthday, ordinal } from '../../src/config/age';
 
 const BD = '2019-10-16';
 
@@ -32,5 +32,15 @@ describe('isBirthday', () => {
     expect(isBirthday(BD, new Date(2030, 9, 16))).toBe(true);
     expect(isBirthday(BD, new Date(2026, 9, 15))).toBe(false);
     expect(isBirthday(BD, new Date(2026, 8, 16))).toBe(false);
+  });
+});
+
+describe('celebrationAge', () => {
+  const BD = '2019-10-16';
+  it('is the age she turns this year, even before the birthday', () => {
+    expect(celebrationAge(BD, new Date(2026, 9, 5))).toBe(7);
+    expect(celebrationAge(BD, new Date(2026, 9, 16))).toBe(7);
+    expect(celebrationAge(BD, new Date(2026, 11, 31))).toBe(7);
+    expect(celebrationAge(BD, new Date(2027, 0, 1))).toBe(8);
   });
 });

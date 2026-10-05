@@ -21,3 +21,13 @@ export function isBirthday(birthDate: string, now: Date = new Date()): boolean {
   const [, m, d] = birthDate.split('-').map(Number);
   return now.getMonth() + 1 === m && now.getDate() === d;
 }
+
+/**
+ * The age being celebrated this year: the birthday Luna turns (or turned) in the current calendar
+ * year. Used for the title and the candle count, so the game says "7th" for the whole run-up to
+ * October 16, 2026 and flips to "8th" the next year. Never hardcoded.
+ */
+export function celebrationAge(birthDate: string, now: Date = new Date()): number {
+  const [y] = birthDate.split('-').map(Number);
+  return now.getFullYear() - y;
+}

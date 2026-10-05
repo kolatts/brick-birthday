@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { computeAge, ordinal } from '../config/age';
+import { celebrationAge, ordinal } from '../config/age';
 import { family } from '../config/family';
 import { Button } from '../ui/Button';
 import { useUi } from '../state/ui';
@@ -10,7 +10,7 @@ const LONG_PRESS_MS = 3000;
 export function Title() {
   const setScreen = useUi((s) => s.setScreen);
   const timer = useRef<number | null>(null);
-  const age = computeAge(family.luna.birthDate!);
+  const age = celebrationAge(family.luna.birthDate!);
 
   const cancel = () => {
     if (timer.current !== null) window.clearTimeout(timer.current);
