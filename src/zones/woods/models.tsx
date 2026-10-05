@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
-import { B, Cone, Cy, mat, popScale } from './fx';
-import { family } from '../../config/family';
+import { B, Cone, Cy, popScale } from './fx';
+import { Avatar } from '../../three/Avatar';
 import type { FriendId, GuestId } from './facts';
 
 type V3 = [number, number, number];
@@ -85,85 +84,31 @@ export function StumpSpot({ position, stage, plantedAt, wateredAt }: { position:
 }
 
 // ---- hosts -------------------------------------------------------------------------------------
-/** Rudolph: gray-and-tan blocky dog with pointy ears and a curled tail. */
-export function Dog({ position, rotY = 0, scale = 1, onTap, bob = true }: { position: V3; rotY?: number; scale?: number; onTap?: () => void; bob?: boolean }) {
+type PetProps = { position: V3; rotY?: number; scale?: number; onTap?: () => void; bob?: boolean };
+
+/** Shared pet wrapper: the hub's Avatar (same figure everywhere) plus the zone's hop. */
+function PetFigure({ id, position, rotY = 0, scale = 1, onTap, bob = true, k, phase }: PetProps & { id: 'rudolph' | 'jinglebells'; k: number; phase: number }) {
   const g = useRef<THREE.Group>(null);
-  const tail = useRef<THREE.Group>(null);
   useFrame(({ clock }) => {
-    const t = clock.elapsedTime;
-    if (g.current && bob) g.current.position.y = Math.abs(Math.sin(t * 3)) * 0.12;
-    if (tail.current) tail.current.rotation.y = Math.sin(t * 9) * 0.35;
+    if (g.current && bob) g.current.position.y = Math.abs(Math.sin(clock.elapsedTime * 3 + phase)) * 0.1;
   });
-  const gray = '#9AA0A6';
-  const tan = '#C8A97E';
   return (
     <group position={position} rotation={[0, rotY, 0]} scale={scale} onPointerDown={onTap}>
       <group ref={g}>
-        <B p={[0, 0.7, 0]} s={[0.8, 0.7, 1.2]} c={gray} />
-        <B p={[0, 0.55, 0.15]} s={[0.84, 0.4, 0.7]} c={tan} />
-        {([[-0.27, 0.48], [0.27, 0.48], [-0.27, -0.48], [0.27, -0.48]] as [number, number][]).map(([x, z], i) => (
-          <B key={i} p={[x, 0.22, z]} s={[0.24, 0.44, 0.26]} c={i < 2 ? tan : gray} />
-        ))}
-        <B p={[0, 1.25, 0.62]} s={[0.78, 0.7, 0.7]} c={gray} />
-        <B p={[0, 1.12, 1.05]} s={[0.46, 0.34, 0.3]} c={tan} />
-        <B p={[0, 1.22, 1.22]} s={[0.2, 0.14, 0.1]} c="#222" />
-        <B p={[-0.17, 1.4, 0.99]} s={[0.1, 0.1, 0.06]} c="#1D1D1D" />
-        <B p={[0.17, 1.4, 0.99]} s={[0.1, 0.1, 0.06]} c="#1D1D1D" />
-        <Cone p={[-0.28, 1.78, 0.58]} s={[0.3, 0.46, 0.3]} c="#7C8288" r={[0, Math.PI / 4, 0]} />
-        <Cone p={[0.28, 1.78, 0.58]} s={[0.3, 0.46, 0.3]} c="#7C8288" r={[0, Math.PI / 4, 0]} />
-        <Cone p={[-0.28, 1.97, 0.58]} s={[0.16, 0.2, 0.16]} c="#222" r={[0, Math.PI / 4, 0]} />
-        <Cone p={[0.28, 1.97, 0.58]} s={[0.16, 0.2, 0.16]} c="#222" r={[0, Math.PI / 4, 0]} />
-        <group ref={tail} position={[0, 0.95, -0.6]}>
-          <B p={[0, 0.0, -0.12]} s={[0.26, 0.26, 0.3]} c={gray} />
-          <B p={[0, 0.2, -0.28]} s={[0.26, 0.26, 0.26]} c={tan} />
-          <B p={[0, 0.4, -0.12]} s={[0.26, 0.26, 0.3]} c={gray} />
-        </group>
+        <Avatar id={id} scale={k} interactive={false} />
       </group>
     </group>
   );
 }
 
-/** Jingle Bells: fluffy dark tortoiseshell blocky cat. */
-export function Cat({ position, rotY = 0, scale = 1, onTap, bob = true }: { position: V3; rotY?: number; scale?: number; onTap?: () => void; bob?: boolean }) {
-  const g = useRef<THREE.Group>(null);
-  const tail = useRef<THREE.Group>(null);
-  useFrame(({ clock }) => {
-    const t = clock.elapsedTime + 1;
-    if (g.current && bob) g.current.position.y = Math.abs(Math.sin(t * 2.4)) * 0.1;
-    if (tail.current) tail.current.rotation.z = Math.sin(t * 3) * 0.3;
-  });
-  const dark = '#3A2A22';
-  const brown = '#8A5A2B';
-  const orange = '#C77A2E';
-  return (
-    <group position={position} rotation={[0, rotY, 0]} scale={scale} onPointerDown={onTap}>
-      <group ref={g}>
-        <B p={[0, 0.55, 0]} s={[0.8, 0.7, 1.0]} c={dark} />
-        <B p={[-0.25, 0.7, -0.1]} s={[0.35, 0.45, 0.5]} c={brown} />
-        <B p={[0.3, 0.5, 0.2]} s={[0.25, 0.3, 0.4]} c={orange} />
-        {([[-0.25, 0.4], [0.25, 0.4], [-0.25, -0.35], [0.25, -0.35]] as [number, number][]).map(([x, z], i) => (
-          <B key={i} p={[x, 0.18, z]} s={[0.26, 0.36, 0.26]} c={i % 2 ? brown : dark} />
-        ))}
-        <B p={[0, 1.15, 0.5]} s={[0.84, 0.7, 0.66]} c={dark} />
-        <B p={[-0.46, 1.05, 0.55]} s={[0.16, 0.3, 0.46]} c={brown} />
-        <B p={[0.46, 1.05, 0.55]} s={[0.16, 0.3, 0.46]} c={orange} />
-        <B p={[0.12, 1.4, 0.82]} s={[0.3, 0.14, 0.04]} c={orange} />
-        <Cone p={[-0.28, 1.62, 0.5]} s={[0.3, 0.36, 0.3]} c={dark} r={[0, Math.PI / 4, 0]} />
-        <Cone p={[0.28, 1.62, 0.5]} s={[0.3, 0.36, 0.3]} c={brown} r={[0, Math.PI / 4, 0]} />
-        <B p={[-0.2, 1.22, 0.85]} s={[0.18, 0.16, 0.05]} c="#C8E04A" />
-        <B p={[0.2, 1.22, 0.85]} s={[0.18, 0.16, 0.05]} c="#C8E04A" />
-        <B p={[-0.2, 1.22, 0.88]} s={[0.06, 0.14, 0.04]} c="#111" />
-        <B p={[0.2, 1.22, 0.88]} s={[0.06, 0.14, 0.04]} c="#111" />
-        <B p={[0, 1.08, 0.86]} s={[0.12, 0.09, 0.05]} c="#FF9EB5" />
-        <B p={[0, 0.85, 0.72]} s={[0.76, 0.1, 0.1]} c="#E63946" />
-        <B p={[0, 0.76, 0.78]} s={[0.14, 0.14, 0.1]} c="#FFD60A" />
-        <group ref={tail} position={[0, 0.75, -0.55]}>
-          <B p={[0, 0.1, -0.1]} s={[0.22, 0.22, 0.4]} c={dark} />
-          <B p={[0, 0.4, -0.25]} s={[0.22, 0.5, 0.22]} c={brown} />
-        </group>
-      </group>
-    </group>
-  );
+/** Rudolph (thin wrapper around the shared Avatar). */
+export function Dog(props: PetProps) {
+  return <PetFigure {...props} id="rudolph" k={1.35} phase={0} />;
+}
+
+/** Jingle Bells (thin wrapper around the shared Avatar). */
+export function Cat(props: PetProps) {
+  return <PetFigure {...props} id="jinglebells" k={1.3} phase={1} />;
 }
 
 // ---- forest friends ----------------------------------------------------------------------------
@@ -280,70 +225,20 @@ export function HoppingFriend({ type, from, to, bornAt, seed = 0 }: { type: Frie
 }
 
 // ---- people ------------------------------------------------------------------------------------
-function useFaceTexture(url: string): THREE.Texture | null {
-  const [tex, setTex] = useState<THREE.Texture | null>(null);
-  useEffect(() => {
-    let alive = true;
-    let loaded: THREE.Texture | null = null;
-    new THREE.TextureLoader().load(
-      url,
-      (t) => {
-        t.colorSpace = THREE.SRGBColorSpace;
-        loaded = t;
-        if (alive) setTex(t);
-      },
-      undefined,
-      () => { /* default faces are optional; the drawn face stays */ },
-    );
-    return () => { alive = false; loaded?.dispose(); };
-  }, [url]);
-  return tex;
-}
-
 export const faceUrl = (id: string): string => `${import.meta.env.BASE_URL}faces/default/${id}-happy.webp`;
 
-/** Blocky seated family member: round head, chunky body, mitten hands, face plate. */
+/** Family member at the table: the shared Avatar (pop-in scale, happy hop). */
 export function Person({ id, position, rotY, bornAt, onTap, happy, scale = 1 }: { scale?: number; id: Exclude<GuestId, FriendId | 'rudolph' | 'jinglebells'>; position: V3; rotY: number; bornAt: number; onTap: () => void; happy: boolean }) {
-  const av = family[id].avatar;
-  const tex = useFaceTexture(faceUrl(id));
-  const faceMat = useMemo(() => (tex ? new THREE.MeshBasicMaterial({ map: tex, transparent: true }) : null), [tex]);
   const g = useRef<THREE.Group>(null);
-  const head = useRef<THREE.Group>(null);
+  const hop = useRef<THREE.Group>(null);
   useFrame(({ clock }) => {
-    if (!g.current) return;
-    const k = popScale((performance.now() - bornAt) / 1000, 0, 0.55);
-    g.current.scale.setScalar(k * scale);
-    if (head.current) head.current.position.y = 1.45 + (happy ? Math.abs(Math.sin(clock.elapsedTime * 4)) * 0.08 : 0);
+    if (g.current) g.current.scale.setScalar(popScale((performance.now() - bornAt) / 1000, 0, 0.55) * scale);
+    if (hop.current) hop.current.position.y = happy ? Math.abs(Math.sin(clock.elapsedTime * 4)) * 0.08 : 0;
   });
   return (
     <group ref={g} position={position} rotation={[0, rotY, 0]} onPointerDown={onTap}>
-      <B p={[0, 0.2, 0]} s={[0.9, 0.4, 0.9]} c="#5C4A3A" />
-      <B p={[0, 0.85, 0]} s={[0.95, 0.9, 0.62]} c={av.outfitColor} />
-      <B p={[-0.58, 0.85, 0.12]} s={[0.24, 0.6, 0.3]} c={av.outfitColor} />
-      <B p={[0.58, 0.85, 0.12]} s={[0.24, 0.6, 0.3]} c={av.outfitColor} />
-      <B p={[-0.58, 0.6, 0.3]} s={[0.26, 0.26, 0.26]} c={av.skinTone} />
-      <B p={[0.58, 0.6, 0.3]} s={[0.26, 0.26, 0.26]} c={av.skinTone} />
-      <group ref={head} position={[0, 1.45, 0]}>
-        <RoundedBox args={[0.95, 0.88, 0.8]} radius={0.2} smoothness={2} material={mat(av.skinTone)} />
-        {av.hairStyle !== 'bald' && <B p={[0, 0.42, -0.02]} s={[av.hairStyle.startsWith('curly') ? 1.15 : 1.0, av.hairStyle.startsWith('curly') ? 0.5 : 0.28, 0.86]} c={av.hairColor} />}
-        {av.hairStyle.startsWith('long') && <B p={[0, -0.05, -0.38]} s={[1.0, 1.0, 0.16]} c={av.hairColor} />}
-        {av.hairStyle.startsWith('wavy') && <B p={[0, 0.22, 0.3]} s={[0.9, 0.18, 0.3]} c={av.hairColor} />}
-        {faceMat ? (
-          <mesh position={[0, 0, 0.405]} material={faceMat}>
-            <planeGeometry args={[0.8, 0.8]} />
-          </mesh>
-        ) : (
-          <>
-            <B p={[-0.2, 0.08, 0.4]} s={[0.12, 0.16, 0.05]} c="#1D2A44" />
-            <B p={[0.2, 0.08, 0.4]} s={[0.12, 0.16, 0.05]} c="#1D2A44" />
-            <B p={[0, -0.18, 0.4]} s={[0.3, 0.07, 0.05]} c="#C0392B" />
-            <B p={[-0.3, -0.08, 0.4]} s={[0.1, 0.07, 0.04]} c="#FF9EB5" />
-            <B p={[0.3, -0.08, 0.4]} s={[0.1, 0.07, 0.04]} c="#FF9EB5" />
-          </>
-        )}
-        {id === 'mom' && <B p={[0, 0.58, 0.1]} s={[0.7, 0.1, 0.2]} c="#222" />}
-        {id === 'julian' && <B p={[0, 0.5, 0.36]} s={[1.0, 0.14, 0.2]} c="#2EC4B6" />}
-        {id === 'darian' && <B p={[0, 0.5, 0.52]} s={[0.9, 0.06, 0.45]} c="#FFD60A" />}
+      <group ref={hop}>
+        <Avatar id={id} scale={0.78} interactive={false} wave={happy} />
       </group>
     </group>
   );

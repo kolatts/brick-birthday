@@ -64,65 +64,76 @@ export function humanBody(id: PersonId, equipped: string[]): Part[] {
   const P: Part[] = [];
   const has = (k: string) => equipped.includes(k);
 
-  // legs + shoes
+  // legs (tapered cylinders), hips block, feet with a toe step
   for (const sx of [-1, 1]) {
-    P.push({ k: 'box', p: [sx * 0.21, 0.2 + look.legH / 2, 0], s: [0.36, look.legH + 0.04, 0.38], c: look.pants });
-    P.push({ k: 'rbox', p: [sx * 0.21, 0.11, 0.07], s: [0.4, 0.24, 0.56], c: look.shoes, r: 0.09 });
+    P.push({ k: 'tcyl', p: [sx * 0.2, 0.2 + look.legH / 2, 0], s: [0.17, look.legH + 0.06, 0.2], c: look.pants });
+    P.push({ k: 'rbox', p: [sx * 0.2, 0.1, -0.02], s: [0.36, 0.2, 0.4], c: look.shoes, r: 0.08 });
+    P.push({ k: 'rbox', p: [sx * 0.2, 0.07, 0.2], s: [0.32, 0.14, 0.3], c: look.shoes, r: 0.06 });
   }
-  // torso with 2x2 chest studs
-  P.push({ k: 'rbox', p: [0, d.torsoY, 0], s: [1.02, d.torsoH, 0.6], c: a.bodyColor, r: 0.16 });
-  const stud = lighten(a.bodyColor, 0.22);
+  P.push({ k: 'rbox', p: [0, d.base + 0.02, 0], s: [0.8, 0.2, 0.46], c: look.pants, r: 0.08 });
+  // torso: tapered (wide shoulders, narrow waist), lighter printed chest panel with 2x2 studs
+  P.push({ k: 'rtap', p: [0, d.torsoY, 0], s: [1.02, d.torsoH, 0.58], c: a.bodyColor, r: 0.2, t: 0.72 });
+  P.push({ k: 'rbox', p: [0, d.torsoY + 0.03, 0.27], s: [0.62, 0.5, 0.06], c: lighten(a.bodyColor, 0.28), r: 0.025 });
+  const stud = lighten(a.bodyColor, 0.5);
   for (const sx of [-1, 1]) {
     for (const sy of [-1, 1]) {
-      P.push({ k: 'cyl', p: [sx * 0.22, d.torsoY + sy * 0.18 + 0.02, 0.32], s: [0.12, 0.08, 0.12], c: stud, rot: [Math.PI / 2, 0, 0] });
+      P.push({ k: 'cyl', p: [sx * 0.15, d.torsoY + sy * 0.12 + 0.03, 0.33], s: [0.075, 0.06, 0.075], c: stud, rot: [Math.PI / 2, 0, 0] });
     }
   }
-  // head: chunky rounded box + ears
-  P.push({ k: 'rbox', p: [0, d.headY, 0], s: [d.headW, d.headH, d.headD], c: a.skinTone, r: 0.3 });
-  for (const sx of [-1, 1]) P.push({ k: 'sph', p: [sx * (d.headW / 2 + 0.01), d.headY - 0.02, 0], s: [0.1, 0.14, 0.1], c: a.skinTone });
+  // neck + turned cylindrical head with a bevelled rim, ears, and a small top stud
+  P.push({ k: 'cyl', p: [0, d.base + d.torsoH + 0.02, 0], s: [0.17, 0.16, 0.17], c: a.skinTone });
+  P.push({ k: 'head', p: [0, d.headY, 0], s: [d.headW / 2, d.headH, 0.92], c: a.skinTone, r: 0.18 });
+  for (const sx of [-1, 1]) P.push({ k: 'sph', p: [sx * (d.headW / 2 + 0.01), d.headY - 0.02, 0], s: [0.09, 0.13, 0.09], c: a.skinTone });
 
   const top = d.headY + d.headH / 2;
   const hc = a.hairColor;
+  const hcl = lighten(hc, 0.18);
+  /** Sculpted hair dome sitting on the skull; its equator stays above the face plate. */
+  const dome = (rz = 0.5, y = top - 0.1, z = -0.02) => P.push({ k: 'sph', p: [0, y, z], s: [0.55, 0.4, rz], c: hc });
   switch (a.hairStyle) {
     case 'bald':
-      P.push({ k: 'cyl', p: [0, top + 0.03, 0], s: [0.17, 0.1, 0.17], c: a.skinTone });
+      P.push({ k: 'cyl', p: [0, top + 0.04, 0], s: [0.15, 0.08, 0.15], c: a.skinTone });
+      P.push({ k: 'sph', p: [0.2, top - 0.03, 0.2], s: [0.14, 0.05, 0.09], c: lighten(a.skinTone, 0.3) }); // sheen
       break;
     case 'wavy-short':
-      P.push({ k: 'rbox', p: [0, top - 0.1, -0.04], s: [1.08, 0.36, 1.0], c: hc, r: 0.16 });
-      for (let i = 0; i < 4; i++) P.push({ k: 'sph', p: [-0.38 + i * 0.25, top - 0.02, 0.36], s: [0.17, 0.15, 0.15], c: hc });
-      for (const sx of [-1, 1]) P.push({ k: 'sph', p: [sx * 0.52, d.headY + 0.18, -0.05], s: [0.15, 0.22, 0.28], c: hc });
-      P.push({ k: 'rbox', p: [0, d.headY + 0.02, -0.44], s: [1.0, 0.7, 0.2], c: hc, r: 0.1 });
+      dome();
+      for (let i = 0; i < 4; i++) P.push({ k: 'sph', p: [-0.33 + i * 0.22, top - 0.01, 0.31 - Math.abs(i - 1.5) * 0.04], s: [0.17, 0.15, 0.15], c: hc });
+      for (const [x, z] of [[-0.25, -0.1], [0.12, 0.05], [0.3, -0.15], [-0.05, -0.25]] as const) P.push({ k: 'sph', p: [x, top + 0.1, z], s: [0.2, 0.14, 0.2], c: hcl });
+      for (const sx of [-1, 1]) P.push({ k: 'sph', p: [sx * 0.5, d.headY + 0.14, -0.05], s: [0.13, 0.24, 0.26], c: hc });
+      P.push({ k: 'sph', p: [0, d.headY + 0.02, -0.36], s: [0.5, 0.42, 0.16], c: hc });
       break;
     case 'long-straight':
-      P.push({ k: 'rbox', p: [0, top - 0.1, -0.02], s: [1.08, 0.34, 1.0], c: hc, r: 0.16 });
-      P.push({ k: 'rbox', p: [0, d.headY - 0.32, -0.46], s: [1.12, 1.5, 0.26], c: hc, r: 0.12 });
-      for (const sx of [-1, 1]) P.push({ k: 'rbox', p: [sx * 0.55, d.headY - 0.34, -0.12], s: [0.14, 1.1, 0.5], c: hc, r: 0.06 });
-      for (let i = 0; i < 4; i++) P.push({ k: 'sph', p: [-0.38 + i * 0.25, top - 0.04, 0.38], s: [0.17, 0.12, 0.13], c: hc });
+      dome();
+      P.push({ k: 'rbox', p: [0, d.headY - 0.34, -0.43], s: [1.0, 1.5, 0.22], c: hc, r: 0.1 });
+      P.push({ k: 'sph', p: [0, d.headY - 1.04, -0.43], s: [0.5, 0.12, 0.12], c: hc });
+      for (const sx of [-1, 1]) P.push({ k: 'rbox', p: [sx * 0.52, d.headY - 0.36, -0.12], s: [0.14, 1.1, 0.46], c: hc, r: 0.06 });
+      for (let i = 0; i < 4; i++) P.push({ k: 'sph', p: [-0.33 + i * 0.22, top - 0.02, 0.33], s: [0.17, 0.12, 0.13], c: hc });
       break;
     case 'curly-fluffy':
-      for (let i = 0; i < 7; i++) {
-        const an = (i / 7) * Math.PI * 2;
-        P.push({ k: 'sph', p: [Math.cos(an) * 0.34, top + 0.02, Math.sin(an) * 0.34], s: [0.26, 0.22, 0.26], c: hc });
+      dome(0.52, top - 0.12);
+      for (let i = 0; i < 8; i++) {
+        const an = (i / 8) * Math.PI * 2;
+        P.push({ k: 'sph', p: [Math.cos(an) * 0.34, top + 0.04, Math.sin(an) * 0.34 - 0.03], s: [0.2, 0.19, 0.2], c: hc });
       }
-      P.push({ k: 'sph', p: [0, top + 0.1, 0], s: [0.32, 0.22, 0.32], c: hc });
+      for (const [x, z] of [[0, 0], [0.16, 0.1], [-0.16, -0.08]] as const) P.push({ k: 'sph', p: [x, top + 0.14, z], s: [0.2, 0.18, 0.2], c: hcl });
       for (const sx of [-1, 1]) {
-        P.push({ k: 'sph', p: [sx * 0.5, d.headY + 0.28, 0.0], s: [0.2, 0.2, 0.26], c: hc });
-        P.push({ k: 'sph', p: [sx * 0.5, d.headY + 0.02, -0.12], s: [0.17, 0.2, 0.22], c: hc });
+        P.push({ k: 'sph', p: [sx * 0.47, d.headY + 0.22, 0.0], s: [0.15, 0.17, 0.2], c: hc });
+        P.push({ k: 'sph', p: [sx * 0.47, d.headY + 0.0, -0.12], s: [0.13, 0.17, 0.18], c: hc });
       }
-      for (let i = 0; i < 5; i++) P.push({ k: 'sph', p: [-0.4 + i * 0.2, top - 0.02, 0.36], s: [0.16, 0.14, 0.14], c: hc });
-      P.push({ k: 'sph', p: [0, d.headY + 0.1, -0.46], s: [0.5, 0.42, 0.18], c: hc });
+      for (let i = 0; i < 5; i++) P.push({ k: 'sph', p: [-0.36 + i * 0.18, top - 0.02, 0.33], s: [0.13, 0.12, 0.12], c: hc });
+      P.push({ k: 'sph', p: [0, d.headY + 0.1, -0.4], s: [0.44, 0.4, 0.15], c: hc });
       break;
     case 'wavy-pulled-back':
     default:
-      P.push({ k: 'rbox', p: [0, top - 0.1, -0.03], s: [1.08, 0.36, 1.0], c: hc, r: 0.16 });
-      for (let i = 0; i < 4; i++) P.push({ k: 'sph', p: [-0.36 + i * 0.24, top - 0.02, 0.37], s: [0.17, 0.15, 0.14], c: hc });
+      dome();
+      for (let i = 0; i < 4; i++) P.push({ k: 'sph', p: [-0.32 + i * 0.21, top - 0.01, 0.33], s: [0.15, 0.14, 0.13], c: hc });
       for (const sx of [-1, 1]) {
         for (let i = 0; i < 4; i++) {
-          P.push({ k: 'sph', p: [sx * (0.54 + (i % 2) * 0.03), d.headY + 0.22 - i * 0.21, -0.04], s: [0.14, 0.15, 0.24], c: hc });
+          P.push({ k: 'sph', p: [sx * (0.52 + (i % 2) * 0.03), d.headY + 0.2 - i * 0.2, -0.04], s: [0.13, 0.15, 0.22], c: hc });
         }
       }
-      P.push({ k: 'rbox', p: [0, d.headY - 0.02, -0.44], s: [1.0, 0.8, 0.2], c: hc, r: 0.1 });
-      P.push({ k: 'sph', p: [0, top + 0.12, -0.28], s: [0.25, 0.25, 0.25], c: hc });
+      P.push({ k: 'sph', p: [0, d.headY - 0.04, -0.38], s: [0.5, 0.46, 0.15], c: hc });
+      P.push({ k: 'sph', p: [0, top + 0.1, -0.26], s: [0.22, 0.22, 0.22], c: hcl }); // bun
       break;
   }
 
@@ -168,8 +179,8 @@ export function humanBody(id: PersonId, equipped: string[]): Part[] {
       const an = (i / 9) * Math.PI * 2;
       P.push({ k: 'sph', p: [Math.cos(an) * 0.62, d.base - 0.1, Math.sin(an) * 0.62], s: [0.06, 0.06, 0.06], c: '#FFFFFF' });
     }
-    P.push({ k: 'rbox', p: [0, d.torsoY, 0], s: [1.05, d.torsoH - 0.02, 0.63], c: '#FF9CCB', r: 0.16 });
-    for (const sx of [-1, 1]) for (const sy of [-1, 1]) P.push({ k: 'cyl', p: [sx * 0.22, d.torsoY + sy * 0.18 + 0.02, 0.34], s: [0.12, 0.08, 0.12], c: '#FFC4E1', rot: [Math.PI / 2, 0, 0] });
+    P.push({ k: 'rtap', p: [0, d.torsoY, 0], s: [1.05, d.torsoH - 0.02, 0.62], c: '#FF9CCB', r: 0.2, t: 0.72 });
+    for (const sx of [-1, 1]) for (const sy of [-1, 1]) P.push({ k: 'cyl', p: [sx * 0.15, d.torsoY + sy * 0.12 + 0.03, 0.34], s: [0.075, 0.06, 0.075], c: '#FFFFFF', rot: [Math.PI / 2, 0, 0] });
   }
   if (has('cape')) {
     P.push({ k: 'box', p: [0, d.torsoY - 0.08, -0.42], s: [1.0, 1.25, 0.07], c: '#7B4BC4', rot: [0.1, 0, 0] });
@@ -179,7 +190,7 @@ export function humanBody(id: PersonId, equipped: string[]): Part[] {
     }
   }
   if (has('labcoat')) {
-    P.push({ k: 'rbox', p: [0, d.torsoY - 0.1, 0], s: [1.1, d.torsoH + 0.3, 0.66], c: '#FFFFFF', r: 0.16 });
+    P.push({ k: 'rtap', p: [0, d.torsoY - 0.1, 0], s: [1.1, d.torsoH + 0.3, 0.64], c: '#FFFFFF', r: 0.2, t: 0.74 });
     P.push({ k: 'box', p: [0, d.torsoY - 0.05, 0.34], s: [0.06, d.torsoH + 0.1, 0.03], c: '#BFD7FF' });
     for (let i = 0; i < 3; i++) P.push({ k: 'sph', p: [0.1, d.torsoY + 0.2 - i * 0.24, 0.35], s: [0.05, 0.05, 0.04], c: '#3A86FF' });
     P.push({ k: 'box', p: [-0.3, d.torsoY - 0.28, 0.34], s: [0.26, 0.2, 0.03], c: '#DCEBFF' });
@@ -206,72 +217,84 @@ export function humanBody(id: PersonId, equipped: string[]): Part[] {
   return P;
 }
 
-/** One arm (symmetric, hangs down from its pivot): sleeve + mitten hand with a thumb. */
+/** One arm (symmetric, hangs from its shoulder pivot): upper arm, bent elbow, forearm and a C-shaped mitten hand. */
 export function humanArm(id: PersonId): Part[] {
   const a = family[id].avatar;
+  const bend = 0.32;
+  const fy = -0.31 - 0.15 * Math.cos(bend);
+  const fz = 0.15 * Math.sin(bend);
   return [
-    { k: 'rbox', p: [0, -0.26, 0], s: [0.3, 0.58, 0.32], c: a.bodyColor, r: 0.12 },
-    { k: 'sph', p: [0, -0.63, 0], s: [0.2, 0.2, 0.2], c: a.skinTone },
-    { k: 'sph', p: [0, -0.57, 0.15], s: [0.08, 0.09, 0.08], c: a.skinTone },
+    { k: 'sph', p: [0, 0, 0], s: [0.17, 0.17, 0.17], c: a.bodyColor },
+    { k: 'tcyl', p: [0, -0.16, 0], s: [0.14, 0.3, 0.16], c: a.bodyColor },
+    { k: 'sph', p: [0, -0.31, 0], s: [0.145, 0.145, 0.145], c: a.bodyColor },
+    { k: 'tcyl', p: [0, fy, fz], s: [0.13, 0.3, 0.145], c: a.bodyColor, rot: [-bend, 0, 0] },
+    { k: 'cyl', p: [0, fy - 0.14, fz + 0.045], s: [0.145, 0.05, 0.145], c: lighten(a.bodyColor, 0.35), rot: [-bend, 0, 0] },
+    // C-shaped hand: a torus arc with the opening toward the front
+    { k: 'torus', p: [0, fy - 0.24, fz + 0.09], s: [0.11, 0.065, 4.7], c: a.skinTone, rot: [0, Math.PI / 2, -2.0] },
   ];
 }
 
 export interface PetDims {
   headY: number;
   headZ: number;
+  /** Radius of the turned head the face plate wraps. */
+  headR: number;
+  headH: number;
+  headScaleZ: number;
   plateW: number;
   plateH: number;
-  plateZ: number;
   top: number;
 }
 
 export function petDims(id: PersonId): PetDims {
   return id === 'rudolph'
-    ? { headY: 1.05, headZ: 0.5, plateW: 0.66, plateH: 0.6, plateZ: 0.82, top: 1.38 }
-    : { headY: 0.98, headZ: 0.38, plateW: 0.6, plateH: 0.54, plateZ: 0.67, top: 1.26 };
+    ? { headY: 1.0, headZ: 0.48, headR: 0.4, headH: 0.64, headScaleZ: 0.88, plateW: 0.62, plateH: 0.46, top: 1.32 }
+    : { headY: 0.95, headZ: 0.38, headR: 0.36, headH: 0.58, headScaleZ: 0.88, plateW: 0.56, plateH: 0.42, top: 1.24 };
 }
 
 export function petBody(id: PersonId, partyHat: boolean): Part[] {
   const a = family[id].avatar;
   const P: Part[] = [];
   const dd = petDims(id);
+  const head: Part = { k: 'head', p: [0, dd.headY, dd.headZ], s: [dd.headR, dd.headH, dd.headScaleZ], c: a.bodyColor, r: 0.2 };
   if (id === 'rudolph') {
     const dark = darken(a.bodyColor, 0.28);
-    P.push({ k: 'rbox', p: [0, 0.54, -0.05], s: [0.66, 0.54, 0.98], c: a.bodyColor, r: 0.2 });
-    P.push({ k: 'sph', p: [0, 0.5, 0.4], s: [0.28, 0.27, 0.18], c: a.outfitColor });
+    P.push({ k: 'cap', p: [0, 0.55, -0.05], s: [0.33, 0.5, 0], c: a.bodyColor });
+    P.push({ k: 'sph', p: [0, 0.5, 0.36], s: [0.27, 0.27, 0.2], c: a.outfitColor });
     for (const sx of [-1, 1]) {
-      for (const sz of [0.32, -0.4]) {
-        P.push({ k: 'box', p: [sx * 0.21, 0.16, sz], s: [0.18, 0.32, 0.2], c: dark });
-        P.push({ k: 'rbox', p: [sx * 0.21, 0.04, sz + 0.03], s: [0.2, 0.09, 0.26], c: a.outfitColor, r: 0.04 });
+      for (const sz of [0.3, -0.4]) {
+        P.push({ k: 'tcyl', p: [sx * 0.2, 0.17, sz], s: [0.1, 0.34, 0.13], c: dark });
+        P.push({ k: 'sph', p: [sx * 0.2, 0.06, sz + 0.03], s: [0.13, 0.08, 0.16], c: a.outfitColor });
       }
     }
-    P.push({ k: 'rbox', p: [0, dd.headY, dd.headZ], s: [0.8, 0.68, 0.64], c: a.bodyColor, r: 0.22 });
-    P.push({ k: 'sph', p: [0, dd.headY - 0.1, dd.headZ + 0.28], s: [0.3, 0.2, 0.16], c: a.outfitColor });
+    P.push(head);
+    P.push({ k: 'sph', p: [0, dd.headY - 0.12, dd.headZ + 0.3], s: [0.2, 0.14, 0.12], c: a.outfitColor }); // tapered snout
     for (const sx of [-1, 1]) {
-      P.push({ k: 'cone', p: [sx * 0.29, dd.headY + 0.52, dd.headZ - 0.04], s: [0.17, 0.46, 0.17], c: dark, rot: [0, 0, -sx * 0.22] });
-      P.push({ k: 'cone', p: [sx * 0.33, dd.headY + 0.64, dd.headZ - 0.04], s: [0.09, 0.24, 0.09], c: '#2B2B33', rot: [0, 0, -sx * 0.22] });
+      P.push({ k: 'cone', p: [sx * 0.27, dd.headY + 0.5, dd.headZ - 0.04], s: [0.16, 0.44, 0.1], c: dark, rot: [0, 0, -sx * 0.25] });
+      P.push({ k: 'cone', p: [sx * 0.32, dd.headY + 0.62, dd.headZ - 0.04], s: [0.085, 0.22, 0.06], c: '#2B2B33', rot: [0, 0, -sx * 0.25] });
     }
-    // blue collar + tag
-    P.push({ k: 'tcyl', p: [0, 0.82, 0.36], s: [0.34, 0.1, 0.34], c: '#3A86FF', rot: [0.45, 0, 0] });
-    P.push({ k: 'sph', p: [0, 0.7, 0.62], s: [0.08, 0.08, 0.04], c: '#FFD60A' });
+    P.push({ k: 'tcyl', p: [0, 0.8, 0.34], s: [0.3, 0.1, 0.3], c: '#3A86FF', rot: [0.45, 0, 0] });
+    P.push({ k: 'sph', p: [0, 0.68, 0.6], s: [0.08, 0.08, 0.04], c: '#FFD60A' });
   } else {
     const patch = '#8A5A2B';
-    P.push({ k: 'rbox', p: [0, 0.5, -0.05], s: [0.52, 0.48, 0.74], c: a.bodyColor, r: 0.18 });
-    P.push({ k: 'sph', p: [0.16, 0.62, -0.1], s: [0.17, 0.08, 0.2], c: patch });
-    P.push({ k: 'sph', p: [-0.14, 0.48, -0.3], s: [0.14, 0.1, 0.12], c: '#B87A3C' });
+    P.push({ k: 'cap', p: [0, 0.5, -0.05], s: [0.27, 0.4, 0], c: a.bodyColor });
+    P.push({ k: 'sph', p: [0.15, 0.68, -0.1], s: [0.16, 0.09, 0.2], c: patch });
+    P.push({ k: 'sph', p: [-0.13, 0.5, -0.3], s: [0.14, 0.11, 0.12], c: '#B87A3C' });
     for (const sx of [-1, 1]) {
-      for (const sz of [0.22, -0.3]) {
-        P.push({ k: 'rbox', p: [sx * 0.17, 0.15, sz], s: [0.16, 0.3, 0.18], c: sx > 0 ? patch : a.bodyColor, r: 0.06 });
-        P.push({ k: 'sph', p: [sx * 0.17, 0.04, sz + 0.03], s: [0.1, 0.06, 0.12], c: '#E8A0B4' });
+      for (const sz of [0.2, -0.3]) {
+        P.push({ k: 'tcyl', p: [sx * 0.16, 0.16, sz], s: [0.085, 0.32, 0.11], c: sx > 0 ? patch : a.bodyColor });
+        P.push({ k: 'sph', p: [sx * 0.16, 0.05, sz + 0.03], s: [0.1, 0.06, 0.12], c: '#E8A0B4' });
       }
     }
-    P.push({ k: 'rbox', p: [0, dd.headY, dd.headZ], s: [0.72, 0.6, 0.56], c: a.bodyColor, r: 0.22 });
+    P.push(head);
+    // fluffy cheek ruff
+    for (const sx of [-1, 1]) P.push({ k: 'sph', p: [sx * 0.3, dd.headY - 0.12, dd.headZ + 0.05], s: [0.13, 0.13, 0.13], c: a.bodyColor });
     for (const sx of [-1, 1]) {
-      P.push({ k: 'cone', p: [sx * 0.24, dd.headY + 0.42, dd.headZ - 0.02], s: [0.17, 0.36, 0.14], c: sx > 0 ? patch : a.bodyColor, rot: [0, 0, -sx * 0.18] });
-      P.push({ k: 'cone', p: [sx * 0.24, dd.headY + 0.38, dd.headZ + 0.04], s: [0.1, 0.24, 0.07], c: '#F28AA6', rot: [0, 0, -sx * 0.18] });
+      P.push({ k: 'cone', p: [sx * 0.22, dd.headY + 0.4, dd.headZ - 0.02], s: [0.15, 0.34, 0.09], c: sx > 0 ? patch : a.bodyColor, rot: [0, 0, -sx * 0.2] });
+      P.push({ k: 'cone', p: [sx * 0.22, dd.headY + 0.37, dd.headZ + 0.03], s: [0.09, 0.22, 0.05], c: '#F28AA6', rot: [0, 0, -sx * 0.2] });
     }
-    P.push({ k: 'tcyl', p: [0, 0.76, 0.3], s: [0.28, 0.08, 0.28], c: '#FF5CA8', rot: [0.4, 0, 0] });
-    P.push({ k: 'sph', p: [0, 0.68, 0.5], s: [0.08, 0.08, 0.08], c: '#FFD60A' });
+    P.push({ k: 'tcyl', p: [0, 0.74, 0.3], s: [0.27, 0.08, 0.27], c: '#FF5CA8', rot: [0.4, 0, 0] });
+    P.push({ k: 'sph', p: [0, 0.66, 0.54], s: [0.08, 0.08, 0.08], c: '#FFD60A' });
   }
   if (partyHat) {
     P.push({ k: 'cone', p: [0, dd.top + 0.24, dd.headZ - 0.05], s: [0.2, 0.5, 0.2], c: '#FF5CA8', rot: [0.15, 0, 0.1] });
@@ -285,19 +308,22 @@ export function petBody(id: PersonId, partyHat: boolean): Part[] {
 export function petTail(id: PersonId): Part[] {
   const a = family[id].avatar;
   if (id === 'rudolph') {
+    // curled: rises, then curls forward over the back
     return [
       { k: 'sph', p: [0, 0.0, -0.05], s: [0.15, 0.15, 0.15], c: a.bodyColor },
-      { k: 'sph', p: [0, 0.16, -0.12], s: [0.17, 0.17, 0.17], c: a.bodyColor },
-      { k: 'sph', p: [0, 0.3, -0.04], s: [0.2, 0.2, 0.2], c: a.outfitColor },
-      { k: 'sph', p: [0, 0.34, 0.12], s: [0.15, 0.15, 0.15], c: a.bodyColor },
+      { k: 'sph', p: [0, 0.14, -0.12], s: [0.17, 0.17, 0.17], c: a.bodyColor },
+      { k: 'sph', p: [0, 0.28, -0.08], s: [0.19, 0.19, 0.19], c: a.outfitColor },
+      { k: 'sph', p: [0, 0.38, 0.04], s: [0.17, 0.17, 0.17], c: a.bodyColor },
+      { k: 'sph', p: [0, 0.34, 0.18], s: [0.14, 0.14, 0.14], c: a.outfitColor },
     ];
   }
+  // fluffy: thick plume
   return [
-    { k: 'sph', p: [0, 0.0, -0.04], s: [0.1, 0.1, 0.1], c: a.bodyColor },
-    { k: 'sph', p: [0, 0.14, -0.1], s: [0.1, 0.1, 0.1], c: '#8A5A2B' },
-    { k: 'sph', p: [0, 0.3, -0.13], s: [0.1, 0.11, 0.1], c: a.bodyColor },
-    { k: 'sph', p: [0, 0.46, -0.1], s: [0.1, 0.11, 0.1], c: a.bodyColor },
-    { k: 'sph', p: [0, 0.6, -0.03], s: [0.11, 0.11, 0.11], c: '#8A5A2B' },
+    { k: 'sph', p: [0, 0.0, -0.04], s: [0.12, 0.12, 0.12], c: a.bodyColor },
+    { k: 'sph', p: [0, 0.16, -0.1], s: [0.15, 0.17, 0.15], c: '#8A5A2B' },
+    { k: 'sph', p: [0, 0.34, -0.13], s: [0.17, 0.2, 0.17], c: a.bodyColor },
+    { k: 'sph', p: [0, 0.53, -0.1], s: [0.18, 0.21, 0.18], c: a.bodyColor },
+    { k: 'sph', p: [0, 0.72, -0.03], s: [0.15, 0.19, 0.15], c: '#8A5A2B' },
   ];
 }
 

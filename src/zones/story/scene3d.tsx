@@ -163,8 +163,13 @@ function cameoPrims(id: string): Prim[] {
     const c = cameos.find((x) => x.id === 'moon')!.brick;
     b.cone([0, 0.8, 0], 0.55, 1.6, '#C9D8E8', [Math.PI, 0, 0]); // silver tail, tip up -> flipped so it flares at the bottom
     b.cone([0, 0.1, 0.02], 0.7, 0.35, '#E6EEF8');
-    b.box([0, 1.7, 0], [0.8, 0.8, 0.6], '#F5D5BD');
-    b.box([0, 1.15, 0], [0.7, 0.9, 0.45], '#E8B6D8');
+    // same construction as the Avatars: turned cylinder head with rounded top, neck, tapered torso
+    b.cyl([0, 1.7, 0], 0.42, 0.7, '#F5D5BD');
+    b.sph([0, 2.05, 0], [0.42, 0.1, 0.42], '#F5D5BD');
+    b.sph([0, 1.35, 0], [0.42, 0.1, 0.42], '#F5D5BD');
+    b.cyl([0, 1.3, 0], 0.15, 0.14, '#F5D5BD');
+    b.cone([0, 1.0, 0], 0.5, 0.75, '#E8B6D8', [Math.PI, 0, 0]);
+    b.sph([0, 1.28, 0.0], [0.4, 0.12, 0.3], '#E8B6D8');
     b.box([0, 1.95, -0.12], [1.05, 0.9, 0.35], c.hairColor);
     b.box([0, 2.15, 0.2], [0.9, 0.2, 0.3], c.hairColor);
     b.box([0, 2.5, 0.05], [0.7, 0.18, 0.3], c.accent);

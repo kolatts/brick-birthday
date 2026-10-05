@@ -14,22 +14,11 @@ import type { V3 } from './prims';
 
 const NO_EQUIP: string[] = [];
 
-function roundedRectGeometry(w: number, h: number, r: number): THREE.ShapeGeometry {
-  const s = new THREE.Shape();
-  const x = -w / 2, y = -h / 2;
-  s.moveTo(x + r, y);
-  s.lineTo(x + w - r, y);
-  s.quadraticCurveTo(x + w, y, x + w, y + r);
-  s.lineTo(x + w, y + h - r);
-  s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  s.lineTo(x + r, y + h);
-  s.quadraticCurveTo(x, y + h, x, y + h - r);
-  s.lineTo(x, y + r);
-  s.quadraticCurveTo(x, y, x + r, y);
-  const g = new THREE.ShapeGeometry(s, 4);
-  const uv = g.getAttribute('uv');
-  const pos = g.getAttribute('position');
-  for (let i = 0; i < uv.count; i++) uv.setXY(i, pos.getX(i) / w + 0.5, pos.getY(i) / h + 0.5);
+/** A face plate that follows the head curve: a vertical cylinder segment (same radius/depth scale as the head). */
+function curvedPlateGeometry(radius: number, arcWidth: number, height: number, depthScale: number): THREE.CylinderGeometry {
+  const theta = arcWidth / radius;
+  const g = new THREE.CylinderGeometry(radius + 0.012, radius + 0.012, height, 20, 1, true, -theta / 2, theta);
+  g.scale(1, 1, depthScale);
   return g;
 }
 
@@ -91,11 +80,14 @@ export function Avatar(props: AvatarProps) {
 
   const dims = pet ? null : humanDims(id);
   const pd = pet ? petDims(id) : null;
-  const plate = useMemo(() => (pet ? roundedRectGeometry(pd!.plateW, pd!.plateH, 0.14) : roundedRectGeometry(0.84, 0.78, 0.16)), [pet, pd]);
+  const plate = useMemo(
+    () => (pet ? curvedPlateGeometry(pd!.headR, pd!.plateW, pd!.plateH, pd!.headScaleZ) : curvedPlateGeometry(0.5, 0.72, 0.6, 0.92)),
+    [pet, pd],
+  );
   useEffect(() => () => plate.dispose(), [plate]);
   // Portraits have transparent backgrounds: let the skin-coloured head show through around the face.
   const plateMat = useMemo(
-    () => new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false, transparent: true, alphaTest: 0.05, depthWrite: false }),
+    () => new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.4, metalness: 0, transparent: true, alphaTest: 0.05, depthWrite: false }),
     [],
   );
   useEffect(() => () => plateMat.dispose(), [plateMat]);
@@ -167,7 +159,7 @@ export function Avatar(props: AvatarProps) {
         <mesh geometry={geo.body} material={vertexMat} raycast={noRaycast} />
         {pet && pd && (
           <>
-            <mesh geometry={plate} material={plateMat} position={[0, pd.headY, pd.plateZ]} raycast={noRaycast} />
+            <mesh geometry={plate} material={plateMat} position={[0, pd.headY - 0.02, pd.headZ]} raycast={noRaycast} />
             <group ref={tailRef} position={petTailPivot(id)}>
               <mesh geometry={geo.tail!} material={vertexMat} raycast={noRaycast} />
             </group>
@@ -175,7 +167,7 @@ export function Avatar(props: AvatarProps) {
         )}
         {!pet && dims && (
           <>
-            <mesh geometry={plate} material={plateMat} position={[0, dims.headY - 0.03, dims.headD / 2 + 0.012]} raycast={noRaycast} />
+            <mesh geometry={plate} material={plateMat} position={[0, dims.headY - 0.03, 0]} raycast={noRaycast} />
             <group ref={armL} position={[-0.66, dims.shoulderY, 0]}>
               <mesh geometry={geo.arm!} material={vertexMat} raycast={noRaycast} />
               {wand && (

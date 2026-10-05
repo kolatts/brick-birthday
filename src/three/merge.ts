@@ -3,12 +3,15 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { V3 } from './prims';
 
-export type PartKind = 'box' | 'rbox' | 'sph' | 'cyl' | 'tcyl' | 'cone' | 'star';
+export type PartKind = 'box' | 'rbox' | 'sph' | 'cyl' | 'tcyl' | 'cone' | 'star' | 'rtap' | 'head' | 'cap' | 'torus';
 
 /**
  * A coloured piece of a merged mesh.
  * box/rbox: s = (w,h,d); sph: s = radii; cyl/cone: s = (r,h,r); tcyl: s = (rBottom,h,rTop); star: s = (radius, depth, _).
- * `r` is the corner radius for rbox.
+ * rtap: rounded box tapering to `t` (0..1) of its width at the bottom (shoulders wide, waist narrow).
+ * head: lathe-turned cylinder s = (radius, height, depthScale) with bevel `r` rounding both edges.
+ * cap: capsule lying along z, s = (radius, length, _). torus: s = (ringRadius, tube, arcRadians).
+ * `r` is the corner radius for rbox/rtap/head.
  */
 export interface Part {
   k: PartKind;
@@ -17,6 +20,7 @@ export interface Part {
   c: string;
   rot?: V3;
   r?: number;
+  t?: number;
 }
 
 let starShape: THREE.Shape | null = null;
@@ -53,6 +57,42 @@ function geometryFor(pt: Part): THREE.BufferGeometry {
       return new THREE.CylinderGeometry(pt.s[2], pt.s[0], pt.s[1], 14);
     case 'cone':
       return new THREE.ConeGeometry(pt.s[0], pt.s[1], 12);
+    case 'rtap': {
+      const g = new RoundedBoxGeometry(pt.s[0], pt.s[1], pt.s[2], 3, pt.r ?? 0.12);
+      const pos = g.getAttribute('position');
+      const t = pt.t ?? 0.8;
+      for (let i = 0; i < pos.count; i++) {
+        const k = (pos.getY(i) + pt.s[1] / 2) / pt.s[1]; // 0 bottom .. 1 top
+        const f = t + (1 - t) * k;
+        pos.setX(i, pos.getX(i) * f);
+        pos.setZ(i, pos.getZ(i) * (0.9 + 0.1 * k));
+      }
+      g.computeVertexNormals();
+      return g;
+    }
+    case 'head': {
+      const r = pt.s[0], h = pt.s[1], b = Math.min(pt.r ?? 0.15, r * 0.9, h / 2 - 0.01);
+      const pts: THREE.Vector2[] = [new THREE.Vector2(0, -h / 2)];
+      const arc = (cx: number, cy: number, a0: number, a1: number) => {
+        for (let i = 0; i <= 5; i++) {
+          const a = a0 + ((a1 - a0) * i) / 5;
+          pts.push(new THREE.Vector2(cx + Math.cos(a) * b, cy + Math.sin(a) * b));
+        }
+      };
+      arc(r - b, -h / 2 + b, -Math.PI / 2, 0);
+      arc(r - b, h / 2 - b, 0, Math.PI / 2);
+      pts.push(new THREE.Vector2(0, h / 2));
+      const g = new THREE.LatheGeometry(pts, 24);
+      g.scale(1, 1, pt.s[2]);
+      return g;
+    }
+    case 'cap': {
+      const g = new THREE.CapsuleGeometry(pt.s[0], pt.s[1], 4, 12);
+      g.rotateX(Math.PI / 2);
+      return g;
+    }
+    case 'torus':
+      return new THREE.TorusGeometry(pt.s[0], pt.s[1], 8, 14, pt.s[2]);
     case 'star': {
       const g = new THREE.ExtrudeGeometry(star(), { depth: pt.s[1], bevelEnabled: false });
       g.translate(0, 0, -pt.s[1] / 2);
@@ -100,5 +140,5 @@ export function mergeParts(parts: Part[]): THREE.BufferGeometry {
   return merged;
 }
 
-export const vertexMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, metalness: 0 });
+export const vertexMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.4, metalness: 0 });
 export const vertexMatFlat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0, flatShading: true });
