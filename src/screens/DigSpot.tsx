@@ -10,7 +10,7 @@ import { Builder } from '../three/prims';
 import { digPos } from '../three/layout';
 import { useDig } from '../three/digStore';
 import { emitSparkles } from '../three/Wand';
-import { sfx } from '../audio/engine';
+import { playSting, sfx } from '../audio/engine';
 
 export const DIG_TAPS = 5;
 const DIRT = ['#8B5A2B', '#A66B3C', '#C98B4F', '#6E4524'];
@@ -104,6 +104,7 @@ function DigSpot({ id, onConfetti, onDug }: DigSpotProps) {
       t0.current = -1;
       sfx('fanfare');
       sfx('sparkle');
+      void playSting('celebrate');
       emitSparkles([pos[0], 0.8, pos[2]], { count: 60, speed: 3.6, size: 0.14 });
       onConfetti();
       timer.current = window.setTimeout(

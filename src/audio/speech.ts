@@ -22,6 +22,19 @@ export interface Fragment {
 
 export const isTestMode = (): boolean => typeof location !== 'undefined' && new URLSearchParams(location.search).has('test');
 
+const speakingListeners = new Set<(speaking: boolean) => void>();
+let isSpeaking = false;
+function notifySpeaking(v: boolean): void {
+  if (v === isSpeaking) return;
+  isSpeaking = v;
+  speakingListeners.forEach((cb) => cb(v));
+}
+/** Subscribes to narration start/end (used to duck the music bed). Returns an unsubscribe. */
+export function onSpeaking(cb: (speaking: boolean) => void): () => void {
+  speakingListeners.add(cb);
+  return () => speakingListeners.delete(cb);
+}
+
 // ---- shared audio element -------------------------------------------------
 
 const SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
@@ -140,6 +153,7 @@ export async function sayFragments(fragments: Fragment[], opts: Omit<SayOptions,
   }
   stopSpeaking();
   const gen = ++generation;
+  notifySpeaking(true);
   const override = { pitch: opts.pitch, rate: opts.rate };
   for (let i = 0; i < fragments.length; i++) {
     if (gen !== generation) return;
@@ -150,6 +164,7 @@ export async function sayFragments(fragments: Fragment[], opts: Omit<SayOptions,
       /* keep going */
     }
   }
+  if (gen === generation) notifySpeaking(false);
 }
 
 /** Speaks `text`; resolves when finished. Never rejects. Stubbed under ?test=1. */
@@ -162,6 +177,7 @@ export function stopSpeaking(): void {
   const c = current;
   current = null;
   c?.cancel();
+  notifySpeaking(false);
   if (audio && !audio.paused) audio.pause();
   if (webAvailable()) speechSynthesis.cancel();
 }

@@ -1,0 +1,51 @@
+[
+  {
+    "id": "title",
+    "file": "title.mp3",
+    "ms": 68543,
+    "bpm": 112,
+    "loop": true
+  },
+  {
+    "id": "hub",
+    "file": "hub.mp3",
+    "ms": 68878,
+    "bpm": 108,
+    "loop": true
+  },
+  {
+    "id": "story",
+    "file": "story.mp3",
+    "ms": 60000,
+    "bpm": 92,
+    "loop": true
+  },
+  {
+    "id": "woods",
+    "file": "woods.mp3",
+    "ms": 65000,
+    "bpm": 96,
+    "loop": true
+  },
+  {
+    "id": "challenge",
+    "file": "challenge.mp3",
+    "ms": 67684,
+    "bpm": 124,
+    "loop": true
+  },
+  {
+    "id": "finale",
+    "file": "finale.mp3",
+    "ms": 62000,
+    "bpm": 120,
+    "loop": true
+  },
+  {
+    "id": "celebrate",
+    "file": "celebrate.mp3",
+    "ms": 7000,
+    "bpm": 120,
+    "loop": false
+  }
+]

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { say, sayFragments, stopSpeaking, isTestMode, type Fragment } from '../../audio/speech';
+import { playSting } from '../../audio/engine';
 import { safeSfx as sfx } from './ui';
 import { useProgress } from '../../state/progress';
 import { useUi } from '../../state/ui';
@@ -457,6 +458,9 @@ function Sparkles({ burst }: { burst: number }) {
 }
 
 export function BrickCelebration({ count, onClose }: { count: number; onClose: () => void }) {
+  useEffect(() => {
+    void playSting('celebrate');
+  }, []);
   return (
     <div
       data-testid="brick-celebration"

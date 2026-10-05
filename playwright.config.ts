@@ -25,6 +25,10 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1366, height: 1024 } },
+      // The GPU-less CI runner software-renders the 3D zones far too slowly in Chromium; WebKit
+      // covers every zone flow there in seconds, so CI keeps Chromium for the smoke-only checks
+      // (canvas pixels, network isolation, pack import). Locally both projects run everything.
+      ...(process.env.CI ? { testMatch: /smoke\.spec\.ts$/ } : {}),
     },
     {
       name: 'ipad-webkit',

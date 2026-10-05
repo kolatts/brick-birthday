@@ -12,7 +12,7 @@ import { useUi } from '../state/ui';
 import { useSettings } from '../state/settings';
 import { Button, Panel, palette } from '../ui/Button';
 import { Confetti } from '../ui/Confetti';
-import { setMuted, sfx, startMusic, stopMusic } from '../audio/engine';
+import { setMuted, sfx } from '../audio/engine';
 import { registerPerf } from '../test/hooks';
 import { canvasProps } from '../three/Brick';
 import { Lights } from '../three/Lights';
@@ -159,11 +159,6 @@ export function Hub() {
     () => new URLSearchParams(location.search).get('birthday') === '1' || isBirthday(family.luna.birthDate!),
     [],
   );
-
-  useEffect(() => {
-    startMusic();
-    return () => stopMusic();
-  }, []);
 
   const enter = useCallback(
     (id: ZoneId) => {

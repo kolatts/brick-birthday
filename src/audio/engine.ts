@@ -1,4 +1,8 @@
 import { useSettings } from '../state/settings';
+import { attachMusic, playMusic as playBed, stopMusic as stopBed, playSting as playOneShot, setSpeaking } from './music';
+
+export type { TrackId, StingId } from './music';
+export { setSpeaking };
 
 export type SfxName = 'tap' | 'pop' | 'sparkle' | 'splash' | 'fanfare' | 'oops';
 
@@ -59,6 +63,7 @@ export function unlock(): Promise<void> {
       rig.music.volume.value = -14;
       audioState.unlocked = true;
       applyVolume();
+      attachMusic(tone, { start: startMusic, stop: stopSynth });
       if (wantMusic) startMusic();
     } catch {
       unlocking = null; // allow retry on next tap
@@ -121,13 +126,23 @@ export function startMusic(): void {
   tone.getTransport().start();
 }
 
-export function stopMusic(): void {
+function stopSynth(): void {
   wantMusic = false;
   if (!rig?.seq) return;
   rig.seq.stop();
   rig.seq.dispose();
   rig.seq = null;
   rig.tone.getTransport().stop();
+}
+
+/** Crossfades to a pre-generated music track (falls back to the synth loop if it cannot load). */
+export const playMusic = playBed;
+export const playSting = playOneShot;
+
+/** Stops the music bed (and the synth fallback). */
+export function stopMusic(): void {
+  stopBed();
+  stopSynth();
 }
 
 export function setMuted(muted: boolean): void {

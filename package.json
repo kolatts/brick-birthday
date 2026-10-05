@@ -18,6 +18,7 @@
     "pack": "tsx scripts/pack/build.ts",
     "portraits": "tsx scripts/portraits/generate.ts",
     "fixtures": "tsx scripts/fixtures/make-pack.ts",
+    "music:generate": "C:/Code/claude-video-editor/venv/Scripts/python.exe scripts/music/generate.py",
     "voices:extract": "tsx scripts/voices/extract.ts",
     "voices:generate": "uv run --with azure-cognitiveservices-speech python scripts/voices/generate.py"
   },

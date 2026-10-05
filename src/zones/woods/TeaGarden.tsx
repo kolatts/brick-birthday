@@ -8,6 +8,7 @@ import {
   TEA_CENTER, TREATS, cupWorldPos, endPour, guestTap, guestWorldPos, guestsFor, replayTeaParty, seatAngle,
   selectTreat, startPour, useWoods, TREE_COUNT,
 } from './woodsState';
+import { playSting } from '../../audio/engine';
 import { GUEST_EMOJI, GUEST_NAMES, type FriendId, type GuestId } from './facts';
 import { LEVEL_PERFECT_MAX, LEVEL_PERFECT_MIN, levelAt } from './logic';
 import { useProgress } from '../../state/progress';
@@ -263,6 +264,10 @@ export function TeaHud() {
   const celebrating = useWoods((s) => s.celebrating);
   const firstBrick = useWoods((s) => s.firstBrick);
   const [level, setLevel] = useState(0);
+
+  useEffect(() => {
+    if (celebrating) void playSting('celebrate');
+  }, [celebrating]);
 
   // Drive the on-screen meter, and auto-finish (splash!) when the cup overflows.
   useEffect(() => {

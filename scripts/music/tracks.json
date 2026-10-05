@@ -1,0 +1,66 @@
+[
+  {
+    "id": "title",
+    "bpm": 112,
+    "key": "C major",
+    "seed": 12,
+    "genMs": 72000,
+    "loop": true,
+    "prompt": "Sparkling birthday party fanfare, bright glockenspiel playing a happy celebratory melody, pizzicato strings, strummed ukulele, light clapping and shakers, twinkling toy-box energy, joyful, whimsical, kid-friendly, in C major, around 112 BPM, instrumental"
+  },
+  {
+    "id": "hub",
+    "bpm": 108,
+    "key": "G major",
+    "seed": 23,
+    "genMs": 72000,
+    "loop": true,
+    "prompt": "Cheeky bouncy cartoon island theme, staccato marimba melody, plucked pizzicato strings, toy piano sparkles, catchy whistled tune, playful swung brushed drums, skipping rhythm, whimsical and fun, kid-friendly, in G major, around 108 BPM, instrumental"
+  },
+  {
+    "id": "story",
+    "bpm": 92,
+    "key": "F major",
+    "seed": 31,
+    "genMs": 72000,
+    "loop": true,
+    "prompt": "Cozy storybook magic, music box melody, harp glissandi, soft felt piano, gentle woodwinds, warm and dreamy, whimsical, kid-friendly, in F major, around 92 BPM, instrumental"
+  },
+  {
+    "id": "woods",
+    "bpm": 96,
+    "key": "D major",
+    "seed": 41,
+    "genMs": 72000,
+    "loop": true,
+    "prompt": "Gentle forest wonder growing into a tea party waltz, flute, acoustic guitar, tinkling bells, bird-like flourishes, whimsical, kid-friendly, in D major, around 96 BPM, instrumental"
+  },
+  {
+    "id": "challenge",
+    "bpm": 124,
+    "key": "A major",
+    "seed": 51,
+    "genMs": 72000,
+    "loop": true,
+    "prompt": "Upbeat game show silliness, bouncy tuba bass, xylophone, hand claps, slide whistle accents, toy-like, whimsical and fun, kid-friendly, in A major, around 124 BPM, instrumental"
+  },
+  {
+    "id": "finale",
+    "bpm": 120,
+    "key": "C major",
+    "seed": 61,
+    "genMs": 72000,
+    "loop": true,
+    "prompt": "Joyful fireworks celebration, full toy orchestra, bells, bright brass, drums, confetti energy, whimsical, kid-friendly, in C major, around 120 BPM, instrumental"
+  },
+  {
+    "id": "celebrate",
+    "bpm": 120,
+    "key": "C major",
+    "seed": 71,
+    "genMs": 10000,
+    "loop": false,
+    "maxMs": 7000,
+    "prompt": "Short triumphant victory sting, rising glockenspiel run, cymbal swell, bright triumphant major chord finish, toy-like, kid-friendly, in C major, around 120 BPM, instrumental"
+  }
+]
