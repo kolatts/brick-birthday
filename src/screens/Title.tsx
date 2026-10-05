@@ -1,0 +1,57 @@
+import { useRef } from 'react';
+import { computeAge, ordinal } from '../config/age';
+import { family } from '../config/family';
+import { Button } from '../ui/Button';
+import { useUi } from '../state/ui';
+import { sfx } from '../audio/engine';
+
+const LONG_PRESS_MS = 3000;
+
+export function Title() {
+  const setScreen = useUi((s) => s.setScreen);
+  const timer = useRef<number | null>(null);
+  const age = computeAge(family.luna.birthDate!);
+
+  const cancel = () => {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+    timer.current = null;
+  };
+  const start = () => {
+    cancel();
+    timer.current = window.setTimeout(() => {
+      timer.current = null;
+      setScreen({ kind: 'grownup' });
+    }, LONG_PRESS_MS);
+  };
+
+  return (
+    <div className="screen center-col" style={{ background: 'linear-gradient(#FFB3D6, #FFF4E0)' }} data-testid="title-screen">
+      <div style={{ fontSize: 96, animation: 'wave 1.6s ease-in-out infinite', transformOrigin: '70% 80%' }} aria-hidden>
+        👋
+      </div>
+      <h1
+        data-testid="title-heading"
+        onPointerDown={start}
+        onPointerUp={cancel}
+        onPointerLeave={cancel}
+        onPointerCancel={cancel}
+        onContextMenu={(e) => e.preventDefault()}
+        style={{ margin: 0, fontSize: 'clamp(40px, 8vw, 88px)', color: '#E63946', textShadow: '0 4px 0 #1D2A44', padding: '0 24px' }}
+      >
+        Happy {ordinal(age)} Birthday, Luna!
+      </h1>
+      <Button
+        big
+        tone="blue"
+        testId="play-button"
+        style={{ fontSize: 64, minHeight: 120, padding: '12px 72px' }}
+        onClick={() => {
+          sfx('pop');
+          setScreen({ kind: 'hub' });
+        }}
+      >
+        Play
+      </Button>
+    </div>
+  );
+}

@@ -1,0 +1,9 @@
+photos/
+private/
+.env
+.env.*
+node_modules/
+dist/
+test-results/
+playwright-report/
+.claude/image-generation/*/

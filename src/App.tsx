@@ -1,0 +1,52 @@
+import { useEffect } from 'react';
+import { useUi, currentOrientation } from './state/ui';
+import { useFamilyPack } from './state/familyPack';
+import { Title } from './screens/Title';
+import { Hub } from './screens/Hub';
+import { Rotate } from './screens/Rotate';
+import { GrownUp } from './screens/GrownUp';
+import { ZonePlaceholder } from './screens/ZonePlaceholder';
+import { Button } from './ui/Button';
+
+function FinalePlaceholder() {
+  const setScreen = useUi((s) => s.setScreen);
+  return (
+    <div className="screen center-col" style={{ background: '#FF5CA8' }} data-testid="finale-screen">
+      <h1 style={{ fontSize: 56, color: '#fff', margin: 0 }}>Finale (coming soon)</h1>
+      <Button tone="cream" onClick={() => setScreen({ kind: 'hub' })}>Back to island</Button>
+    </div>
+  );
+}
+
+export default function App() {
+  const screen = useUi((s) => s.screen);
+  const orientation = useUi((s) => s.orientation);
+  const setOrientation = useUi((s) => s.setOrientation);
+  const initPack = useFamilyPack((s) => s.init);
+
+  useEffect(() => {
+    void initPack();
+    const onResize = () => setOrientation(currentOrientation());
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    // Safari sometimes skips resize events on rotation; a cheap poll keeps the rotate screen honest.
+    const poll = window.setInterval(onResize, 400);
+    return () => {
+      window.clearInterval(poll);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, [initPack, setOrientation]);
+
+  return (
+    <>
+      {screen.kind === 'title' && <Title />}
+      {screen.kind === 'hub' && <Hub />}
+      {screen.kind === 'zone' && <ZonePlaceholder zone={screen.zone} />}
+      {screen.kind === 'challenge' && <ZonePlaceholder zone={screen.zone} challenge />}
+      {screen.kind === 'finale' && <FinalePlaceholder />}
+      {screen.kind === 'grownup' && <GrownUp />}
+      {orientation === 'portrait' && <Rotate />}
+    </>
+  );
+}
