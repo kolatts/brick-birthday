@@ -51,7 +51,7 @@ test('wand moment adds a bonus sentence', async ({ page }) => {
   await page.getByTestId('tile-problem-sock').click();
   await page.getByTestId('tile-power-bubble').click();
   await page.getByTestId('tell-story').click();
-  await page.getByTestId('wand-button').click({ timeout: 3000 });
+  await page.getByTestId('wand-button').click();
   await expect(page.getByTestId('sparkle-burst')).toBeAttached();
   await expect(page.getByTestId('again')).toBeVisible({ timeout: 15_000 });
   const sentences = (await page.getByTestId('story-text').innerText()).split(/(?<=[.!?])\s+/).length;
