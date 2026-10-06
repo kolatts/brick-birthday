@@ -126,9 +126,17 @@ export function Avatar(props: AvatarProps) {
         l.rotation.z = wand ? -0.5 : -0.08;
       }
       if (r) {
+        // The Blender-built arm pivots lift the arm sideways about X; the procedural arm uses Z.
+        const glbArm = r.userData.glb === true;
         if (wave) {
-          r.rotation.z = -(2.55 + Math.sin(t * 7) * 0.4);
-          r.rotation.x = 0;
+          const lift = -(2.3 + Math.sin(t * 7) * 0.35);
+          if (glbArm) {
+            r.rotation.set(lift, 0, 0);
+          } else {
+            r.rotation.set(0, 0, lift);
+          }
+        } else if (glbArm) {
+          r.rotation.set(Math.sin(t * 1.6 + 1) * 0.06, 0, 0);
         } else {
           r.rotation.z = 0.08;
           r.rotation.x = Math.sin(t * 1.6 + 1) * 0.06;
@@ -253,6 +261,8 @@ function GlbRig(props: { scene: THREE.Object3D; expr: Expression; procFace: Reac
   useEffect(() => {
     refs.armL.current = nodes.armL;
     refs.armR.current = nodes.armR;
+    if (nodes.armR) nodes.armR.userData.glb = true;
+    if (nodes.armL) nodes.armL.userData.glb = true;
     refs.head.current = nodes.head;
     refs.tail.current = nodes.tail;
     return () => {
