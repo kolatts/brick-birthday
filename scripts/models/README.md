@@ -31,12 +31,12 @@ Preview on the turntable (dev server or a `?test=1` build):
 
 | Node | Meaning |
 | --- | --- |
-| `Head` (empty at the head centre) | nods; parent of `HeadMesh`, `FacePlate`, `Item_bow`, `Item_visor`, `Item_sunglasses`, `Item_pethats` |
+| `Head` (empty at the head centre) | nods; parent of `HeadMesh`, `Face_happy`, `Face_surprised`, `Face_silly`, `Item_bow`, `Item_visor`, `Item_sunglasses`, `Item_pethats` |
 | `ArmL` / `ArmR` (empties at the shoulders) | wave and swing; parents of `ArmMeshL/R` and the `Item_<id>__sleeve*` garments |
 | `Tail` (pets) | wags |
-| `FacePlate` | curved mesh on the head profile, UV mapped 0..1, placeholder material; the runtime replaces the material with the portrait texture |
+| `Face_happy` / `Face_surprised` / `Face_silly` | parent empties under `Head`; each contains the complete expression as shallow mesh relief with opaque `FaceInk_*` base-colour materials |
 | `Item_<id>` / `Item_<id>__<part>` | closet garments, hidden unless the id is equipped (`dress`, `cape`, `labcoat`, `boots`, `bow`, `visor`, `sunglasses`, `pethats`) |
-| everything else | vertex coloured (COLOR_0) with the shared material `figure`; the runtime swaps in its molded-plastic material |
+| body, hair and closet meshes | vertex coloured (COLOR_0) with the shared material `figure`; the runtime swaps in its molded-plastic material |
 
 Coordinates are the three.js frame (Y up, +Z front) and the glTF is exported with `export_yup=False`, so numbers in
 the script equal the numbers in `src/three/avatarParts.ts`.
@@ -44,3 +44,31 @@ the script equal the numbers in `src/three/avatarParts.ts`.
 ## IP note
 
 All figures are our own design (round head, chunky body, mitten/C hands). No third-party figure shapes or logos.
+
+## Geometry faces and Blender review
+
+Faces contain no images, textures, UVs or alpha blending. Elliptical eyes, white
+catchlights, blush and tongues follow the skull curvature; brows, smiles, lashes
+and winks are thin mesh tubes. Face meshes use material base colours (no COLOR_0).
+The existing body/hair/closet geometry keeps its vertex colours. Skin uses
+`skinTone` directly, including Dad #6B4226 and Luna #B98259.
+
+All three expression groups are exported. glTF does not standardize object visibility:
+the runtime must select exactly one `Face_*` group before displaying the model.
+Do not replace `FaceInk_*` materials with a vertex-colour-only body material.
+`FacePlate` and its placeholder image have been removed. Head, arm, tail and
+closet node names and transforms are preserved. The generator resets Blender for
+every figure, making repeated builds independent of prior scene state.
+
+```powershell
+& "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" --background --python scripts/models/build_figures.py -- --review test-results/blender
+# Or through the existing wrapper:
+npm run models:build -- --review test-results/blender
+```
+
+`--review` adds a Blender Cycles PNG per figure, with happy / surprised / silly
+columns, front views above and 30-degree turntable views below. Three area lights
+illuminate the figures; closet overlays are hidden for review only. Review copies,
+camera and lights are created after export and never enter the GLB. Review PNGs
+are local artifacts in `test-results/blender/`. The Python exporter itself rejects
+any output of 300,000 bytes or more, including direct Blender invocations.

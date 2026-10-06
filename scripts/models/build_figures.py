@@ -8,13 +8,10 @@ Builds Luna's brick-figure family in Blender (headless) and exports one Draco-co
 Authoring frame = three.js frame (Y up, +Z is the figure's front) so numbers match src/three/avatarParts.ts one to one;
 the glTF is exported with export_yup=False, so nothing is rotated. Parameters live in scripts/models/figures.json.
 
-Scene contract used by src/three/Avatar.tsx (node names matter):
-  Head      empty at the head centre (nods)            -> HeadMesh (skull, ears, hair, accessory), FacePlate, Item_bow/visor/sunglasses
-  ArmL/ArmR empties at the shoulder pivots (wave/swing)-> ArmMeshL/R (+ Item_<id>__sleeve* garments)
-  Tail      empty at the rump (pets, wags)             -> TailMesh
-  Body      static mesh (legs, torso, studs, shoes, prop) and Item_dress / Item_cape / Item_labcoat / Item_boots (Luna), Item_pethats
-  FacePlate is UV mapped 0..1 (u across, v up) with a placeholder material the runtime replaces by the portrait texture.
-All other meshes carry vertex colours (COLOR_0) on one shared material "figure".
+Scene contract: Head, ArmL, ArmR, Tail and Item_* retain their original pivots.
+Face_happy / Face_surprised / Face_silly are parent empties beneath Head.
+Faces use opaque base-colour materials and actual mesh geometry; no images or UVs.
+Existing body, hair and clothing retain the shared vertex-colour material.
 """
 import json
 import math
@@ -254,31 +251,6 @@ def head_shape(s, segs=64):
     return lathe(head_profile(s), segs, zs=s["depth"])
 
 
-def plate_shape(s, y_lo, y_hi, arc_w, off=0.012, nx=32, ny=16, bumps=()):
-    """Face plate on the exact head profile (uv 0..1, u across, v up) a hair above the skin."""
-    prof = head_profile(s, 2.0)
-    verts, uvs = [], []
-    for i in range(ny + 1):
-        v = i / ny
-        y = y_lo + (y_hi - y_lo) * v
-        rho0 = profile_radius(prof, y) + off
-        for j in range(nx + 1):
-            u = j / nx
-            rho = rho0 + sum(a * math.exp(-(((u - u0) / su) ** 2 + ((v - v0) / sv) ** 2)) for u0, v0, su, sv, a in bumps)
-            th = (u - 0.5) * (arc_w / s["r"])
-            verts.append((math.sin(th) * rho, y, math.cos(th) * rho * s["depth"]))
-            uvs.append((u, v))
-    faces = []
-    row = nx + 1
-    for i in range(ny):
-        for j in range(nx):
-            a = i * row + j
-            faces.append((a, a + 1, a + row + 1, a + row))
-    sh = Shape(verts, faces, closed=False)
-    sh.uvs = uvs
-    return sh
-
-
 def hair_cap(s, hairline, thick, top_thick=None, wave=None, cols=64, rows=18):
     """Continuous hair shell with a shaped hairline (high at the forehead, dipping over ears / nape)."""
     src = [p for p in head_profile(s, 2.0) if p[1] > -s["h"] / 2 + s["bevel"] * 0.5]
@@ -462,17 +434,7 @@ def make_materials(skin):
     bsdf.inputs["Roughness"].default_value = 0.35
     bsdf.inputs["Metallic"].default_value = 0.0
 
-    plate = bpy.data.materials.new("FacePlatePlaceholder")
-    plate.use_nodes = True
-    pb = plate.node_tree.nodes["Principled BSDF"]
-    img = bpy.data.images.new("portrait_placeholder", 4, 4)
-    img.pixels = list(hex_linear(skin)) * 16
-    img.pack()
-    tex = plate.node_tree.nodes.new("ShaderNodeTexImage")
-    tex.image = img
-    plate.node_tree.links.new(tex.outputs["Color"], pb.inputs["Base Color"])
-    pb.inputs["Roughness"].default_value = 0.4
-    return fig, plate
+    return fig
 
 
 # ----------------------------------------------------------------------------- people
@@ -499,8 +461,8 @@ def c_hand(R, tube, sweep=math.radians(250)):
 
 
 def person_parts(fid, f, root, mats):
-    figure_mat, plate_mat = mats
-    skin, body_c = f.get("portraitSkin", f["skinTone"]), f["bodyColor"]  # head matches the portrait so the plate blends in
+    figure_mat = mats
+    skin, body_c = f["skinTone"], f["bodyColor"]
     hc, hcl = f["hairColor"], lighten(f["hairColor"], 0.16)
     leg_h = f["legH"]
     base = 0.2 + leg_h
@@ -595,7 +557,7 @@ def person_parts(fid, f, root, mats):
 
     if style == "bald":
         Hd.add(sphere(0.13, 0.04, 0.09, 16, 8), lighten(skin, 0.28), (0.13, top - 0.035, 0.16), rot=(0.3, 0, -0.3))
-        Hd.add(jaw_shell(HEAD, -0.5, -0.33, 1.3, 0.04), hc)
+        Hd.add(jaw_shell(HEAD, -0.445, -0.16, 1.65, 0.035), hc)
         Hd.add(sphere(0.1, 0.04, 0.07, 18, 10), mix(hc, "#9AA0A6", 0.45), (0, -0.47, 0.38), rot=(0.25, 0, 0))
     elif style == "wavy-short":
         Hd.add(hair_cap(HEAD, hl(0.27, 0.03, -0.14), 0.035, 0.05, (0.012, 6, 14)), hc)
@@ -632,21 +594,19 @@ def person_parts(fid, f, root, mats):
         Hd.add(sphere(0.2, 0.19, 0.2, 24, 14), hcl, (0, top + 0.1, -0.26))
         Hd.add(torus(0.13, 0.035, TAU, 24, 8), "#FF5CA8", (0, top + 0.04, -0.24), rot=(math.pi / 2 - 0.5, 0, 0))
         # tiara
-        tilt = -0.38
-        Hd.add(tiara_band(), "#E4ECF9", (0, 0.1, 0.13), rot=(tilt, 0, 0))
+        tilt = -0.10
+        Hd.add(tiara_band(), "#E4ECF9", (0, 0.1, 0.49), rot=(tilt, 0, 0))
         for i in range(5):
             an = math.pi / 2 + ((i - 2) / 2.0) * (1.1 - 0.2)
             big = 1 - abs(i - 2) * 0.22
             x, y = math.cos(an) * 0.4, math.sin(an) * 0.4 + 0.07 * big
             c, s_ = math.cos(tilt), math.sin(tilt)
-            Hd.add(cone(0.04, 0.16 * big + 0.04, 12), "#E4ECF9", (x, 0.1 + y * c, 0.13 + y * s_), rot=(tilt, 0, an - math.pi / 2))
-        Hd.add(sphere(0.05, 0.05, 0.04, 14, 8), "#FF3E96", (0, 0.1 + 0.41 * math.cos(tilt), 0.13 + 0.41 * math.sin(tilt) + 0.015))
+            Hd.add(cone(0.04, 0.16 * big + 0.04, 12), "#E4ECF9", (x, 0.1 + y * c, 0.49 + y * s_), rot=(tilt, 0, an - math.pi / 2))
+        Hd.add(sphere(0.05, 0.05, 0.04, 14, 8), "#FF3E96", (0, 0.1 + 0.41 * math.cos(tilt), 0.49 + 0.41 * math.sin(tilt) + 0.015))
     if f["accessory"] == "visor":
         visor_parts(Hd, "#E63946")
     Hd.finish(head, figure_mat)
-    fp = Role("FacePlate")
-    fp.add(plate_shape(HEAD, SPEC["plate"]["yLo"], SPEC["plate"]["yHi"], SPEC["plate"]["arc"]), skin)
-    fp_ob = fp.finish(head, plate_mat)
+    face_parts(fid, f, head, HEAD)
 
     # ---------------- Luna's closet: garments as separate named, toggleable meshes
     if fid == "luna":
@@ -797,7 +757,7 @@ def star_shape(radius, depth=0.05):
 
 # ----------------------------------------------------------------------------- pets
 def pet_parts(fid, f, root, mats):
-    figure_mat, plate_mat = mats
+    figure_mat = mats
     skin = f["bodyColor"]
     body_c, out_c = f["bodyColor"], f["outfitColor"]
     hy, hz = f["headY"], f["headZ"]
@@ -860,21 +820,7 @@ def pet_parts(fid, f, root, mats):
     hat.add(torus(0.18, 0.035, TAU, 24, 8), "#FFFFFF", (0, top - hy - 0.1, -0.045), rot=(math.pi / 2 + 0.15, 0, 0.1))
     hat.add(sphere(0.08, 0.08, 0.08, 14, 8), "#FFD60A", (0.05, top - hy + 0.4, -0.1))
     hat.finish(head, figure_mat)
-    fp = Role("FacePlate")
-    pd = f["plateH"]
-    # the portrait bulges where the muzzle / cheeks are, with a body-coloured volume behind it
-    bumps = [(0.5, 0.36, 0.2, 0.2, 0.09)] if dog else [(0.5, 0.3, 0.16, 0.16, 0.05), (0.33, 0.3, 0.12, 0.14, 0.035), (0.67, 0.3, 0.12, 0.14, 0.035)]
-    fp.add(plate_shape(spec, -0.02 - pd / 2, -0.02 + pd / 2, f["plateW"], bumps=bumps), skin)
-    my = -0.02 - pd / 2 + pd * 0.34
-    mz = plate_z(my) + (0.0 if dog else -0.01)
-    Hm = Role("HeadMuzzle")
-    if dog:
-        Hm.add(sphere(0.15, 0.11, 0.12, 24, 14), out_c, (0, my, mz - 0.07))
-    else:
-        for sx in (-1, 0, 1):
-            Hm.add(sphere(0.09, 0.07, 0.07, 20, 12), body_c, (sx * 0.1, my, mz - 0.05))
-    Hm.finish(head, figure_mat)
-    fp.finish(head, plate_mat)
+    face_parts(fid, f, head, spec)
 
     tail_pivot = (0, 0.7, -0.5) if dog else (0, 0.55, -0.4)
     tail = empty("Tail", root, tail_pivot)
@@ -886,6 +832,175 @@ def pet_parts(fid, f, root, mats):
         T.add(tube([(0, 0, 0), (0, 0.16, -0.08), (0, 0.36, -0.12), (0, 0.56, -0.1), (0, 0.74, -0.02)], lambda t: 0.07 + 0.13 * math.sin(math.pi * min(1, t * 0.9 + 0.1)), 32, 14), body_c)
         T.add(sphere(0.09, 0.1, 0.09, 14, 8), patch, (0, 0.75, -0.02))
     T.finish(tail, figure_mat)
+
+
+# ----------------------------------------------------------------------------- opaque geometry faces
+def face_material(color):
+    name = "FaceInk_" + color.lstrip("#")
+    mat = bpy.data.materials.get(name)
+    if mat is None:
+        mat = bpy.data.materials.new(name)
+        mat.use_nodes = True
+        mat.diffuse_color = hex_linear(color)
+        shader = mat.node_tree.nodes["Principled BSDF"]
+        shader.inputs["Base Color"].default_value = hex_linear(color)
+        shader.inputs["Roughness"].default_value = 0.78
+    return mat
+
+
+def face_parts(fid, f, head, spec):
+    """Shallow ink-like relief, projected onto the skull rather than a face plate.
+
+    Batch disconnected features by colour within each expression to keep GLBs small.
+    No vertex colour attribute remains on face meshes: baseColorFactor is authoritative.
+    """
+    prof = head_profile(spec, 2.0)
+    scale = spec["r"] / HEAD["r"]
+    pet = f["kind"] == "pet"
+    cat = f.get("species") == "cat"
+    ink = SPEC["faceStyle"]["ink"]
+
+    def surface(x, y, offset=0.012):
+        r = profile_radius(prof, y)
+        return math.sqrt(max(0.001, r * r - x * x)) * spec["depth"] + offset
+
+    for expression in ("happy", "surprised", "silly"):
+        group = empty("Face_" + expression, head, (0, 0, 0))
+        group["expression"] = expression
+        roles = {}
+
+        def add(sh, color):
+            if color not in roles:
+                roles[color] = Role("Ink_" + expression + "_" + color.lstrip("#"))
+            roles[color].add(sh, color)
+
+        def oval(x, y, rx, ry, color, offset=0.013, depth=0.008):
+            sh = sphere(rx * scale, ry * scale, depth * scale, 24, 10)
+            sh.verts = [(vx + x * scale, vy + y * scale,
+                         surface(vx + x * scale, vy + y * scale, offset) + vz)
+                        for vx, vy, vz in sh.verts]
+            add(sh, color)
+
+        def line(points, color=ink, radius=0.012, offset=0.019):
+            pts = [(x * scale, y * scale, surface(x * scale, y * scale, offset)) for x, y in points]
+            sh = tube(pts, lambda t: radius * scale, 18, 6)
+            sh.mods = []
+            add(sh, color)
+
+        surprised = expression == "surprised"
+        silly = expression == "silly"
+        ey = 0.055
+        for side in (-1, 1):
+            x = side * 0.195
+            if silly and side == 1:
+                line([(x - 0.074, ey - 0.006), (x, ey + 0.033), (x + 0.074, ey - 0.006)], radius=0.016)
+            else:
+                oval(x, ey, 0.095 if surprised else 0.084, 0.117 if surprised else 0.103, ink)
+                if cat:
+                    oval(x, ey, 0.076 if surprised else 0.066, 0.098 if surprised else 0.083, "#B9BD55", offset=0.025)
+                    oval(x, ey, 0.036, 0.065, ink, offset=0.036)
+                oval(x - 0.022, ey + 0.036, 0.025, 0.029, "#FFFFFF", offset=0.05 if cat else 0.028, depth=0.004)
+                if fid == "luna":
+                    for n in range(2):
+                        line([(x + side * 0.052, ey + 0.042 + n * 0.021),
+                              (x + side * (0.094 + n * 0.009), ey + 0.066 + n * 0.033)], radius=0.010)
+            by = (0.171 if surprised else 0.139) if fid == "darian" else (0.226 if surprised else 0.196)
+            line([(x + t * 0.062, by + 0.013 * (1 - t * t)) for t in (-1, -0.5, 0, 0.5, 1)], radius=0.011)
+            oval(side * 0.315, -0.098, 0.071, 0.038, SPEC["faceStyle"]["blush"], offset=0.006, depth=0.003)
+
+        if pet:
+            # A real muzzle volume, shallow enough to retain the printed toy character.
+            for side in (-1, 1):
+                oval(side * 0.074, -0.139, 0.102, 0.077, "#D9C5A5", offset=0.025, depth=0.029)
+            oval(0, -0.071, 0.068 if cat else 0.089, 0.043 if cat else 0.06,
+                 "#EF91AB" if cat else "#151D29", offset=0.071, depth=0.035)
+            mouth_offset = 0.068
+        else:
+            oval(0, -0.084, 0.028, 0.024, lighten(f["skinTone"], 0.07), depth=0.016)
+            mouth_offset = 0.065 if fid == "dad" else 0.019
+
+        my = -0.206 if pet else -0.22
+        if fid == "dad":
+            oval(0, my + 0.002, 0.146, 0.092, f["skinTone"], offset=0.056, depth=0.005)
+        if surprised:
+            oval(0, my, 0.067, 0.073, ink, offset=mouth_offset)
+        else:
+            line([(-0.115, my + 0.035), (-0.063, my - 0.011), (0.013, my - 0.024),
+                  (0.077, my - 0.003), (0.12, my + (0.055 if silly else 0.035))],
+                 radius=0.014, offset=mouth_offset)
+            if silly:
+                oval(0.05, my - 0.047, 0.042, 0.064, "#F47EAB", offset=mouth_offset + 0.014)
+                line([(0.05, my - 0.023), (0.05, my - 0.06)], "#CB527D", radius=0.004, offset=mouth_offset + 0.026)
+        for color, role in roles.items():
+            ob = role.finish(group, face_material(color))
+            for attr in list(ob.data.color_attributes):
+                ob.data.color_attributes.remove(attr)
+
+
+def render_review(root, fid, directory):
+    """Six-view turntable: happy/surprised/silly, front and 30-degree views.
+
+    Review copies are created after export and discarded by the next factory reset.
+    """
+    scene = bpy.context.scene
+    originals = [root] + list(root.children_recursive)
+    for ob in originals:
+        ob.hide_render = True
+    pet = SPEC["figures"][fid]["kind"] == "pet"
+    spacing = 1.85
+    for row, angle in enumerate((0, math.radians(30))):
+        for col, expression in enumerate(("happy", "surprised", "silly")):
+            mapping = {}
+            for ob in originals:
+                clone = ob.copy()
+                scene.collection.objects.link(clone)
+                mapping[ob] = clone
+            for ob, clone in mapping.items():
+                clone.parent = mapping.get(ob.parent)
+                ancestors = [ob]
+                parent = ob.parent
+                while parent:
+                    ancestors.append(parent)
+                    parent = parent.parent
+                clone.hide_render = any(a.name.startswith("Item_") or
+                    (a.name.startswith("Face_") and a.name != "Face_" + expression)
+                    for a in ancestors)
+            copy_root = mapping[root]
+            copy_root.location = ((col - 1) * spacing, -row * (1.85 if pet else 2.95), 0)
+            copy_root.rotation_euler[1] = angle
+    center = Vector((0, -0.18 if pet else -0.25, 0))
+    cam_data = bpy.data.cameras.new("ReviewCamera")
+    cam = bpy.data.objects.new("ReviewCamera", cam_data)
+    scene.collection.objects.link(cam)
+    cam.location = center + Vector((0, 0, 12))
+    cam.rotation_euler = (0, 0, 0)
+    cam_data.type = 'ORTHO'
+    cam_data.ortho_scale = 6.05
+    scene.camera = cam
+    for name, pos, power, size in (("Key", (-3, 5, 7), 420, 5),
+                                    ("Fill", (4, 1, 5), 240, 4),
+                                    ("Rim", (0, 4, -4), 350, 3)):
+        data = bpy.data.lights.new(name, 'AREA')
+        data.energy, data.shape, data.size = power, 'DISK', size
+        light = bpy.data.objects.new(name, data)
+        scene.collection.objects.link(light)
+        light.location = pos
+        light.rotation_euler = (center - light.location).to_track_quat('-Z', 'Y').to_euler()
+    scene.world = bpy.data.worlds.new("ReviewWorld")
+    scene.world.use_nodes = True
+    scene.world.node_tree.nodes['Background'].inputs[0].default_value = (0.65, 0.7, 0.8, 1)
+    scene.world.node_tree.nodes['Background'].inputs[1].default_value = 0.35
+    scene.render.engine = 'CYCLES'
+    scene.cycles.samples = 12
+    scene.cycles.use_denoising = True
+    scene.render.resolution_x = 1100
+    scene.render.resolution_y = 1100
+    scene.render.resolution_percentage = 100
+    scene.view_settings.view_transform = 'Standard'
+    scene.render.image_settings.file_format = 'PNG'
+    os.makedirs(directory, exist_ok=True)
+    scene.render.filepath = os.path.join(directory, fid + '.png')
+    bpy.ops.render.render(write_still=True)
 
 
 # ----------------------------------------------------------------------------- driver
@@ -912,7 +1027,7 @@ def export(root, path):
         export_lights=False,
         export_materials="EXPORT",
         export_normals=True,
-        export_texcoords=True,
+        export_texcoords=False,
         export_vertex_color="NAME",
         export_vertex_color_name="Col",
         export_all_vertex_colors=False,
@@ -932,6 +1047,7 @@ def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     out = os.path.join(ROOT, "public", "models")
     only = None
+    review = None
     i = 0
     while i < len(argv):
         if argv[i] == "--out":
@@ -939,6 +1055,9 @@ def main():
             i += 2
         elif argv[i] == "--only":
             only = set(argv[i + 1].split(","))
+            i += 2
+        elif argv[i] == "--review":
+            review = os.path.abspath(argv[i + 1])
             i += 2
         else:
             i += 1
@@ -956,6 +1075,10 @@ def main():
         export(root, path)
         tris = sum(len(o.data.polygons) for o in bpy.data.objects if o.type == "MESH")
         print("EXPORTED %s -> %s (%d bytes, ~%d polys)" % (fid, path, os.path.getsize(path), tris))
+        if os.path.getsize(path) >= 300_000:
+            raise RuntimeError("GLB exceeds 300 KB: " + path)
+        if review:
+            render_review(root, fid, review)
 
 
 main()

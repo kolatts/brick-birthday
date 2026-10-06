@@ -6,11 +6,14 @@ import { installUnlockOnFirstTap } from './audio/engine';
 import { installTestHooks } from './test/hooks';
 import { installUiScale } from './ui/scale';
 import { applyResetParam } from './state/reset';
+import { preloadModel } from './three/Model';
 
 installUnlockOnFirstTap();
 installUiScale();
 applyResetParam();
 installTestHooks();
+// The title-screen figure must never show a blank face: warm Luna's model before first paint.
+preloadModel('luna');
 
 const turntable = new URLSearchParams(location.search).get('turntable');
 if (turntable && (import.meta.env.DEV || new URLSearchParams(location.search).get('test') === '1')) {

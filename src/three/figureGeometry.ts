@@ -452,3 +452,98 @@ export function arcBand(R: number, tube: number, arc: number, d: Detail): THREE.
   g.deleteAttribute('uv');
   return g;
 }
+
+/* ------------------------------------------------------------------ face decals ---------- */
+
+/** Maps (arc x, height y, lift) on the head front to a point on the head surface (same profile and depth as the lathe). */
+export function surfacePoint(s: HeadSpec, prof: THREE.Vector2[], x: number, y: number, off: number): THREE.Vector3 {
+  const th = x / s.r;
+  const rho = profileRadius(prof, y) + off;
+  return new THREE.Vector3(Math.sin(th) * rho, y, Math.cos(th) * rho * s.depth);
+}
+
+function decalFinish(pos: number[], idx: number[]): THREE.BufferGeometry {
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
+
+/** Flat ellipse printed on the head surface, lifted `off` above it. */
+export function decalEllipse(s: HeadSpec, d: Detail, x: number, y: number, rx: number, ry: number, off: number): THREE.BufferGeometry {
+  const prof = headProfile(s, 'high');
+  const ns = pick(d, 20, 12);
+  const nr = pick(d, 3, 2);
+  const pos: number[] = [];
+  const c = surfacePoint(s, prof, x, y, off);
+  pos.push(c.x, c.y, c.z);
+  for (let i = 1; i <= nr; i++) {
+    for (let j = 0; j < ns; j++) {
+      const t = (j / ns) * Math.PI * 2;
+      const k = i / nr;
+      const p = surfacePoint(s, prof, x + Math.cos(t) * rx * k, y + Math.sin(t) * ry * k, off);
+      pos.push(p.x, p.y, p.z);
+    }
+  }
+  const idx: number[] = [];
+  for (let j = 0; j < ns; j++) idx.push(0, 1 + j, 1 + ((j + 1) % ns));
+  for (let i = 1; i < nr; i++) {
+    for (let j = 0; j < ns; j++) {
+      const a = 1 + (i - 1) * ns + j, b = 1 + (i - 1) * ns + ((j + 1) % ns), c2 = a + ns, e = b + ns;
+      idx.push(a, c2, e, a, e, b);
+    }
+  }
+  return decalFinish(pos, idx);
+}
+
+/** Thin curved stroke (brows, smiles, lashes) along points given left to right. */
+export function decalStrip(s: HeadSpec, pts: [number, number][], halfW: number, off: number): THREE.BufferGeometry {
+  const prof = headProfile(s, 'high');
+  const pos: number[] = [];
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)];
+    const dx = b[0] - a[0], dy = b[1] - a[1];
+    const l = Math.hypot(dx, dy) || 1;
+    const nx = -dy / l, ny = dx / l;
+    const w = halfW * (i === 0 || i === pts.length - 1 ? 0.6 : 1);
+    for (const sg of [1, -1]) {
+      const p = surfacePoint(s, prof, pts[i][0] + nx * w * sg, pts[i][1] + ny * w * sg, off);
+      pos.push(p.x, p.y, p.z);
+    }
+  }
+  const idx: number[] = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const L0 = i * 2, R0 = L0 + 1, L1 = L0 + 2, R1 = L0 + 3;
+    idx.push(L0, R0, R1, L0, R1, L1);
+  }
+  return decalFinish(pos, idx);
+}
+
+/** Soft beard shell on the lower face (thickest at the chin, feathered at the edges, slightly rough). */
+export function jawShellGeometry(s: HeadSpec, d: Detail, yLo: number, yHi: number, half: number, thick: number): THREE.BufferGeometry {
+  const prof = headProfile(s, 'high');
+  const cols = pick(d, 36, 18), rows = pick(d, 9, 5);
+  const pos: number[] = [];
+  for (let c = 0; c <= cols; c++) {
+    const phi = -half + (2 * half * c) / cols;
+    const edge = 1 - smooth(half * 0.55, half, Math.abs(phi));
+    for (let r = 0; r <= rows; r++) {
+      const y = yLo + ((yHi - yLo) * r) / rows;
+      const vy = smooth(yLo, yLo + 0.07, y) * (1 - smooth(yHi - 0.1, yHi, y));
+      const chin = 0.045 * Math.exp(-((phi / 0.7) ** 2)) * (1 - smooth(yLo + 0.05, yHi - 0.02, y));
+      const nz = (Math.sin(phi * 23 + y * 31) * 0.5 + Math.sin(phi * 11 - y * 47) * 0.5) * 0.008;
+      const rho = profileRadius(prof, y) + 0.006 + (thick * vy + chin + nz) * edge;
+      pos.push(Math.sin(phi) * rho, y, Math.cos(phi) * rho * s.depth);
+    }
+  }
+  const idx: number[] = [];
+  const row = rows + 1;
+  for (let c = 0; c < cols; c++) {
+    for (let r = 0; r < rows; r++) {
+      const a = c * row + r, b = (c + 1) * row + r;
+      idx.push(a, b, a + 1, b, b + 1, a + 1);
+    }
+  }
+  return decalFinish(pos, idx);
+}

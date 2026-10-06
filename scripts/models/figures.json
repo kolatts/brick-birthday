@@ -10,11 +10,6 @@
     "cheek": 0.03,
     "cheekY": -0.2
   },
-  "plate": {
-    "yLo": -0.4,
-    "yHi": 0.34,
-    "arc": 0.85
-  },
   "torso": {
     "h": 0.82,
     "wTop": 1.02,
@@ -41,8 +36,7 @@
       "accessory": "tiara",
       "pants": "#FF8FC3",
       "shoes": "#E63C8F",
-      "legH": 0.34,
-      "portraitSkin": "#C27B4E"
+      "legH": 0.34
     },
     "mom": {
       "kind": "person",
@@ -53,8 +47,7 @@
       "accessory": "sunglasses",
       "pants": "#FFF1D6",
       "shoes": "#FFD60A",
-      "legH": 0.5,
-      "portraitSkin": "#E4A577"
+      "legH": 0.5
     },
     "dad": {
       "kind": "person",
@@ -65,8 +58,7 @@
       "accessory": "guitar",
       "pants": "#1D2A44",
       "shoes": "#6B4423",
-      "legH": 0.52,
-      "portraitSkin": "#884D30"
+      "legH": 0.52
     },
     "julian": {
       "kind": "person",
@@ -77,8 +69,7 @@
       "accessory": "sunglasses",
       "pants": "#26407A",
       "shoes": "#FFFFFF",
-      "legH": 0.48,
-      "portraitSkin": "#EDB586"
+      "legH": 0.48
     },
     "darian": {
       "kind": "person",
@@ -89,8 +80,7 @@
       "accessory": "visor",
       "pants": "#5B8DEF",
       "shoes": "#E63946",
-      "legH": 0.48,
-      "portraitSkin": "#E8B78D"
+      "legH": 0.48
     },
     "rudolph": {
       "kind": "pet",
@@ -102,10 +92,7 @@
       "headZ": 0.48,
       "headR": 0.4,
       "headH": 0.64,
-      "headDepth": 0.88,
-      "plateW": 0.78,
-      "plateH": 0.56,
-      "portraitFur": "#E3BB89"
+      "headDepth": 0.88
     },
     "jinglebells": {
       "kind": "pet",
@@ -117,10 +104,11 @@
       "headZ": 0.38,
       "headR": 0.36,
       "headH": 0.58,
-      "headDepth": 0.88,
-      "plateW": 0.7,
-      "plateH": 0.52,
-      "portraitFur": "#AB996E"
+      "headDepth": 0.88
     }
+  },
+  "faceStyle": {
+    "ink": "#1D2A44",
+    "blush": "#FF9EC4"
   }
 }

@@ -36,6 +36,11 @@ interface ModelProps {
   render?: (scene: THREE.Object3D) => ReactNode;
 }
 
+/** Warm a glb (and the Draco decoder) before it is first rendered, e.g. the title-screen figure. */
+export function preloadModel(name: string): void {
+  if (availableModels.includes(name)) useGLTF.preload(url(name));
+}
+
 /** Swap procedural props for .glb files with no code changes: list the file in src/config/models.ts. */
 export function Model({ name, fallback, render }: ModelProps) {
   if (!availableModels.includes(name)) return <>{fallback}</>;

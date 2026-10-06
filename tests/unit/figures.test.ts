@@ -3,8 +3,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { availableModels } from '../../src/config/models';
 import * as THREE from 'three';
-import { PET_IDS, humanArm, humanBody, humanPlateGeometry, petBody, petPlateGeometry, petTail } from '../../src/three/avatarParts';
+import { PET_IDS, humanArm, humanBody, petBody, petTail, HUMAN_HEAD, petHeadSpec, petDims } from '../../src/three/avatarParts';
 import { mergeParts } from '../../src/three/merge';
+import { faceParts } from '../../src/three/faceParts';
+import { EXPRESSIONS } from '../../src/types';
 import { family } from '../../src/config/family';
 import { closetItems, toggleEquipped } from '../../src/config/closet';
 import type { PersonId } from '../../src/types';
@@ -68,11 +70,18 @@ describe('procedural figures', () => {
     expect(tris(g) + 2 * tris(mergeParts(humanArm('luna', 'high', all)))).toBeLessThan(15000); // everything worn at once, procedural fallback
   });
 
-  it('face plates follow the head and have uvs', () => {
-    for (const g of [humanPlateGeometry(), petPlateGeometry('rudolph'), petPlateGeometry('jinglebells')]) {
-      expect(g.getAttribute('uv')).toBeTruthy();
+  it.each(ids)('%s: every expression has its own printed face geometry', (id) => {
+    const pet = PET_IDS.includes(id);
+    const spec = pet ? petHeadSpec(id) : HUMAN_HEAD;
+    const at: [number, number, number] = [0, 0, pet ? petDims(id).headZ : 0];
+    const sets = EXPRESSIONS.map((x) => mergeParts(faceParts(id, x, spec, at, 'high')));
+    for (const g of sets) {
       checkGeometry(g);
+      expect(tris(g)).toBeGreaterThan(40);
+      expect(tris(g)).toBeLessThan(1500);
     }
+    // surprised / silly differ from happy
+    expect(new Set(sets.map((g) => tris(g))).size).toBeGreaterThan(1);
   });
 });
 
@@ -111,5 +120,22 @@ describe('closet slots', () => {
   it('toggling removes a worn item and replaces anchor clashes', () => {
     expect(toggleEquipped(['bow'], 'bow')).toEqual([]);
     expect(toggleEquipped([], 'nope')).toEqual([]);
+  });
+});
+
+describe('glb face groups', () => {
+  /** Node names in a glb's JSON chunk. */
+  const nodeNames = (file: string): string[] => {
+    const b = fs.readFileSync(file);
+    const len = b.readUInt32LE(12);
+    return (JSON.parse(b.subarray(20, 20 + len).toString('utf8')) as { nodes: { name?: string }[] }).nodes.map((n) => n.name ?? '');
+  };
+  it('each listed glb that has been rebuilt with faces carries Face_happy / Face_surprised / Face_silly (older glbs are skipped)', () => {
+    for (const name of availableModels) {
+      const names = nodeNames(path.join('public', 'models', `${name}.glb`));
+      if (!names.some((n) => n.startsWith('Face_'))) continue; // pre-3D-face build: Avatar falls back to nothing special, rebuild pending
+      for (const x of EXPRESSIONS) expect(names, `${name} Face_${x}`).toContain(`Face_${x}`);
+      expect(names).toContain('Head');
+    }
   });
 });

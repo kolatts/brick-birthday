@@ -3,7 +3,7 @@ import type { PersonId } from '../types';
 import { family } from '../config/family';
 import type { Part } from './merge';
 import {
-  arcBand, bandGeometry, beardGeometry, brimGeometry, capeGeometry, cHandGeometry, footGeometry, hairCapGeometry, headGeometry, headPlateGeometry,
+  arcBand, bandGeometry, jawShellGeometry, brimGeometry, capeGeometry, cHandGeometry, footGeometry, hairCapGeometry, headGeometry,
   headProfile, panelGeometry, pick, profileRadius, skirtGeometry, smooth, studGeometry, taperedTube, torsoGeometry,
   type Detail, type HeadSpec,
 } from './figureGeometry';
@@ -64,13 +64,6 @@ export function humanDims(id: PersonId): HumanDims {
 
 /** Shared head sculpt for the five people (fuller cheeks, soft rim). */
 export const HUMAN_HEAD: HeadSpec = { r: 0.5, h: 0.92, depth: 0.92, bevel: 0.13, topBevel: 0.22, cheek: 0.03, cheekY: -0.2 };
-const PLATE_Y: [number, number] = [-0.4, 0.34];
-const PLATE_ARC = 0.85;
-
-export function humanPlateGeometry(d: Detail = 'high'): THREE.BufferGeometry {
-  return headPlateGeometry(HUMAN_HEAD, d, PLATE_Y[0], PLATE_Y[1], PLATE_ARC);
-}
-
 const geo = (g: THREE.BufferGeometry, p: [number, number, number], c: string, rot?: [number, number, number], sc?: [number, number, number]): Part => ({
   k: 'geo', g, p, s: [1, 1, 1], c, rot, sc,
 });
@@ -127,8 +120,8 @@ export function humanBody(id: PersonId, equipped: string[], d: Detail = 'high'):
     case 'bald':
       P.push({ k: 'sph', p: [0.13, T(top - 0.035), 0.16], s: [0.13, 0.04, 0.09], c: lighten(a.skinTone, 0.28), rot: [0.3, 0, -0.3] }); // sheen
       // short soft beard hugging the jaw under the face plate, with a salt-and-pepper chin
-      P.push(geo(beardGeometry(0.455, 0.085, 3.7, H.depth, d), [0, T(-0.335), 0], hc));
-      P.push({ k: 'sph', p: [0, T(-0.43), 0.34], s: [0.17, 0.07, 0.11], c: mixGray(hc), rot: [0.25, 0, 0] });
+      P.push(geo(jawShellGeometry(H, d, -0.5, -0.12, 1.3, 0.035), [0, hy, 0], hc));
+      P.push({ k: 'sph', p: [0, T(-0.47), 0.38], s: [0.1, 0.04, 0.07], c: mixGray(hc), rot: [0.25, 0, 0] });
       break;
     case 'wavy-short':
       cap(hl(0.27, 0.03, -0.14), 0.04, 0.07, { amp: 0.018, around: 6, up: 14 });
@@ -329,11 +322,6 @@ export function petDims(id: PersonId): PetDims {
 export function petHeadSpec(id: PersonId): HeadSpec {
   const p = petDims(id);
   return { r: p.headR, h: p.headH, depth: p.headScaleZ, bevel: 0.29, topBevel: 0.3, cheek: id === 'rudolph' ? 0.02 : 0.035, cheekY: -0.1 };
-}
-
-export function petPlateGeometry(id: PersonId, d: Detail = 'high'): THREE.BufferGeometry {
-  const p = petDims(id);
-  return headPlateGeometry(petHeadSpec(id), d, -0.02 - p.plateH / 2, -0.02 + p.plateH / 2, p.plateW);
 }
 
 export function petBody(id: PersonId, partyHat: boolean, d: Detail = 'high'): Part[] {

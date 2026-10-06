@@ -1,15 +1,15 @@
-import { useEffect, useMemo, useRef, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, type ReactNode, type RefObject } from 'react';
 import { createPortal, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { Expression, PersonId } from '../types';
-import { family } from '../config/family';
+import { EXPRESSIONS } from '../types';
 import { mergeParts, vertexMat } from './merge';
-import { humanArm, humanBody, humanDims, humanPlateGeometry, isPet, petBody, petDims, petPlateGeometry, petTail, petTailPivot } from './avatarParts';
+import { HUMAN_HEAD, humanArm, humanBody, humanDims, isPet, petBody, petDims, petHeadSpec, petTail, petTailPivot } from './avatarParts';
 import type { Detail } from './figureGeometry';
 import { Model } from './Model';
 import { availableModels } from '../config/models';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { useFaceTexture } from './faces';
+import { faceParts } from './faceParts';
 import { useAvatarExpression, setExpression } from '../state/expressions';
 import { useCloset } from '../state/closet';
 import { sfx } from '../audio/engine';
@@ -36,6 +36,9 @@ function useFigureEnv(): void {
     }
   }, [gl]);
 }
+
+/** Flat printed finish for facial features. */
+const faceMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
 
 const shadowGeo = new THREE.CircleGeometry(1, 36);
 shadowGeo.rotateX(-Math.PI / 2);
@@ -66,7 +69,7 @@ export interface AvatarProps {
   hopRef?: RefObject<{ hop: number } | null>;
 }
 
-/** Brick figure (people) or brick pet. Faces on a flat plate that shows the portrait for the current expression. */
+/** Brick figure (people) or brick pet. The face is geometry (printed-toy eyes, brows, blush, mouth); one expression is visible at a time. */
 export function Avatar(props: AvatarProps) {
   const { id, wave = false, scale = 1, position, rotationY = 0, wand = false, partyHat = false, interactive = true, phase = 0, detail = 'high' } = props;
   useFigureEnv();
@@ -75,14 +78,16 @@ export function Avatar(props: AvatarProps) {
   const equipped = props.equipped ?? (id === 'luna' ? storeEquipped : NO_EQUIP);
   const storeExpr = useAvatarExpression(id);
   const expr = props.expression ?? storeExpr;
-  const tex = useFaceTexture(id, expr);
 
   const equipKey = equipped.join('|');
   const geo = useMemo(() => {
     const body = mergeParts(pet ? petBody(id, partyHat, detail) : humanBody(id, equipped, detail), detail);
     const arm = pet ? null : mergeParts(humanArm(id, detail, equipped), detail);
     const tail = pet ? mergeParts(petTail(id, detail), detail) : null;
-    return { body, arm, tail };
+    const spec = pet ? petHeadSpec(id) : HUMAN_HEAD;
+    const at: V3 = pet ? [0, 0, petDims(id).headZ] : [0, 0, 0];
+    const faces = Object.fromEntries(EXPRESSIONS.map((x) => [x, mergeParts(faceParts(id, x, spec, at, detail), detail)])) as Record<Expression, THREE.BufferGeometry>;
+    return { body, arm, tail, faces };
     // equipped is represented by equipKey
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, pet, partyHat, equipKey, detail]);
@@ -91,30 +96,13 @@ export function Avatar(props: AvatarProps) {
       geo.body.dispose();
       geo.arm?.dispose();
       geo.tail?.dispose();
+      EXPRESSIONS.forEach((x) => geo.faces[x].dispose());
     },
     [geo],
   );
 
   const dims = pet ? null : humanDims(id);
   const pd = pet ? petDims(id) : null;
-  const plate = useMemo(() => (pet ? petPlateGeometry(id, detail) : humanPlateGeometry(detail)), [pet, id, detail]);
-  useEffect(() => () => plate.dispose(), [plate]);
-  // Portraits have transparent backgrounds: let the skin-coloured head show through around the face.
-  const plateMat = useMemo(
-    () => new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.4, metalness: 0, transparent: true, alphaTest: 0.02, depthWrite: false, }),
-    [],
-  );
-  useEffect(() => () => plateMat.dispose(), [plateMat]);
-  useEffect(() => {
-    plateMat.map = tex;
-    plateMat.needsUpdate = true;
-  }, [tex, plateMat]);
-  // before the texture decodes, show the skin / fur colour rather than white
-  const fallbackColor = family[id].avatar.skinTone;
-  useEffect(() => {
-    plateMat.color.set(tex ? '#ffffff' : fallbackColor);
-  }, [tex, plateMat, fallbackColor]);
-
   const inner = useRef<THREE.Group>(null);
   const armL = useRef<THREE.Object3D | null>(null);
   const armR = useRef<THREE.Object3D | null>(null);
@@ -173,7 +161,7 @@ export function Avatar(props: AvatarProps) {
       <mesh geometry={geo.body} material={vertexMat} raycast={noRaycast} />
       {pet && pd && (
         <>
-          <mesh geometry={plate} material={plateMat} position={[0, pd.headY, pd.headZ]} raycast={noRaycast} />
+          <group position={[0, pd.headY, 0]}>{FaceMeshes(geo.faces, expr)}</group>
           <group ref={tailRef} position={petTailPivot(id)}>
             <mesh geometry={geo.tail!} material={vertexMat} raycast={noRaycast} />
           </group>
@@ -181,7 +169,7 @@ export function Avatar(props: AvatarProps) {
       )}
       {!pet && dims && (
         <>
-          <mesh geometry={plate} material={plateMat} position={[0, dims.headY, 0]} raycast={noRaycast} />
+          <group position={[0, dims.headY, 0]}>{FaceMeshes(geo.faces, expr)}</group>
           <group ref={(o) => { armL.current = o; }} position={[-0.66, dims.shoulderY, 0]}>
             <mesh geometry={geo.arm!} material={vertexMat} raycast={noRaycast} />
             {wand && (
@@ -207,7 +195,7 @@ export function Avatar(props: AvatarProps) {
             name={glbName}
             fallback={procedural}
             render={(scene) => (
-              <GlbRig scene={scene} tex={tex} fallbackColor={fallbackColor} equipped={equipped} wand={wand} partyHat={partyHat} refs={{ armL, armR, head: headNode, tail: tailRef }} />
+              <GlbRig scene={scene} expr={expr} procFace={<group position={[0, pet ? pd!.headY : dims!.headY, 0]}>{FaceMeshes(geo.faces, expr)}</group>} equipped={equipped} wand={wand} partyHat={partyHat} refs={{ armL, armR, head: headNode, tail: tailRef }} />
             )}
           />
         ) : (
@@ -226,38 +214,42 @@ interface RigRefs {
   tail: RefObject<THREE.Object3D | null>;
 }
 
-/** A Blender-built figure: portrait on the `FacePlate` mesh, `ArmL`/`ArmR`/`Head`/`Tail` nodes animated, garment/prop nodes toggled. */
-function GlbRig(props: { scene: THREE.Object3D; tex: THREE.Texture | null; fallbackColor: string; equipped: string[]; wand: boolean; partyHat: boolean; refs: RigRefs }) {
-  const { scene, tex, fallbackColor, equipped, wand, partyHat, refs } = props;
-  const mat = useMemo(
-    () => new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.4, metalness: 0, transparent: true, alphaTest: 0.02, depthWrite: false, }),
-    [],
-  );
-  useEffect(() => () => mat.dispose(), [mat]);
-  // glTF uv origin is top-left, so the portrait needs flipY=false (clone shares the decoded image).
-  const faceTex = useMemo(() => {
-    if (!tex) return null;
-    const t = tex.clone();
-    t.flipY = false;
-    t.needsUpdate = true;
-    return t;
-  }, [tex]);
-  useEffect(() => {
-    mat.map = faceTex;
-    mat.color.set(faceTex ? '#ffffff' : fallbackColor);
-    mat.needsUpdate = true;
-    return () => faceTex?.dispose();
-  }, [faceTex, mat, fallbackColor]);
+/** The three face geometries of the procedural figure, only the current expression visible. */
+function FaceMeshes(faces: Record<Expression, THREE.BufferGeometry>, expr: Expression) {
+  return EXPRESSIONS.map((x) => <mesh key={x} geometry={faces[x]} material={faceMat} visible={x === expr} raycast={noRaycast} />);
+}
+
+/** A Blender-built figure: `Face_<expression>` groups toggled, `ArmL`/`ArmR`/`Head`/`Tail` nodes animated, `Item_*` garments/props toggled. */
+function GlbRig(props: { scene: THREE.Object3D; expr: Expression; procFace: ReactNode; equipped: string[]; wand: boolean; partyHat: boolean; refs: RigRefs }) {
+  const { scene, expr, procFace, equipped, wand, partyHat, refs } = props;
+  // glbs built before the 3D faces have no Face_* groups: keep the procedural face (and hide the old portrait plate)
+  const hasFace = useMemo(() => {
+    let found = false;
+    scene.traverse((o) => {
+      if (o.name.startsWith('Face_')) found = true;
+    });
+    scene.traverse((o) => {
+      if (!found && o.name === 'FacePlate') o.visible = false;
+    });
+    return found;
+  }, [scene]);
   const nodes = useMemo(() => {
     scene.traverse((o) => {
       const m = o as THREE.Mesh;
       if (!m.isMesh) return;
       m.raycast = noRaycast;
-      if (o.name === 'FacePlate') m.material = mat;
-      else m.material = vertexMat; // every other mesh: vertex colours + the shared molded-plastic material
+      let inFace = false;
+      for (let p: THREE.Object3D | null = o; p; p = p.parent) if (p.name.startsWith('Face_')) inFace = true;
+      if (inFace) {
+        // printed-toy features keep the glb's own flat material, nudged toward the camera so they never z-fight the skin
+        const fm = m.material as THREE.Material;
+        fm.polygonOffset = true;
+        fm.polygonOffsetFactor = -2;
+        fm.polygonOffsetUnits = -2;
+      } else m.material = vertexMat; // everything else: vertex colours + the shared molded-plastic material
     });
     return { armL: scene.getObjectByName('ArmL') ?? null, armR: scene.getObjectByName('ArmR') ?? null, head: scene.getObjectByName('Head') ?? null, tail: scene.getObjectByName('Tail') ?? null };
-  }, [scene, mat]);
+  }, [scene]);
   useEffect(() => {
     refs.armL.current = nodes.armL;
     refs.armR.current = nodes.armR;
@@ -270,6 +262,12 @@ function GlbRig(props: { scene: THREE.Object3D; tex: THREE.Texture | null; fallb
       refs.tail.current = null;
     };
   }, [nodes, refs]);
+  // only the current expression's face group is visible
+  useEffect(() => {
+    scene.traverse((o) => {
+      if (o.name.startsWith('Face_') && o.parent && !o.parent.name.startsWith('Face_')) o.visible = o.name === `Face_${expr}`;
+    });
+  }, [scene, expr]);
   // toggle named garment / prop nodes (closet slot items are separate meshes in the glb: "Item_<id>")
   useEffect(() => {
     scene.traverse((o) => {
@@ -285,6 +283,7 @@ function GlbRig(props: { scene: THREE.Object3D; tex: THREE.Texture | null; fallb
   return (
     <>
       <primitive object={scene} />
+      {!hasFace && procFace}
       {wand && nodes.armL && createPortal(
         <group position={[0, -0.66, 0.12]} rotation={[1.15 + 0.25, 0, 0]}>
           <Wand scale={0.9} />
