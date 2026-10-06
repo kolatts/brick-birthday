@@ -303,7 +303,7 @@ export function Zone() {
                 const t = s.tiles.find((x) => x.id === picks[s.key]);
                 return (
                   <div key={s.key} style={chip}>
-                    <span style={{ fontSize: f(52) }}>{t?.icon}</span>
+                    {t?.image ? <img src={t.image} alt="" draggable={false} style={{ width: f(64), height: f(64), objectFit: 'contain' }} /> : <span style={{ fontSize: f(52) }}>{t?.icon}</span>}
                     <span style={{ fontSize: f(26), fontWeight: 800 }}>{t?.label}</span>
                   </div>
                 );
@@ -506,7 +506,7 @@ function TileButton({ tile, step, selected, onPick }: { tile: Tile; step: StepKe
         cursor: 'pointer',
       }}
     >
-      <span style={{ fontSize: f(60), lineHeight: 1 }}>{tile.icon}</span>
+      {tile.image ? <img src={tile.image} alt="" draggable={false} style={{ width: f(72), height: f(72), objectFit: 'contain' }} /> : <span style={{ fontSize: f(60), lineHeight: 1 }}>{tile.icon}</span>}
       <span style={{ fontSize: f(26), fontWeight: 800, lineHeight: 1.1 }}>{tile.label}</span>
     </button>
   );

@@ -1,3 +1,4 @@
+import { faceUrl } from '../../state/faces';
 import { family } from '../../config/family';
 import { cameos } from '../../config/cameos';
 
@@ -11,6 +12,8 @@ export interface Hero {
   them: string;
   their: string;
   icon: string;
+  /** Cartoon portrait shown instead of the emoji icon (family and pets). */
+  image?: string;
   label: string;
   /** Short kid-facing blurb (cameos only). */
   blurb?: string;
@@ -19,6 +22,8 @@ export interface Hero {
 export interface Tile {
   id: string;
   icon: string;
+  /** Custom art shown instead of the emoji icon. */
+  image?: string;
   label: string;
   /** Text dropped into story templates. */
   text: string;
@@ -33,13 +38,13 @@ const THEY = { they: 'they', them: 'them', their: 'their' };
 const cameo = (id: 'moon' | 'babylady' | 'cottontail') => cameos.find((c) => c.id === id)!;
 
 export const heroes: Hero[] = [
-  { id: 'luna', name: family.luna.displayName, kind: 'family', ...SHE, icon: '👧', label: 'Luna' },
-  { id: 'mom', name: family.mom.displayName, kind: 'family', ...SHE, icon: '👩', label: 'Mom' },
-  { id: 'dad', name: family.dad.displayName, kind: 'family', ...HE, icon: '🧔', label: 'Daddy' },
-  { id: 'julian', name: family.julian.displayName, kind: 'family', ...HE, icon: '👦', label: 'Julian' },
-  { id: 'darian', name: family.darian.displayName, kind: 'family', ...HE, icon: '🧒', label: 'Darian' },
-  { id: 'rudolph', name: family.rudolph.displayName, kind: 'pet', ...THEY, icon: '🐕', label: 'Rudolph' },
-  { id: 'jinglebells', name: family.jinglebells.displayName, kind: 'pet', ...THEY, icon: '🐈‍⬛', label: 'Jingle Bells' },
+  { id: 'luna', name: family.luna.displayName, kind: 'family', ...SHE, icon: '👧', image: faceUrl('luna', 'happy'), label: 'Luna' },
+  { id: 'mom', name: family.mom.displayName, kind: 'family', ...SHE, icon: '👩', image: faceUrl('mom', 'happy'), label: 'Mom' },
+  { id: 'dad', name: family.dad.displayName, kind: 'family', ...HE, icon: '🧔', image: faceUrl('dad', 'happy'), label: 'Daddy' },
+  { id: 'julian', name: family.julian.displayName, kind: 'family', ...HE, icon: '👦', image: faceUrl('julian', 'happy'), label: 'Julian' },
+  { id: 'darian', name: family.darian.displayName, kind: 'family', ...HE, icon: '🧒', image: faceUrl('darian', 'happy'), label: 'Darian' },
+  { id: 'rudolph', name: family.rudolph.displayName, kind: 'pet', ...THEY, icon: '🐕', image: faceUrl('rudolph', 'happy'), label: 'Rudolph' },
+  { id: 'jinglebells', name: family.jinglebells.displayName, kind: 'pet', ...THEY, icon: '🐈‍⬛', image: faceUrl('jinglebells', 'happy'), label: 'Jingle Bells' },
   { id: 'princessmoon', name: cameo('moon').name, kind: 'cameo', ...cameo('moon').pronouns, icon: '🧜‍♀️', label: 'Princess Moon', blurb: cameo('moon').blurb },
   { id: 'babylady', name: cameo('babylady').name, kind: 'cameo', ...cameo('babylady').pronouns, icon: '🐩', label: 'Baby Lady', blurb: cameo('babylady').blurb },
   { id: 'babyjag', name: cameo('cottontail').name, kind: 'cameo', ...cameo('cottontail').pronouns, icon: '🐆', label: 'Baby Jag', blurb: cameo('cottontail').blurb },
@@ -82,7 +87,7 @@ export const powers: Tile[] = [
   { id: 'sneeze', icon: '🤧', label: 'Sparkle sneeze', text: 'a sparkle sneeze' },
 ];
 
-export const heroTile = (h: Hero): Tile => ({ id: h.id, icon: h.icon, label: h.label, text: h.name });
+export const heroTile = (h: Hero): Tile => ({ id: h.id, icon: h.icon, image: h.image, label: h.label, text: h.name });
 
 export interface Picks {
   hero: string;
