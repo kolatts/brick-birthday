@@ -57,6 +57,13 @@ export interface AvatarProps {
   equipped?: string[];
   /** Luna's wand in the left hand. */
   wand?: boolean;
+  /** A prop held in the right hand (e.g. a racket), rendered at the hand pivot. */
+  holdRight?: ReactNode;
+  /**
+   * Mutable per-frame pose override (no re-render): when `armR` is set it drives the right arm instead of
+   * the idle/wave animation. Axes are the Blender arm's: x = sideways lift, z = forward raise (negative = up).
+   */
+  pose?: { armR: [number, number, number] | null };
   /** Party hat (pets). */
   partyHat?: boolean;
   /** Tap = silly face + pop. Pets pass false and handle taps themselves. */
@@ -71,7 +78,7 @@ export interface AvatarProps {
 
 /** Brick figure (people) or brick pet. The face is geometry (printed-toy eyes, brows, blush, mouth); one expression is visible at a time. */
 export function Avatar(props: AvatarProps) {
-  const { id, wave = false, scale = 1, position, rotationY = 0, wand = false, partyHat = false, interactive = true, phase = 0, detail = 'high' } = props;
+  const { id, wave = false, scale = 1, position, rotationY = 0, wand = false, holdRight, pose, partyHat = false, interactive = true, phase = 0, detail = 'high' } = props;
   useFigureEnv();
   const pet = isPet(id);
   const storeEquipped = useCloset((s) => s.equipped);
@@ -128,7 +135,12 @@ export function Avatar(props: AvatarProps) {
       if (r) {
         // The Blender-built arm pivots lift the arm sideways about X; the procedural arm uses Z.
         const glbArm = r.userData.glb === true;
-        if (wave) {
+        const p = pose?.armR;
+        if (p) {
+          // The procedural arm's sideways/forward axes are swapped relative to the Blender rig.
+          if (glbArm) r.rotation.set(p[0], p[1], p[2]);
+          else r.rotation.set(p[2], p[1], p[0]);
+        } else if (wave) {
           const lift = -(2.3 + Math.sin(t * 7) * 0.35);
           if (glbArm) {
             r.rotation.set(lift, 0, 0);
@@ -188,6 +200,9 @@ export function Avatar(props: AvatarProps) {
           </group>
           <group ref={(o) => { armR.current = o; }} position={[0.66, dims.shoulderY, 0]}>
             <mesh geometry={geo.arm!} material={vertexMat} raycast={noRaycast} />
+            {holdRight && (
+              <group position={[0, -0.66, 0.12]} rotation={[1.15 + 0.25, 0, 0]}>{holdRight}</group>
+            )}
           </group>
         </>
       )}
@@ -203,7 +218,7 @@ export function Avatar(props: AvatarProps) {
             name={glbName}
             fallback={procedural}
             render={(scene) => (
-              <GlbRig scene={scene} expr={expr} procFace={<group position={[0, pet ? pd!.headY : dims!.headY, 0]}>{FaceMeshes(geo.faces, expr)}</group>} equipped={equipped} wand={wand} partyHat={partyHat} refs={{ armL, armR, head: headNode, tail: tailRef }} />
+              <GlbRig scene={scene} expr={expr} procFace={<group position={[0, pet ? pd!.headY : dims!.headY, 0]}>{FaceMeshes(geo.faces, expr)}</group>} equipped={equipped} wand={wand} holdRight={holdRight} partyHat={partyHat} refs={{ armL, armR, head: headNode, tail: tailRef }} />
             )}
           />
         ) : (
@@ -228,8 +243,8 @@ function FaceMeshes(faces: Record<Expression, THREE.BufferGeometry>, expr: Expre
 }
 
 /** A Blender-built figure: `Face_<expression>` groups toggled, `ArmL`/`ArmR`/`Head`/`Tail` nodes animated, `Item_*` garments/props toggled. */
-function GlbRig(props: { scene: THREE.Object3D; expr: Expression; procFace: ReactNode; equipped: string[]; wand: boolean; partyHat: boolean; refs: RigRefs }) {
-  const { scene, expr, procFace, equipped, wand, partyHat, refs } = props;
+function GlbRig(props: { scene: THREE.Object3D; expr: Expression; procFace: ReactNode; equipped: string[]; wand: boolean; holdRight?: ReactNode; partyHat: boolean; refs: RigRefs }) {
+  const { scene, expr, procFace, equipped, wand, holdRight, partyHat, refs } = props;
   // glbs built before the 3D faces have no Face_* groups: keep the procedural face (and hide the old portrait plate)
   const hasFace = useMemo(() => {
     let found = false;
@@ -299,6 +314,10 @@ function GlbRig(props: { scene: THREE.Object3D; expr: Expression; procFace: Reac
           <Wand scale={0.9} />
         </group>,
         nodes.armL,
+      )}
+      {holdRight && nodes.armR && createPortal(
+        <group position={[0, -0.66, 0.12]} rotation={[1.15 + 0.25, 0, 0]}>{holdRight}</group>,
+        nodes.armR,
       )}
     </>
   );

@@ -91,7 +91,7 @@ function BallAndFx() {
 
 function Luna() {
   const g = useRef<THREE.Group>(null);
-  const racket = useRef<THREE.Group>(null);
+  const pose = useRef<{ armR: [number, number, number] | null }>({ armR: null });
   const wave = useTennis((s) => s.lunaCheer);
   useFrame((_, dt) => {
     const sim = getSim();
@@ -99,38 +99,27 @@ function Luna() {
     const tx = sim.phase === 'incoming' ? target : 0;
     if (g.current) g.current.position.x += (tx - g.current.position.x) * Math.min(1, dt * 4);
     const s = swing(sim.clock - sim.lastSwing);
-    if (racket.current) {
-      racket.current.rotation.set(-0.25 - s * 0.9, 0, 0.7 - s * 2.3);
-    }
+    // Forehand: the whole arm sweeps from behind her hip forward and up, racket in hand.
+    pose.current.armR = s > 0 ? [-0.55 - s * 0.6, 0.3 * s, 0.6 - s * 1.5] : wave ? null : [-0.25, 0, 0.45];
   });
   return (
     <group ref={g} position={[0, FLOOR, 7.6]}>
-      <Avatar id="luna" scale={1.25} rotationY={Math.PI + 0.28} interactive={false} wave={wave} />
-      <group position={[0.95, 1.55, -0.1]} rotation={[0, 0.28, 0]}>
-        <group ref={racket} scale={1.25}>
-          <Racket color="#E63946" />
-        </group>
-      </group>
+      <Avatar id="luna" scale={1.25} rotationY={Math.PI + 0.28} interactive={false} wave={wave} pose={pose.current} holdRight={<Racket color="#E63946" />} />
     </group>
   );
 }
 
 function Darian() {
-  const racket = useRef<THREE.Group>(null);
+  const pose = useRef<{ armR: [number, number, number] | null }>({ armR: null });
   const wave = useTennis((s) => s.darianCheer);
   useFrame(() => {
     const sim = getSim();
     const s = sim.phase === 'incoming' && sim.t < 0.34 ? swing(sim.t) : 0;
-    if (racket.current) racket.current.rotation.set(-0.25 - s * 0.9, 0, -0.7 + s * 2.3);
+    pose.current.armR = s > 0 ? [-0.55 - s * 0.6, 0.3 * s, 0.6 - s * 1.5] : wave ? null : [-0.25, 0, 0.45];
   });
   return (
     <group position={[0.2, FLOOR, -7.9]}>
-      <Avatar id="darian" scale={1.2} rotationY={0} interactive={false} wave={wave} />
-      <group position={[-0.95, 1.5, 0.2]}>
-        <group ref={racket} scale={1.2}>
-          <Racket color="#3A86FF" />
-        </group>
-      </group>
+      <Avatar id="darian" scale={1.2} rotationY={0} interactive={false} wave={wave} pose={pose.current} holdRight={<Racket color="#3A86FF" />} />
     </group>
   );
 }
