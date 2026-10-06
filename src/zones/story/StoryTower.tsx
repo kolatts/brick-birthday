@@ -5,6 +5,7 @@ import { safeSfx as sfx } from './ui';
 import { useProgress } from '../../state/progress';
 import { useUi } from '../../state/ui';
 import { Button, palette } from '../../ui/Button';
+import { f, u } from '../../ui/scale';
 import { heroes, heroTile, places, powers, problems, type Picks, type Tile } from './options';
 import { bonusSentence, defaultSeed, generateStory, heroById, storyFragmentsBySentence, titleFragments, type Story } from './generator';
 import { finishStory } from './rewards';
@@ -190,8 +191,8 @@ export function Zone() {
   return (
     <Backdrop testId="zone-screen-story">
       <TowerCanvas picks={picks} hop={hop} burst={burst} />
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', padding: '16px 28px 20px', gap: 14 }}>
-        <header style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', padding: `calc(${u(16)} + var(--sat)) calc(${u(28)} + var(--sar)) calc(${u(20)} + var(--sab)) calc(${u(28)} + var(--sal))`, gap: u(14) }}>
+        <header style={{ display: 'flex', alignItems: 'center', gap: u(18) }}>
           <MomPortrait />
           <div style={{ flex: 1 }}>
             <Bubble testId="mom-line">
@@ -207,19 +208,19 @@ export function Zone() {
         </header>
 
         {phase === 'pick' && (
-          <section style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <section style={{ flex: 1, minHeight: u(0), display: 'flex', flexDirection: 'column', gap: u(12) }}>
             <Progress step={step} />
             <div
               data-testid={`step-${steps[step].key}`}
               style={{
                 flex: 1,
-                minHeight: 0,
+                minHeight: u(0),
                 overflowY: 'auto',
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fill, minmax(132px, 1fr))',
-                gridAutoRows: '152px',
-                gap: 14,
-                padding: '16px 16px 18px',
+                gridAutoRows: `${u(152)}`,
+                gap: u(14),
+                padding: `${u(16)} ${u(16)} ${u(18)}`,
                 alignContent: 'start',
                 maxWidth: '60vw',
                 ...softPanel,
@@ -240,14 +241,14 @@ export function Zone() {
         )}
 
         {phase === 'ready' && (
-          <section style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 22, ...softPanel, width: '60vw', maxHeight: 640, alignSelf: 'flex-start', padding: 20 }}>
-            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
+          <section style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: u(22), ...softPanel, width: '60vw', maxHeight: u(640), alignSelf: 'flex-start', padding: u(20) }}>
+            <div style={{ display: 'flex', gap: u(16), flexWrap: 'wrap', justifyContent: 'center' }}>
               {steps.map((s) => {
                 const t = s.tiles.find((x) => x.id === picks[s.key]);
                 return (
                   <div key={s.key} style={chip}>
-                    <span style={{ fontSize: 52 }}>{t?.icon}</span>
-                    <span style={{ fontSize: 26, fontWeight: 800 }}>{t?.label}</span>
+                    <span style={{ fontSize: f(52) }}>{t?.icon}</span>
+                    <span style={{ fontSize: f(26), fontWeight: 800 }}>{t?.label}</span>
                   </div>
                 );
               })}
@@ -262,28 +263,28 @@ export function Zone() {
         )}
 
         {(phase === 'telling' || phase === 'done') && (
-          <section style={{ flex: 1, minHeight: 0, display: 'flex', gap: 20, alignItems: 'stretch', position: 'relative' }}>
+          <section style={{ flex: 1, minHeight: u(0), display: 'flex', gap: u(20), alignItems: 'stretch', position: 'relative' }}>
             <div
               data-testid="story-page"
               style={{
                 flex: 1,
-                minHeight: 0,
+                minHeight: u(0),
                 alignSelf: 'flex-start',
                 maxHeight: '100%',
                 overflowY: 'auto',
                 background: '#FFF9EC',
-                border: `5px solid ${palette.navy}`,
-                borderRadius: 32,
-                boxShadow: `0 10px 0 ${palette.navy}`,
-                padding: '22px 30px',
-                fontSize: 34,
+                border: `${u(5)} solid ${palette.navy}`,
+                borderRadius: u(32),
+                boxShadow: `0 ${u(10)} 0 ${palette.navy}`,
+                padding: `${u(22)} ${u(30)}`,
+                fontSize: f(34),
                 lineHeight: 1.45,
                 fontWeight: 700,
                 maxWidth: '54vw',
               }}
             >
-              <h2 style={{ margin: '0 0 12px', fontSize: 44, color: palette.red }}>{story?.title}</h2>
-              <p data-testid="story-text" style={{ margin: 0 }}>
+              <h2 style={{ margin: '0 0 12px', fontSize: f(44), color: palette.red }}>{story?.title}</h2>
+              <p data-testid="story-text" style={{ margin: u(0) }}>
                 {sentences.map((sent, si) => (
                   <span key={si} style={{ display: 'inline' }}>
                     {wordsOf(sent).map((w, wi) => {
@@ -296,7 +297,7 @@ export function Zone() {
                           data-current={current ? 'true' : undefined}
                           style={{
                             background: current ? palette.yellow : 'transparent',
-                            borderRadius: 10,
+                            borderRadius: u(10),
                             padding: '0 4px',
                             color: hidden ? '#C9BFB0' : read ? '#5A6A8A' : palette.navy,
                             transition: 'background .1s',
@@ -310,7 +311,7 @@ export function Zone() {
                 ))}
               </p>
             </div>
-            <div style={{ position: 'absolute', right: 0, top: 0, width: 210, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+            <div style={{ position: 'absolute', right: u(0), top: u(0), width: u(210), display: 'flex', flexDirection: 'column', alignItems: 'center', gap: u(16) }}>
               {phase === 'telling' && (
                 <button
                   type="button"
@@ -319,11 +320,11 @@ export function Zone() {
                   disabled={wandUsed}
                   onClick={useWand}
                   style={{
-                    width: 150,
-                    height: 150,
-                    fontSize: 80,
+                    width: u(150),
+                    height: u(150),
+                    fontSize: f(80),
                     borderRadius: '50%',
-                    border: `5px solid ${palette.navy}`,
+                    border: `${u(5)} solid ${palette.navy}`,
                     background: wandUsed ? '#E8DCC0' : palette.yellow,
                     cursor: 'pointer',
                     animation: wandUsed ? undefined : 'st-glow 1.4s ease-in-out infinite',
@@ -332,10 +333,10 @@ export function Zone() {
                   🌟
                 </button>
               )}
-              {phase === 'telling' && <div style={{ fontSize: 26, fontWeight: 800, textAlign: 'center' }}>{wandUsed ? 'Sparkle!' : 'Tap the star for magic!'}</div>}
+              {phase === 'telling' && <div style={{ fontSize: f(26), fontWeight: 800, textAlign: 'center' }}>{wandUsed ? 'Sparkle!' : 'Tap the star for magic!'}</div>}
               {phase === 'done' && (
                 <>
-                  <Button big tone="mint" onClick={again} testId="again" style={{ padding: '12px 28px', fontSize: 42 }}>
+                  <Button big tone="mint" onClick={again} testId="again" style={{ padding: `${u(12)} ${u(28)}`, fontSize: f(42) }}>
                     Again!
                   </Button>
                   {storyBricks >= 2 && (
@@ -352,7 +353,7 @@ export function Zone() {
       </div>
       {phase === 'done' && celebOpen && <BrickCelebration count={earned} onClose={() => setCelebOpen(false)} />}
       {phase !== 'done' && storyBricks >= 2 && phase === 'pick' && step === 0 && (
-        <div style={{ position: 'absolute', right: 28, bottom: 24 }}>
+        <div style={{ position: 'absolute', right: u(28), bottom: u(24) }}>
           <Button tone="blue" onClick={movieNight} testId="movie-night-button">
             🎬 Movie Night challenge
           </Button>
@@ -366,26 +367,26 @@ const chip: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  gap: 4,
+  gap: u(4),
   background: '#FFF4E0',
-  border: `4px solid ${palette.navy}`,
-  borderRadius: 28,
-  boxShadow: `0 6px 0 ${palette.navy}`,
-  padding: '14px 20px',
-  minWidth: 160,
+  border: `${u(4)} solid ${palette.navy}`,
+  borderRadius: u(28),
+  boxShadow: `0 ${u(6)} 0 ${palette.navy}`,
+  padding: `${u(14)} ${u(20)}`,
+  minWidth: u(160),
 };
 
 function Progress({ step }: { step: number }) {
   return (
-    <div style={{ display: 'flex', gap: 10 }} aria-label={`Step ${step + 1} of 4`}>
+    <div style={{ display: 'flex', gap: u(10) }} aria-label={`Step ${step + 1} of 4`}>
       {[0, 1, 2, 3].map((i) => (
         <div
           key={i}
           style={{
-            width: 56,
-            height: 18,
-            borderRadius: 9,
-            border: `3px solid ${palette.navy}`,
+            width: u(56),
+            height: u(18),
+            borderRadius: u(9),
+            border: `${u(3)} solid ${palette.navy}`,
             background: i <= step ? palette.yellow : '#FFF4E0',
           }}
         />
@@ -405,26 +406,26 @@ function TileButton({ tile, step, selected, onPick }: { tile: Tile; step: StepKe
       data-testid={`tile-${step}-${tile.id}`}
       onClick={onPick}
       style={{
-        minHeight: 132,
-        minWidth: 64,
+        minHeight: u(132),
+        minWidth: u(64),
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 6,
-        padding: '10px 8px',
+        gap: u(6),
+        padding: `${u(10)} ${u(8)}`,
         fontFamily: 'inherit',
         color: palette.navy,
         background: selected ? palette.yellow : tone,
-        border: `5px solid ${palette.navy}`,
-        borderRadius: 30,
-        boxShadow: `0 8px 0 ${palette.navy}`,
+        border: `${u(5)} solid ${palette.navy}`,
+        borderRadius: u(30),
+        boxShadow: `0 ${u(8)} 0 ${palette.navy}`,
         cursor: 'pointer',
       }}
     >
-      <span style={{ fontSize: 60, lineHeight: 1 }}>{tile.icon}</span>
-      <span style={{ fontSize: 26, fontWeight: 800, lineHeight: 1.1 }}>{tile.label}</span>
+      <span style={{ fontSize: f(60), lineHeight: 1 }}>{tile.icon}</span>
+      <span style={{ fontSize: f(26), fontWeight: 800, lineHeight: 1.1 }}>{tile.label}</span>
     </button>
   );
 }
@@ -438,13 +439,13 @@ function Sparkles({ burst }: { burst: number }) {
   );
   if (!burst) return null;
   return (
-    <div key={burst} data-testid="sparkle-burst" aria-hidden style={{ position: 'absolute', right: 100, top: '30%', pointerEvents: 'none' }}>
+    <div key={burst} data-testid="sparkle-burst" aria-hidden style={{ position: 'absolute', right: u(100), top: '30%', pointerEvents: 'none' }}>
       {bits.map((b, i) => (
         <span
           key={i}
           style={{
             position: 'absolute',
-            fontSize: 44,
+            fontSize: f(44),
             ['--dx' as string]: `${b.dx}px`,
             ['--dy' as string]: `${b.dy}px`,
             animation: 'st-burst 1.1s ease-out forwards',
@@ -473,15 +474,15 @@ export function BrickCelebration({ count, onClose }: { count: number; onClose: (
         transform: 'translate(-50%, -50%)',
         zIndex: 20,
         background: '#FFF4E0',
-        border: `6px solid ${palette.navy}`,
-        borderRadius: 40,
-        boxShadow: `0 12px 0 ${palette.navy}, 0 0 0 100vmax rgba(29,42,68,.35)`,
-        padding: '28px 48px',
+        border: `${u(6)} solid ${palette.navy}`,
+        borderRadius: u(40),
+        boxShadow: `0 ${u(12)} 0 ${palette.navy}, 0 0 0 100vmax rgba(29,42,68,.35)`,
+        padding: `${u(28)} ${u(48)}`,
         textAlign: 'center',
         animation: 'st-pop .5s ease-out',
       }}
     >
-      <div style={{ display: 'flex', gap: 20, justifyContent: 'center' }}>
+      <div style={{ display: 'flex', gap: u(20), justifyContent: 'center' }}>
         {Array.from({ length: count }).map((_, i) => (
           <svg key={i} viewBox="0 0 120 90" width="150" style={{ animation: `st-bounce ${0.9 + i * 0.2}s ease-in-out infinite` }}>
             <rect x="8" y="26" width="104" height="58" rx="8" fill={palette.red} stroke={palette.navy} strokeWidth="5" />
@@ -491,8 +492,8 @@ export function BrickCelebration({ count, onClose }: { count: number; onClose: (
           </svg>
         ))}
       </div>
-      <div style={{ fontSize: 46, fontWeight: 900, color: palette.red, marginTop: 8 }}>You earned a Birthday Brick!{count > 1 ? ' (2!)' : ''}</div>
-      <div style={{ fontSize: 28, fontWeight: 700 }}>Tap anywhere to keep going</div>
+      <div style={{ fontSize: f(46), fontWeight: 900, color: palette.red, marginTop: u(8) }}>You earned a Birthday Brick!{count > 1 ? ' (2!)' : ''}</div>
+      <div style={{ fontSize: f(28), fontWeight: 700 }}>Tap anywhere to keep going</div>
     </div>
   );
 }

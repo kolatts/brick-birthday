@@ -1,4 +1,5 @@
 import type { SpeakerId } from './voices';
+import { welcomeMessage } from './family';
 
 export interface CopyLine {
   speaker: SpeakerId;
@@ -36,4 +37,9 @@ export const COPY = {
 } as const;
 
 /** Flat list consumed by scripts/voices/lines.ts. */
-export const copyLines: CopyLine[] = Object.values(COPY).map((text) => ({ speaker: 'narrator' as const, text }));
+export const copyLines: CopyLine[] = [
+  ...Object.values(COPY).map((text) => ({ speaker: 'narrator' as const, text })),
+  // Daddy's note on the title screen ("Read it to me")
+  { speaker: 'dad', text: welcomeMessage.body },
+  { speaker: 'dad', text: welcomeMessage.signoff },
+];

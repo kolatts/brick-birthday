@@ -53,6 +53,5 @@ describe('screen to track', () => {
     expect(trackForScreen({ kind: 'zone', zone: 'woods' })).toBe('woods');
     expect(trackForScreen({ kind: 'challenge', zone: 'woods' })).toBe('challenge');
     expect(trackForScreen({ kind: 'finale' })).toBe('finale');
-    expect(trackForScreen({ kind: 'grownup' })).toBeNull();
   });
 });

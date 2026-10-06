@@ -11,6 +11,7 @@ import { useCloset } from '../state/closet';
 import { useUi } from '../state/ui';
 import { useSettings } from '../state/settings';
 import { Button, Panel, palette } from '../ui/Button';
+import { f, inset, u } from '../ui/scale';
 import { Confetti } from '../ui/Confetti';
 import { setMuted, sfx } from '../audio/engine';
 import { registerPerf } from '../test/hooks';
@@ -132,7 +133,7 @@ function Scene({ rigRef, birthday, petHats, onZone, onReady, onConfetti, onDug, 
   );
 }
 
-const hudBtn = { minWidth: 64, minHeight: 64 } as const;
+const hudBtn = { minWidth: 'var(--btn-min)', minHeight: 'var(--btn-min)', padding: `${u(6)} ${u(18)}` } as const;
 
 export function Hub() {
   const setScreen = useUi((s) => s.setScreen);
@@ -144,8 +145,7 @@ export function Hub() {
   const goalReached = total >= goal;
   const equipped = useCloset((s) => s.equipped);
   const dug = useCoupons((s) => s.dug);
-  const redeemed = useCoupons((s) => s.redeemed);
-  const unredeemed = dug.filter((d) => !redeemed.includes(d)).length;
+  const unredeemed = dug.length;
 
   const [soon, setSoon] = useState<(typeof zones)[ZoneId] | null>(null);
   const [overlay, setOverlay] = useState<'closet' | 'box' | null>(null);
@@ -205,7 +205,7 @@ export function Hub() {
       </Canvas>
       {ready && <div data-testid="hub-ready" style={{ display: 'none' }} data-birthday={birthday} />}
 
-      <div style={{ position: 'absolute', top: 14, left: 14, display: 'flex', gap: 12, zIndex: 40 }}>
+      <div style={{ position: 'absolute', top: inset('top', 12), left: inset('left', 12), display: 'flex', gap: u(12), zIndex: 40 }}>
         <Button tone="cream" testId="home-button" style={hudBtn} onClick={() => setScreen({ kind: 'title' })}>Home</Button>
         <Button tone="cream" testId="mute-button" style={hudBtn} ariaLabel={muted ? 'Unmute' : 'Mute'} onClick={() => setMuted(!muted)}>{muted ? '🔇' : '🔊'}</Button>
       </div>
@@ -213,20 +213,20 @@ export function Hub() {
       <div
         data-testid="brick-counter"
         style={{
-          position: 'absolute', top: 96, left: 14, zIndex: 40, minHeight: 64, padding: '0 20px',
-          display: 'flex', alignItems: 'center', gap: 10, background: palette.cream, border: `4px solid ${palette.navy}`, borderRadius: 32,
-          boxShadow: `0 6px 0 ${palette.navy}`, fontSize: 24, fontWeight: 900, color: palette.navy, whiteSpace: 'nowrap',
+          position: 'absolute', top: `calc(${inset('top', 12)} + var(--btn-min) + ${u(14)})`, left: inset('left', 12), zIndex: 40, minHeight: 'var(--btn-min)', padding: `0 ${u(20)}`,
+          display: 'flex', alignItems: 'center', gap: u(10), background: palette.cream, border: `${u(4)} solid ${palette.navy}`, borderRadius: u(32),
+          boxShadow: `0 ${u(6)} 0 ${palette.navy}`, fontSize: f(24), fontWeight: 900, color: palette.navy, whiteSpace: 'nowrap',
         }}
       >
         <span aria-hidden>🧱</span>
         <span>{total}/{goal} Birthday Bricks</span>
       </div>
 
-      <div style={{ position: 'absolute', top: 14, right: 14, display: 'flex', gap: 12, zIndex: 40 }}>
+      <div style={{ position: 'absolute', top: inset('top', 12), right: inset('right', 12), display: 'flex', gap: u(12), zIndex: 40 }}>
         <Button tone="yellow" testId="coupon-box-open" style={{ ...hudBtn, position: 'relative' }} onClick={() => { sfx('tap'); setOverlay('box'); }}>
           🎟️ Coupons
           {unredeemed > 0 && (
-            <span style={{ position: 'absolute', top: -10, right: -8, minWidth: 30, height: 30, borderRadius: 15, background: palette.red, color: '#fff', fontSize: 18, lineHeight: '30px', border: `3px solid ${palette.navy}` }}>
+            <span style={{ position: 'absolute', top: -10, right: -8, minWidth: 26, height: 26, borderRadius: 13, background: palette.red, color: '#fff', fontSize: 16, lineHeight: '20px', border: `3px solid ${palette.navy}` }}>
               {unredeemed}
             </span>
           )}
@@ -235,10 +235,10 @@ export function Hub() {
       </div>
 
       {goalReached && !finaleSeen && (
-        <div style={{ position: 'absolute', bottom: 108, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 40 }}>
+        <div style={{ position: 'absolute', bottom: `calc(${inset('bottom', 12)} + ${u(96)})`, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 40, pointerEvents: 'none' }}>
           <Button
             big tone="pink" testId="finale-button"
-            style={{ animation: 'finale-pulse 1s ease-in-out infinite' }}
+            style={{ pointerEvents: 'auto', animation: 'finale-pulse 1s ease-in-out infinite' }}
             onClick={() => { sfx('fanfare'); setScreen({ kind: 'finale' }); }}
           >
             🎂 Time for the party!
@@ -247,7 +247,7 @@ export function Hub() {
         </div>
       )}
 
-      <div style={{ position: 'absolute', bottom: 14, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 10, zIndex: 40, padding: '0 10px' }}>
+      <div style={{ position: 'absolute', bottom: inset('bottom', 10), left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: u(10), zIndex: 40, padding: `0 calc(${u(10)} + var(--sal)) 0 calc(${u(10)} + var(--sar))`, pointerEvents: 'none' }}>
         {ZONE_IDS.map((id) => {
           const z = zones[id];
           const light = id === 'tennis';
@@ -258,9 +258,9 @@ export function Hub() {
               data-testid={`zone-${id}`}
               onClick={() => enter(id)}
               style={{
-                minWidth: 150, minHeight: 72, padding: '6px 14px', fontFamily: 'inherit', fontWeight: 900, fontSize: 19, lineHeight: 1.15,
-                color: light ? palette.navy : '#fff', background: z.color, border: `4px solid ${palette.navy}`, borderRadius: 24,
-                boxShadow: `0 6px 0 ${palette.navy}`, cursor: 'pointer', opacity: z.built ? 1 : 0.85,
+                pointerEvents: 'auto', minWidth: u(150), minHeight: `max(var(--btn-min), ${u(72)})`, padding: `${u(6)} ${u(14)}`, fontFamily: 'inherit', fontWeight: 900, fontSize: f(19), lineHeight: 1.15,
+                color: light ? palette.navy : '#fff', background: z.color, border: `${u(4)} solid ${palette.navy}`, borderRadius: u(24),
+                boxShadow: `0 ${u(6)} 0 ${palette.navy}`, cursor: 'pointer', opacity: z.built ? 1 : 0.85,
                 textShadow: light ? 'none' : '0 2px 0 rgba(29,42,68,0.55)',
               }}
             >
@@ -275,11 +275,11 @@ export function Hub() {
       {confetti > 0 && <Confetti key={confetti} />}
 
       {soon && (
-        <div className="center-col" style={{ position: 'absolute', inset: 0, background: 'rgba(29,42,68,0.45)', zIndex: 70 }} data-testid="coming-soon-panel">
+        <div className="center-col" style={{ position: 'absolute', inset: 0, background: 'rgba(29,42,68,0.45)', zIndex: 70, padding: 'var(--sat) var(--sar) var(--sab) var(--sal)' }} data-testid="coming-soon-panel">
           <Panel style={{ textAlign: 'center', maxWidth: 520 }}>
-            <div style={{ fontSize: 72 }} aria-hidden>🏗️</div>
-            <h2 style={{ margin: '0 0 8px', fontSize: 48 }}>Coming soon!</h2>
-            <p style={{ margin: '0 0 20px', fontSize: 24 }}>The {soon.title} is still being built.</p>
+            <div style={{ fontSize: u(72) }} aria-hidden>🏗️</div>
+            <h2 style={{ margin: `0 0 ${u(8)}`, fontSize: f(48) }}>Coming soon!</h2>
+            <p style={{ margin: `0 0 ${u(20)}`, fontSize: f(24) }}>The {soon.title} is still being built.</p>
             <Button testId="coming-soon-close" tone="mint" onClick={() => setSoon(null)}>OK!</Button>
           </Panel>
         </div>

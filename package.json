@@ -15,12 +15,14 @@
     "verify:privacy": "tsx scripts/verify/privacy.ts",
     "test:e2e": "playwright test",
     "verify": "npm run typecheck && npm run lint && npm run test:unit && npm run build && npm run verify:size && npm run verify:privacy && npm run test:e2e",
-    "pack": "tsx scripts/pack/build.ts",
+    "passwords": "tsx scripts/pack/passwords-cli.ts",
+    "faces:build": "tsx scripts/faces/build.ts",
+    "models:build": "tsx scripts/models/build.ts",
     "portraits": "tsx scripts/portraits/generate.ts",
-    "fixtures": "tsx scripts/fixtures/make-pack.ts",
     "music:generate": "C:/Code/claude-video-editor/venv/Scripts/python.exe scripts/music/generate.py",
     "voices:extract": "tsx scripts/voices/extract.ts",
-    "voices:generate": "uv run --with azure-cognitiveservices-speech python scripts/voices/generate.py"
+    "voices:generate": "uv run --with azure-cognitiveservices-speech python scripts/voices/generate.py",
+    "review:visual": "node scripts/review/visual-review.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

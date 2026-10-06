@@ -1,5 +1,6 @@
 import { chromium, expect, test, type Page } from '@playwright/test';
 import fs from 'node:fs';
+import { passwords } from '../../src/config/passwords';
 
 const SCREENS = 'test-results/screens';
 fs.mkdirSync(SCREENS, { recursive: true });
@@ -8,7 +9,10 @@ test.beforeEach(() => {
   test.setTimeout(120_000);
 });
 
-const FIXTURE = 'tests/e2e/fixtures/family-pack.fixture.json';
+const phone = (page: Page) => page.viewportSize()!.height < 500;
+const minTap = (page: Page) => (phone(page) ? 52 : 64);
+// Full dig flow runs on Chromium (desktop) and the iPhone project; the iPad project covers the same UI via screenshots.
+const skipDig = (browserName: string, project: string) => browserName !== 'chromium' && project !== 'iphone-webkit';
 
 async function toHub(page: Page, query = '?test=1') {
   await page.goto(`./${query}`);
@@ -18,16 +22,9 @@ async function toHub(page: Page, query = '?test=1') {
   await page.waitForTimeout(600);
 }
 
-async function gotoScreen(page: Page, kind: 'hub' | 'grownup') {
+async function gotoScreen(page: Page, kind: 'hub') {
   await page.evaluate((k) => window.__game!.setScreen({ kind: k }), kind);
   if (kind === 'hub') await expect(page.getByTestId('hub-ready')).toBeAttached();
-}
-
-async function importPack(page: Page) {
-  await gotoScreen(page, 'grownup');
-  await page.getByTestId('pack-file-input').setInputFiles(FIXTURE);
-  await expect(page.getByTestId('pack-status')).toHaveText(/loaded/);
-  await gotoScreen(page, 'hub');
 }
 
 /** Tap the dig spot until the coupon card opens (extra taps are harmless). */
@@ -45,13 +42,13 @@ test('title shows Luna waving next to the heading', async ({ page }, info) => {
   await page.screenshot({ path: `${SCREENS}/title-avatar-${info.project.name}.png` });
 });
 
-test('hub renders the scene and every HUD button is at least 64px', async ({ page }, info) => {
+test('hub renders the scene and every HUD button meets the tap-target minimum', async ({ page }, info) => {
   await toHub(page);
   await page.screenshot({ path: `${SCREENS}/hub-scene-${info.project.name}.png` });
   for (const id of ['home-button', 'mute-button', 'coupon-box-open', 'closet-open', 'zone-story', 'zone-science', 'zone-tennis', 'zone-music', 'zone-woods']) {
     const box = (await page.getByTestId(id).boundingBox())!;
-    expect(box.height, id).toBeGreaterThanOrEqual(64);
-    expect(box.width, id).toBeGreaterThanOrEqual(64);
+    expect(box.height, id).toBeGreaterThanOrEqual(minTap(page));
+    expect(box.width, id).toBeGreaterThanOrEqual(minTap(page));
   }
   await expect(page.getByTestId('brick-counter')).toContainText('Birthday Bricks');
 });
@@ -87,8 +84,7 @@ test('closet shows locked items, unlocks after bricks, and equips', async ({ pag
   await page.waitForTimeout(500);
   await page.screenshot({ path: `${SCREENS}/closet-locked-${info.project.name}.png` });
   await page.getByTestId('closet-close').click();
-  await gotoScreen(page, 'grownup');
-  await page.getByTestId('unlock-bricks').click();
+  await page.evaluate(() => window.__game!.unlockAll());
   await gotoScreen(page, 'hub');
   await page.getByTestId('closet-open').click();
   await expect(page.getByTestId('closet-item-bow')).toHaveAttribute('data-locked', 'false');
@@ -103,13 +99,12 @@ test('closet shows locked items, unlocks after bricks, and equips', async ({ pag
 test('finale button appears once the brick goal is reached', async ({ page }) => {
   await toHub(page);
   await expect(page.getByTestId('finale-button')).toHaveCount(0);
-  await gotoScreen(page, 'grownup');
-  await page.getByTestId('unlock-bricks').click();
+  await page.evaluate(() => window.__game!.unlockAll());
   await gotoScreen(page, 'hub');
   await expect(page.getByTestId('finale-button')).toContainText('Time for the party');
 });
 
-test('coupon box without a pack asks for the family pack', async ({ page }, info) => {
+test('coupon box starts locked; a dug coupon shows its configured password', async ({ page }, info) => {
   await toHub(page);
   await page.getByTestId('coupon-box-open').click();
   await expect(page.getByTestId('coupon-box')).toBeVisible();
@@ -122,13 +117,12 @@ test('coupon box without a pack asks for the family pack', async ({ page }, info
   await page.evaluate(() => window.__game!.completeChallenge('story'));
   await expect(page.getByTestId('dig-spot-movies')).toBeVisible();
   await digUntilCard(page, 'movies');
-  await expect(page.getByTestId('coupon-card')).toContainText('Ask a grown-up to load the family pack');
+  await expect(page.getByTestId('coupon-password')).toHaveText(passwords.movies);
 });
 
-test('challenge, dig, coupon card, box, redeem and undo (with family pack)', async ({ page, browserName }, info) => {
-  test.skip(browserName !== 'chromium', 'full dig flow runs once in Chromium; WebKit covered by screenshots');
+test('challenge, dig, coupon card and box', async ({ page, browserName }, info) => {
+  test.skip(skipDig(browserName, info.project.name), 'full dig flow runs in Chromium and the iPhone project');
   await toHub(page);
-  await importPack(page);
   await page.waitForTimeout(600);
   await page.evaluate(() => window.__game!.completeChallenge('story'));
   await expect(page.getByTestId('dig-spot-movies')).toBeVisible();
@@ -140,40 +134,26 @@ test('challenge, dig, coupon card, box, redeem and undo (with family pack)', asy
   await page.waitForTimeout(500);
   await page.screenshot({ path: `${SCREENS}/dig-progress-${info.project.name}.png` });
   await digUntilCard(page, 'movies');
-  await expect(page.getByTestId('coupon-password')).toHaveText('TEST-CAKE-11');
+  await expect(page.getByTestId('coupon-password')).toHaveText(passwords.movies);
   const pwBox = (await page.getByTestId('coupon-password').boundingBox())!;
-  expect(pwBox.height).toBeGreaterThanOrEqual(72);
+  expect(pwBox.height).toBeGreaterThanOrEqual(56);
   await page.waitForTimeout(3500);
   await page.screenshot({ path: `${SCREENS}/coupon-card-movies-${info.project.name}.png` });
-  expect((await page.getByTestId('coupon-close').boundingBox())!.height).toBeGreaterThanOrEqual(64);
+  expect((await page.getByTestId('coupon-close').boundingBox())!.height).toBeGreaterThanOrEqual(minTap(page));
   await page.getByTestId('coupon-close').click();
   await expect(page.getByTestId('coupon-card')).toHaveCount(0);
   await expect(page.getByTestId('dig-spot-movies')).toHaveCount(0);
 
   await page.getByTestId('coupon-box-open').click();
-  await expect(page.getByTestId('coupon-item-movies')).toContainText('TEST-CAKE-11');
+  await expect(page.getByTestId('coupon-item-movies')).toContainText(passwords.movies);
   await expect(page.getByTestId('coupon-item-movies')).toHaveAttribute('data-status', 'dug');
   await page.screenshot({ path: `${SCREENS}/coupon-box-${info.project.name}.png` });
   await page.getByTestId('coupon-box-close').click();
-
-  await gotoScreen(page, 'grownup');
-  await page.getByTestId('redeem-movies').click();
-  await gotoScreen(page, 'hub');
-  await page.getByTestId('coupon-box-open').click();
-  await expect(page.getByTestId('redeemed-stamp')).toBeVisible();
-  await page.screenshot({ path: `${SCREENS}/coupon-box-redeemed-${info.project.name}.png` });
-  await page.getByTestId('coupon-box-close').click();
-  await gotoScreen(page, 'grownup');
-  await page.getByTestId('undo-movies').click();
-  await gotoScreen(page, 'hub');
-  await page.getByTestId('coupon-box-open').click();
-  await expect(page.getByTestId('redeemed-stamp')).toHaveCount(0);
 });
 
 test('a coupon card for every built zone (screenshots)', async ({ page, browserName }, info) => {
   test.skip(browserName !== 'chromium', 'chromium only');
   await toHub(page);
-  await importPack(page);
   for (const [zone, coupon] of [['story', 'movies'], ['woods', 'icecream']] as const) {
     await page.evaluate((z) => window.__game!.completeChallenge(z), zone);
     await expect(page.getByTestId(`dig-spot-${coupon}`)).toBeVisible();

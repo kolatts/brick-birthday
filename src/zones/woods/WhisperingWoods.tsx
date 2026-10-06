@@ -7,6 +7,8 @@ import { useUi } from '../../state/ui';
 import { sfx } from '../../audio/engine';
 import { say } from '../../audio/speech';
 import { Button, palette } from '../../ui/Button';
+import { f, inset, maxDpr, u, ub } from '../../ui/scale';
+import { FitFov } from '../../three/FitFov';
 import { B, CYL8, Cy, Particles, mat } from './fx';
 import { BrickTree, Cat, Dog, HoppingFriend, StumpSpot } from './models';
 import { TeaGardenScene, TeaHud } from './TeaGarden';
@@ -101,9 +103,9 @@ function StumpButton({ i }: { i: number }) {
         data-testid={`stump-${i}`}
         aria-label={stage === 0 ? `Bare stump ${i + 1}` : `Sapling ${i + 1}`}
         onClick={() => tapStump(i)}
-        style={{ width: 84, height: 84, borderRadius: 42, background: 'rgba(255,255,255,0.12)', border: 'none', cursor: 'pointer', padding: 0, position: 'relative' }}
+        style={{ width: ub(84), height: ub(84), borderRadius: '50%', background: 'rgba(255,255,255,0.12)', border: 'none', cursor: 'pointer', padding: u(0), position: 'relative' }}
       >
-        <span style={{ position: 'absolute', inset: 0, borderRadius: 42, border: `5px dashed ${ring}`, animation: 'woods-pulse 1.6s ease-in-out infinite', pointerEvents: 'none' }} />
+        <span style={{ position: 'absolute', inset: 0, borderRadius: u(42), border: `${u(5)} dashed ${ring}`, animation: 'woods-pulse 1.6s ease-in-out infinite', pointerEvents: 'none' }} />
       </button>
     </Html>
   );
@@ -188,13 +190,13 @@ function CaptionBubble() {
       key={caption.id}
       data-testid="caption"
       style={{
-        position: 'absolute', top: 84, left: '50%', transform: 'translateX(-50%)', zIndex: 80, maxWidth: 'min(820px, 80vw)',
-        background: '#fff', border: `5px solid ${palette.navy}`, borderRadius: 40, boxShadow: `0 8px 0 ${palette.navy}`,
-        padding: '14px 30px', textAlign: 'center', color: palette.navy, animation: 'woods-bubble .25s ease-out', pointerEvents: 'none',
+        position: 'absolute', top: `calc(${inset('top', 12)} + var(--btn-min) + ${u(14)})`, left: '50%', transform: 'translateX(-50%)', zIndex: 80, maxWidth: 'min(820px, 80vw)',
+        background: '#fff', border: `${u(5)} solid ${palette.navy}`, borderRadius: u(40), boxShadow: `0 ${u(8)} 0 ${palette.navy}`,
+        padding: `${u(14)} ${u(30)}`, textAlign: 'center', color: palette.navy, animation: 'woods-bubble .25s ease-out', pointerEvents: 'none',
       }}
     >
-      {caption.kind !== 'hint' && <div style={{ fontSize: 20, fontWeight: 900, color: isFact ? '#2E8B57' : '#E6007A', letterSpacing: 1, textTransform: 'uppercase' }}>{caption.who}</div>}
-      <div style={{ fontSize: isFact ? 30 : 32, fontWeight: 800, lineHeight: 1.25 }}>{caption.text}</div>
+      {caption.kind !== 'hint' && <div style={{ fontSize: f(20), fontWeight: 900, color: isFact ? '#2E8B57' : '#E6007A', letterSpacing: u(1), textTransform: 'uppercase' }}>{caption.who}</div>}
+      <div style={{ fontSize: f(isFact ? 30 : 32), fontWeight: 800, lineHeight: 1.25 }}>{caption.text}</div>
     </div>
   );
 }
@@ -205,29 +207,29 @@ function PlantingHud() {
   const hasWet = stage.some((x) => x === 2);
   return (
     <>
-      <div style={{ position: 'absolute', left: 22, bottom: 24, zIndex: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+      <div style={{ position: 'absolute', left: inset('left', 22), bottom: inset('bottom', 24), zIndex: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: u(6) }}>
         <button
           type="button"
           data-testid="water-btn"
           aria-label="Watering can"
           onClick={() => doWater()}
-          style={{ ...hudButton('#9BE0FF'), width: 104, height: 104, borderRadius: 52, fontSize: 52, animation: hasSap ? 'woods-ring 1.2s ease-in-out infinite' : undefined }}
+          style={{ ...hudButton('#9BE0FF'), width: ub(104), height: ub(104), borderRadius: '50%', fontSize: f(52), animation: hasSap ? 'woods-ring 1.2s ease-in-out infinite' : undefined }}
         >
           💧
         </button>
-        <span style={{ fontWeight: 900, fontSize: 22, color: palette.navy }}>Water</span>
+        <span style={{ fontWeight: 900, fontSize: f(22), color: palette.navy }}>Water</span>
       </div>
-      <div style={{ position: 'absolute', right: 22, bottom: 24, zIndex: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+      <div style={{ position: 'absolute', right: inset('right', 22), bottom: inset('bottom', 24), zIndex: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: u(6) }}>
         <button
           type="button"
           data-testid="wand-btn"
           aria-label="Magic wand"
           onClick={() => doWand()}
-          style={{ ...hudButton('#FFE65C'), width: 112, height: 112, borderRadius: 56, fontSize: 62, animation: 'woods-glow 1.4s ease-in-out infinite', outline: hasWet ? '6px solid #FF5CA8' : 'none' }}
+          style={{ ...hudButton('#FFE65C'), width: ub(112), height: ub(112), borderRadius: '50%', fontSize: f(62), animation: 'woods-glow 1.4s ease-in-out infinite', outline: hasWet ? '6px solid #FF5CA8' : 'none' }}
         >
           ⭐
         </button>
-        <span style={{ fontWeight: 900, fontSize: 22, color: palette.navy }}>Magic wand</span>
+        <span style={{ fontWeight: 900, fontSize: f(22), color: palette.navy }}>Magic wand</span>
       </div>
     </>
   );
@@ -245,16 +247,17 @@ export function Zone() {
   return (
     <div className="screen" data-testid="zone-screen-woods" style={{ background: SKY, overflow: 'hidden' }}>
       <style>{WOODS_CSS}</style>
-      <Canvas dpr={[1, 1.5]} camera={{ position: [0, 6.4, 10.6], fov: 46, near: 0.1, far: 80 }} gl={{ preserveDrawingBuffer: true, alpha: true, antialias: true }} style={{ position: 'absolute', inset: 0 }}>
+      <Canvas dpr={[1, maxDpr()]} camera={{ position: [0, 6.4, 10.6], fov: 46, near: 0.1, far: 80 }} gl={{ preserveDrawingBuffer: true, alpha: true, antialias: true }} style={{ position: 'absolute', inset: 0 }}>
+        <FitFov base={46} />
         <Scene />
       </Canvas>
-      <div style={{ position: 'absolute', top: 14, left: 18, zIndex: 60, display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div data-testid="tree-counter" style={{ background: palette.cream, border: `4px solid ${palette.navy}`, borderRadius: 28, boxShadow: `0 5px 0 ${palette.navy}`, padding: '8px 22px', fontSize: 30, fontWeight: 900, color: palette.navy, minHeight: 64, display: 'flex', alignItems: 'center' }}>
+      <div style={{ position: 'absolute', top: inset('top', 14), left: inset('left', 18), zIndex: 60, display: 'flex', alignItems: 'center', gap: u(10) }}>
+        <div data-testid="tree-counter" style={{ background: palette.cream, border: `${u(4)} solid ${palette.navy}`, borderRadius: u(28), boxShadow: `0 ${u(5)} 0 ${palette.navy}`, padding: `${u(8)} ${u(22)}`, fontSize: f(30), fontWeight: 900, color: palette.navy, minHeight: u(64), display: 'flex', alignItems: 'center' }}>
           🌳 {Math.min(trees, TREE_COUNT)}/{TREE_COUNT} trees
         </div>
         {bricks >= 1 && <Button testId="challenge-btn" tone="yellow" onClick={() => setScreen({ kind: 'challenge', zone: 'woods' })}>Tea Party Orders challenge</Button>}
       </div>
-      <div style={{ position: 'absolute', top: 14, right: 18, zIndex: 60 }}>
+      <div style={{ position: 'absolute', top: inset('top', 14), right: inset('right', 18), zIndex: 60 }}>
         <Button testId="back-to-island" tone="cream" onClick={() => setScreen({ kind: 'hub' })}>Back to island</Button>
       </div>
       <CaptionBubble />

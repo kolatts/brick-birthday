@@ -1,4 +1,5 @@
 import { execSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -19,18 +20,43 @@ const TEXT_EXT = /\.(js|mjs|css|html|json|map|txt|svg|webmanifest)$/i;
 const MAX_IMAGE = 200 * 1024;
 
 const checks: { name: string; re: RegExp }[] = [
-  { name: '"family-pack"', re: /family-pack/i },
   { name: 'API key pattern sk-...', re: /sk-[A-Za-z0-9_-]{20,}/ },
   { name: 'OPENAI', re: /OPENAI/ },
-  { name: 'coupon password pattern', re: /\b[A-Z]{3,8}-[A-Z]{3,8}-\d{2}\b/ },
   { name: 'inline data:image base64 > 200KB', re: new RegExp(`data:image/[a-z+.-]+;base64,[A-Za-z0-9+/=]{${Math.ceil((MAX_IMAGE * 4) / 3)},}`, 'i') },
 ];
+
+/** Fingerprints of every real photo under photos/: none of them may be shipped in public/ or dist/. */
+function photoFingerprints(): Set<string> {
+  const out = new Set<string>();
+  const dir = path.resolve('photos');
+  if (!fs.existsSync(dir)) return out;
+  const stack = [dir];
+  while (stack.length) {
+    const d = stack.pop()!;
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const p = path.join(d, e.name);
+      if (e.isDirectory()) stack.push(p);
+      else if (IMAGE_EXT.test(e.name)) out.add(createHash('sha256').update(fs.readFileSync(p)).digest('hex'));
+    }
+  }
+  return out;
+}
 
 function walk(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((d) => {
     const p = path.join(dir, d.name);
     return d.isDirectory() ? walk(p) : [p];
   });
+}
+
+const photos = photoFingerprints();
+for (const root of [path.resolve('public'), DIST]) {
+  if (!fs.existsSync(root)) continue;
+  for (const file of walk(root)) {
+    if (!IMAGE_EXT.test(file)) continue;
+    if (photos.has(createHash('sha256').update(fs.readFileSync(file)).digest('hex'))) failures.push(`${path.relative(process.cwd(), file)} is byte-identical to a photo in photos/`);
+    if (/\.jpe?g$/i.test(file) && root !== DIST) failures.push(`${path.relative(process.cwd(), file)}: JPEG in public/ (photos must not ship)`);
+  }
 }
 
 if (!fs.existsSync(DIST)) {

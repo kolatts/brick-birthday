@@ -1,17 +1,18 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { V3 } from './prims';
+import { pick, smoothWeld, type Detail } from './figureGeometry';
 
-export type PartKind = 'box' | 'rbox' | 'sph' | 'cyl' | 'tcyl' | 'cone' | 'star' | 'rtap' | 'head' | 'cap' | 'torus';
+export type PartKind = 'box' | 'rbox' | 'sph' | 'cyl' | 'tcyl' | 'cone' | 'star' | 'rtap' | 'cap' | 'caps' | 'torus' | 'geo';
 
 /**
  * A coloured piece of a merged mesh.
  * box/rbox: s = (w,h,d); sph: s = radii; cyl/cone: s = (r,h,r); tcyl: s = (rBottom,h,rTop); star: s = (radius, depth, _).
  * rtap: rounded box tapering to `t` (0..1) of its width at the bottom (shoulders wide, waist narrow).
- * head: lathe-turned cylinder s = (radius, height, depthScale) with bevel `r` rounding both edges.
- * cap: capsule lying along z, s = (radius, length, _). torus: s = (ringRadius, tube, arcRadians).
- * `r` is the corner radius for rbox/rtap/head.
+ * caps: capsule along y, s = (radius, length, _). cap: capsule along z. torus: s = (ringRadius, tube, arcRadians).
+ * geo: a prebuilt indexed geometry in `g` (cloned, so builders may share it).
+ * `r` is the corner radius for rbox/rtap, `sc` a non-uniform scale applied before `rot`.
  */
 export interface Part {
   k: PartKind;
@@ -21,6 +22,10 @@ export interface Part {
   rot?: V3;
   r?: number;
   t?: number;
+  /** radial segment override (spheres, capsules). */
+  seg?: number;
+  sc?: V3;
+  g?: THREE.BufferGeometry;
 }
 
 let starShape: THREE.Shape | null = null;
@@ -40,25 +45,28 @@ function star(): THREE.Shape {
   return sh;
 }
 
-function geometryFor(pt: Part): THREE.BufferGeometry {
+function geometryFor(pt: Part, d: Detail): THREE.BufferGeometry {
   switch (pt.k) {
     case 'box':
       return new THREE.BoxGeometry(pt.s[0], pt.s[1], pt.s[2]);
     case 'rbox':
-      return new RoundedBoxGeometry(pt.s[0], pt.s[1], pt.s[2], 3, pt.r ?? 0.12);
+      return new RoundedBoxGeometry(pt.s[0], pt.s[1], pt.s[2], pt.seg ?? pick(d, 2, 1), pt.r ?? 0.12);
     case 'sph': {
-      const g = new THREE.SphereGeometry(1, 14, 10);
+      const w = pt.seg ?? pick(d, 8, 6);
+      const g = new THREE.SphereGeometry(1, w, Math.max(4, Math.round(w * 0.6)));
       g.scale(pt.s[0], pt.s[1], pt.s[2]);
       return g;
     }
     case 'cyl':
-      return new THREE.CylinderGeometry(pt.s[0], pt.s[0], pt.s[1], 12);
+      return new THREE.CylinderGeometry(pt.s[0], pt.s[0], pt.s[1], pt.seg ?? pick(d, 12, 8));
     case 'tcyl':
-      return new THREE.CylinderGeometry(pt.s[2], pt.s[0], pt.s[1], 14);
+      return new THREE.CylinderGeometry(pt.s[2], pt.s[0], pt.s[1], pt.seg ?? pick(d, 12, 8));
     case 'cone':
-      return new THREE.ConeGeometry(pt.s[0], pt.s[1], 12);
+      return new THREE.ConeGeometry(pt.s[0], pt.s[1], pt.seg ?? pick(d, 8, 6));
     case 'rtap': {
-      const g = new RoundedBoxGeometry(pt.s[0], pt.s[1], pt.s[2], 3, pt.r ?? 0.12);
+      let g: THREE.BufferGeometry = new RoundedBoxGeometry(pt.s[0], pt.s[1], pt.s[2], pt.seg ?? pick(d, 2, 1), pt.r ?? 0.12);
+      g.deleteAttribute('uv');
+      if (!g.index) g = mergeVertices(g);
       const pos = g.getAttribute('position');
       const t = pt.t ?? 0.8;
       for (let i = 0; i < pos.count; i++) {
@@ -70,58 +78,48 @@ function geometryFor(pt: Part): THREE.BufferGeometry {
       g.computeVertexNormals();
       return g;
     }
-    case 'head': {
-      const r = pt.s[0], h = pt.s[1], b = Math.min(pt.r ?? 0.15, r * 0.9, h / 2 - 0.01);
-      const pts: THREE.Vector2[] = [new THREE.Vector2(0, -h / 2)];
-      const arc = (cx: number, cy: number, a0: number, a1: number) => {
-        for (let i = 0; i <= 5; i++) {
-          const a = a0 + ((a1 - a0) * i) / 5;
-          pts.push(new THREE.Vector2(cx + Math.cos(a) * b, cy + Math.sin(a) * b));
-        }
-      };
-      arc(r - b, -h / 2 + b, -Math.PI / 2, 0);
-      arc(r - b, h / 2 - b, 0, Math.PI / 2);
-      pts.push(new THREE.Vector2(0, h / 2));
-      const g = new THREE.LatheGeometry(pts, 24);
-      g.scale(1, 1, pt.s[2]);
-      return g;
-    }
+    case 'caps':
+      return new THREE.CapsuleGeometry(pt.s[0], pt.s[1], (pt.seg ?? 8) > 12 ? 2 : 1, pt.seg ?? pick(d, 8, 6));
     case 'cap': {
-      const g = new THREE.CapsuleGeometry(pt.s[0], pt.s[1], 4, 12);
+      const g = new THREE.CapsuleGeometry(pt.s[0], pt.s[1], pick(d, 5, 2), pt.seg ?? pick(d, 18, 10));
       g.rotateX(Math.PI / 2);
       return g;
     }
     case 'torus':
-      return new THREE.TorusGeometry(pt.s[0], pt.s[1], 8, 14, pt.s[2]);
+      return new THREE.TorusGeometry(pt.s[0], pt.s[1], pt.seg ?? pick(d, 6, 4), pick(d, 14, 8), pt.s[2]);
     case 'star': {
       const g = new THREE.ExtrudeGeometry(star(), { depth: pt.s[1], bevelEnabled: false });
       g.translate(0, 0, -pt.s[1] / 2);
       g.scale(pt.s[0], pt.s[0], 1);
-      return g;
+      return smoothWeld(g, 0.5);
     }
+    case 'geo':
+      return pt.g!.clone();
   }
 }
 
 const mat = new THREE.Matrix4();
 const eul = new THREE.Euler();
 const quat = new THREE.Quaternion();
-const one = new THREE.Vector3(1, 1, 1);
+const scl = new THREE.Vector3(1, 1, 1);
 const pos = new THREE.Vector3();
 const col = new THREE.Color();
 
 /** Merges parts into a single vertex-coloured geometry (1 draw call). */
-export function mergeParts(parts: Part[]): THREE.BufferGeometry {
+export function mergeParts(parts: Part[], detail: Detail = 'high'): THREE.BufferGeometry {
   const list: THREE.BufferGeometry[] = [];
   for (const pt of parts) {
-    const raw = geometryFor(pt);
-    const g = raw.index ? raw.toNonIndexed() : raw;
+    let g = geometryFor(pt, detail);
     g.deleteAttribute('uv');
+    if (!g.index) g = mergeVertices(g, 1e-4);
     if (pt.rot) {
       eul.set(pt.rot[0], pt.rot[1], pt.rot[2]);
       quat.setFromEuler(eul);
     } else quat.identity();
     pos.set(pt.p[0], pt.p[1], pt.p[2]);
-    mat.compose(pos, quat, one);
+    if (pt.sc) scl.set(pt.sc[0], pt.sc[1], pt.sc[2]);
+    else scl.set(1, 1, 1);
+    mat.compose(pos, quat, scl);
     g.applyMatrix4(mat);
     col.set(pt.c);
     const n = g.getAttribute('position').count;
@@ -140,5 +138,13 @@ export function mergeParts(parts: Part[]): THREE.BufferGeometry {
   return merged;
 }
 
-export const vertexMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.4, metalness: 0 });
+/** Shared molded-plastic figure material: glossy but restrained. envMap (soft studio room) is set by Avatar once a renderer exists. */
+export const vertexMat = new THREE.MeshPhysicalMaterial({
+  vertexColors: true,
+  roughness: 0.36,
+  metalness: 0,
+  clearcoat: 0.25,
+  clearcoatRoughness: 0.4,
+  envMapIntensity: 0.4,
+});
 export const vertexMatFlat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0, flatShading: true });

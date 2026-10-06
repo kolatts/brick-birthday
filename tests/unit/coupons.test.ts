@@ -16,7 +16,7 @@ describe('coupon state machine', () => {
     expect(useCoupons.getState().status('movies')).toBe('available');
   });
 
-  it('goes available -> challenge complete -> dug -> redeemed -> undo', () => {
+  it('goes available -> challenge complete -> dug', () => {
     useProgress.getState().unlockAll();
     const c = useCoupons.getState();
     expect(c.status('icecream')).toBe('available');
@@ -26,16 +26,6 @@ describe('coupon state machine', () => {
     useCoupons.getState().markDug('icecream');
     expect(useCoupons.getState().status('icecream')).toBe('dug');
     expect(useCoupons.getState().digPending('icecream')).toBe(false);
-    useCoupons.getState().redeem('icecream');
-    expect(useCoupons.getState().status('icecream')).toBe('redeemed');
-    useCoupons.getState().undoRedeem('icecream');
-    expect(useCoupons.getState().status('icecream')).toBe('dug');
-  });
-
-  it('cannot redeem a coupon that was not dug up', () => {
-    useProgress.getState().unlockAll();
-    useCoupons.getState().redeem('movies');
-    expect(useCoupons.getState().status('movies')).toBe('available');
   });
 
   it('never affects bricks', () => {
@@ -43,8 +33,6 @@ describe('coupon state machine', () => {
     const c = useCoupons.getState();
     c.markChallengeComplete('story');
     c.markDug('movies');
-    useCoupons.getState().redeem('movies');
-    useCoupons.getState().undoRedeem('movies');
     useCoupons.getState().unlockAllChallenges();
     expect(JSON.stringify(useProgress.getState().bricks)).toBe(before);
     expect(useProgress.getState().goalReached()).toBe(false);

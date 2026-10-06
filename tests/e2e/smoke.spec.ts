@@ -16,8 +16,32 @@ test('title loads with the computed age heading', async ({ page }, info) => {
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(/Happy \d+(st|nd|rd|th) Birthday, Luna!/);
   await expect(page.getByTestId('play-button')).toBeVisible();
   const box = await page.getByTestId('play-button').boundingBox();
-  expect(box!.height).toBeGreaterThanOrEqual(64);
+  expect(box!.height).toBeGreaterThanOrEqual(page.viewportSize()!.height < 500 ? 52 : 64);
   await page.screenshot({ path: `${SCREENS}/title-${info.project.name}.png` });
+});
+
+test('title shows Daddy\'s note, the explainer and the four coupons', async ({ page }, info) => {
+  await page.goto('./?test=1');
+  const phone = page.viewportSize()!.height < 500;
+  if (phone) {
+    await page.getByTestId('note-open').click();
+    await expect(page.getByTestId('note-overlay')).toBeVisible();
+    expect((await page.getByTestId('note-open').count())).toBe(1);
+  }
+  await expect(page.getByTestId('note-card')).toContainText('A note from Daddy');
+  await expect(page.getByTestId('note-body')).toContainText('so very proud of your creativity');
+  await expect(page.getByTestId('note-card')).toContainText('Love, Daddy');
+  const read = (await page.getByTestId('read-note').boundingBox())!;
+  expect(read.height).toBeGreaterThanOrEqual(52);
+  await page.getByTestId('read-note').click();
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: `${SCREENS}/title-note-${info.project.name}.png` });
+  if (phone) {
+    await page.getByTestId('note-close').click();
+    await expect(page.getByTestId('note-overlay')).toHaveCount(0);
+  }
+  await expect(page.getByTestId('explainer')).toHaveText('Beat the minigames to earn Daddy-Daughter Date coupons!');
+  await expect(page.getByTestId('coupon-row').locator('img, svg')).toHaveCount(4);
 });
 
 test('tapping Play opens the hub', async ({ page }, info) => {
@@ -70,29 +94,14 @@ test('unbuilt zone shows Coming soon; built zone opens and returns', async ({ pa
   await expect(page.getByTestId('hub-screen')).toBeVisible();
 });
 
-test('long-pressing the title opens the grown-up screen, and test hooks work', async ({ page }) => {
+test('test hooks unlock bricks and ?reset=1 clears progress', async ({ page }) => {
   await page.goto('./?test=1');
-  const h = page.getByTestId('title-heading');
-  const box = (await h.boundingBox())!;
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  await page.mouse.down();
-  await page.waitForTimeout(3300);
-  await page.mouse.up();
-  await expect(page.getByTestId('grownup-screen')).toBeVisible();
-  const state = await page.evaluate(() => (window.__game!.getState() as { totalBricks: number }).totalBricks);
-  expect(state).toBe(0);
-  await page.getByTestId('unlock-bricks').click();
+  expect(await page.evaluate(() => (window.__game!.getState() as { totalBricks: number }).totalBricks)).toBe(0);
+  await page.evaluate(() => window.__game!.unlockAll());
   expect(await page.evaluate(() => (window.__game!.getState() as { goalReached: boolean }).goalReached)).toBe(true);
-});
-
-test('family pack fixture imports through the file chooser', async ({ page, browserName }) => {
-  test.skip(browserName !== 'chromium', 'flow covered once in Chromium');
-  await page.goto('./?test=1');
-  await page.evaluate(() => window.__game!.setScreen({ kind: 'grownup' }));
-  await page.getByTestId('pack-file-input').setInputFiles('tests/e2e/fixtures/family-pack.fixture.json');
-  await expect(page.getByTestId('pack-status')).toHaveText(/loaded/);
-  await page.getByTestId('remove-pack').click();
-  await expect(page.getByTestId('pack-status')).toHaveText(/No family pack/);
+  await page.goto('./?test=1&reset=1');
+  expect(await page.evaluate(() => (window.__game!.getState() as { totalBricks: number }).totalBricks)).toBe(0);
+  expect(page.url()).not.toContain('reset=1');
 });
 
 test('no console errors and no non-localhost network requests', async ({ page }) => {

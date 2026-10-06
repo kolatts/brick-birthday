@@ -6,8 +6,10 @@ import { brickGoal } from '../config/zones';
 import { useProgress } from '../state/progress';
 import { useCloset } from '../state/closet';
 import { Button } from '../ui/Button';
+import { f, u } from '../ui/scale';
 import { Avatar } from '../three/Avatar';
 import { Lights } from '../three/Lights';
+import { FitFov } from '../three/FitFov';
 import { canvasProps } from '../three/Brick';
 import { sfx } from '../audio/engine';
 
@@ -34,19 +36,20 @@ export function Closet({ onClose }: { onClose: () => void }) {
   const equipped = useCloset((s) => s.equipped);
   const toggle = useCloset((s) => s.toggle);
   return (
-    <div className="screen" data-testid="closet" style={{ zIndex: 80, background: 'linear-gradient(#FFB3D6, #FFF4E0)', display: 'flex' }}>
-      <div style={{ flex: '0 0 42%', position: 'relative' }}>
+    <div className="screen" data-testid="closet" style={{ zIndex: 80, background: 'linear-gradient(#FFB3D6, #FFF4E0)', display: 'flex', paddingLeft: 'var(--sal)', paddingRight: 'var(--sar)' }}>
+      <div style={{ flex: '0 0 38%', position: 'relative' }}>
         <Canvas {...canvasProps} camera={{ position: [0, 2.6, 9.2], fov: 38 }} onCreated={({ camera }) => camera.lookAt(0, 1.45, 0)}>
+          <FitFov base={38} />
           <Lights />
           <Turntable />
         </Canvas>
       </div>
-      <div style={{ flex: 1, padding: 20, display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <h1 style={{ margin: 0, fontSize: 42, color: '#E63946', textShadow: '0 3px 0 #1D2A44' }}>Dress-up Closet</h1>
+      <div className="scroll" style={{ flex: 1, minWidth: 0, padding: `calc(${u(20)} + var(--sat)) ${u(20)} calc(${u(20)} + var(--sab))`, display: 'flex', flexDirection: 'column', gap: u(12) }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: u(12) }}>
+          <h1 style={{ margin: 0, fontSize: f(42), color: '#E63946', textShadow: `0 ${u(3)} 0 #1D2A44` }}>Dress-up Closet</h1>
           <Button tone="cream" testId="closet-close" onClick={onClose}>Done</Button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${u(190)}, 1fr))`, gap: u(14), paddingBottom: u(8) }}>
           {closetItems.map((it) => {
             const open = isUnlocked(it, total, goal);
             const on = equipped.includes(it.id);
@@ -68,15 +71,15 @@ export function Closet({ onClose }: { onClose: () => void }) {
                   toggle(it.id);
                 }}
                 style={{
-                  minHeight: 112, padding: 10, borderRadius: 24, border: '4px solid #1D2A44', boxShadow: '0 6px 0 #1D2A44',
+                  minHeight: `max(var(--btn-min), ${u(112)})`, padding: u(10), borderRadius: u(24), border: `${u(4)} solid #1D2A44`, boxShadow: `0 ${u(6)} 0 #1D2A44`,
                   background: !open ? '#D6D9DF' : on ? '#7AE582' : '#FFFBEF', color: '#1D2A44', fontFamily: 'inherit',
-                  fontWeight: 800, fontSize: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
+                  fontWeight: 800, fontSize: f(18), display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: u(4),
                   cursor: 'pointer', filter: open ? 'none' : 'grayscale(1)',
                 }}
               >
-                <span style={{ fontSize: 40 }} aria-hidden>{open ? it.emoji : '🧱'}</span>
+                <span style={{ fontSize: u(40) }} aria-hidden>{open ? it.emoji : '🧱'}</span>
                 <span>{it.name}</span>
-                <span style={{ fontSize: 16 }}>{open ? (on ? 'Wearing!' : 'Tap to wear') : `🔒 ${need} brick${need > 1 ? 's' : ''}`}</span>
+                <span style={{ fontSize: f(16) }}>{open ? (on ? 'Wearing!' : 'Tap to wear') : `🔒 ${need} brick${need > 1 ? 's' : ''}`}</span>
               </button>
             );
           })}

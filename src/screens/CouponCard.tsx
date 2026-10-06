@@ -1,54 +1,58 @@
 import type { CouponId } from '../types';
 import { couponById } from '../config/coupons';
-import { useFamilyPack } from '../state/familyPack';
-import { Button } from '../ui/Button';
+import { passwords } from '../config/passwords';
+import { Button, palette } from '../ui/Button';
+import { f, u } from '../ui/scale';
 import { CouponArt } from '../ui/CouponArt';
 
-export const NO_PACK_TEXT = 'Ask a grown-up to load the family pack';
 const MONO = "ui-monospace, 'SF Mono', Menlo, Consolas, monospace";
 
-/** The password for a coupon from the family pack, or null without one. */
-export function usePassword(id: CouponId): string | null {
-  return useFamilyPack((s) => s.pack?.passwords[id] ?? null);
-}
-
-export function Password({ id, size = 84 }: { id: CouponId; size?: number }) {
-  const pw = usePassword(id);
-  if (!pw) {
-    return (
-      <div data-testid="coupon-nopack" style={{ fontSize: Math.max(22, size / 3), fontWeight: 800, color: '#1D2A44' }}>
-        {NO_PACK_TEXT}
-      </div>
-    );
-  }
+export function Password({ id, size = 84, minHeight = 56 }: { id: CouponId; size?: number; minHeight?: number }) {
   return (
     <div
       data-testid="coupon-password"
       style={{
-        fontFamily: MONO, fontWeight: 900, fontSize: size, letterSpacing: '0.08em', color: '#1D2A44', background: '#fff',
-        border: '5px dashed #E63946', borderRadius: 24, padding: '4px 28px', lineHeight: 1.15, whiteSpace: 'nowrap',
+        fontFamily: MONO, fontWeight: 900, fontSize: size, letterSpacing: '0.1em', color: '#1D2A44', background: '#fff',
+        border: `${u(4)} dashed #E63946`, borderRadius: u(20), padding: `${u(6)} ${u(20)}`, lineHeight: 1.15, whiteSpace: 'nowrap',
+        minHeight, display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}
     >
-      {pw}
+      {passwords[id]}
     </div>
   );
 }
 
-/** Full-screen coupon card shown after the treasure dig (and from the Coupon Box). */
+/** Full-screen coupon card shown after the treasure dig: one cream ticket, scene art, the promise, then the password strip. */
 export function CouponCard({ id, onClose }: { id: CouponId; onClose: () => void }) {
   const def = couponById(id);
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const artSize = Math.min(vw * 0.36, vh * 0.62, 340);
+  const colW = Math.min(vw * 0.94 - artSize - 60, 600);
+  const pwSize = Math.max(18, Math.min(60, Math.floor(colW / 11.5)));
   return (
     <div
       className="screen center-col"
       data-testid="coupon-card"
-      style={{ zIndex: 100, background: 'radial-gradient(circle at 50% 30%, #FFF4E0, #FFB3D6)', gap: 'clamp(6px, 1.6vh, 18px)', padding: 16 }}
+      style={{ zIndex: 100, background: 'radial-gradient(circle at 50% 30%, #FFF4E0, #FFB3D6)', padding: 'calc(var(--pad) + var(--sat)) calc(var(--pad) + var(--sar)) calc(var(--pad) + var(--sab)) calc(var(--pad) + var(--sal))' }}
     >
-      <CouponArt id={id} size={Math.min(240, Math.round(window.innerHeight * 0.28))} />
-      <h1 style={{ margin: 0, fontSize: 'clamp(34px, 7vh, 60px)', color: '#E63946', textShadow: '0 3px 0 #1D2A44' }}>{def.title}</h1>
-      <p style={{ margin: 0, fontSize: 'clamp(20px, 3.6vh, 32px)', fontWeight: 800 }}>{def.line}</p>
-      <Password id={id} size={Math.min(84, Math.round(window.innerWidth / 13))} />
-      <p style={{ margin: 0, fontSize: 'clamp(24px, 4.4vh, 40px)', fontWeight: 900, color: '#3A86FF' }}>Show this to Daddy!</p>
-      <Button tone="mint" big testId="coupon-close" onClick={onClose}>Close</Button>
+      <div
+        style={{
+          display: 'flex', alignItems: 'center', gap: u(24), background: palette.cream, border: `${u(5)} solid ${palette.navy}`, borderRadius: u(32),
+          boxShadow: `0 ${u(8)} 0 ${palette.navy}`, padding: u(22), maxWidth: '96vw', maxHeight: '100%',
+        }}
+      >
+        <CouponArt id={id} size={Math.round(artSize)} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(6px, 1.6vh, 14px)', alignItems: 'stretch', textAlign: 'center', width: colW, minWidth: 0 }}>
+          <h1 data-testid="coupon-title" style={{ margin: 0, fontSize: 'clamp(22px, 5.6vh, 44px)', color: '#E63946' }}>{def.experience}</h1>
+          <p style={{ margin: 0, fontSize: 'clamp(16px, 3vh, 26px)', fontWeight: 800 }}>{def.line}</p>
+          <div style={{ background: '#FFE9F3', borderRadius: u(22), padding: u(12), display: 'flex', flexDirection: 'column', gap: u(8) }}>
+            <div style={{ fontSize: f(20), fontWeight: 900, color: '#2F6FE0' }}>Show this to Daddy!</div>
+            <Password id={id} size={pwSize} />
+          </div>
+          <Button tone="mint" testId="coupon-close" onClick={onClose}>Close</Button>
+        </div>
+      </div>
     </div>
   );
 }

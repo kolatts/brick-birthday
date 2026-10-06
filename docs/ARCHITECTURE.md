@@ -16,9 +16,9 @@ without a note in a PR message. Keep everything client-side; no runtime network 
 
 ```
 public/art/                 committed non-people art (title card, badges, icons, coupons, album frame)
-public/faces/default/       committed default cartoon faces (no real people): luna, mom, dad, julian, darian, rudolph, jinglebells  (each: happy|surprised|silly .webp)
+public/faces/               committed cartoon faces (generated art, no photos): <id>-<happy|surprised|silly>.webp, built by `npm run faces:build`
 src/
-  main.tsx, App.tsx         App = Router by screen (title | hub | zone:<id> | finale | grownup)
+  main.tsx, App.tsx         App = Router by screen (title | hub | zone:<id> | finale)
   config/
     family.ts               people + pets: id, displayName, role, hostZone, avatar params, voice {pitch, rate}, birthDate for luna
     zones.ts                ZONE registry: id, title, host, built: boolean, bricks: number, coupon?: CouponId
@@ -27,7 +27,8 @@ src/
   state/
     progress.ts             zustand store: bricks per zone, experiments done, trees planted, etc; brickGoal() = sum bricks of built zones; localStorage persist with versioned migration + corrupt-data fallback
     coupons.ts              coupon state machine: locked -> available -> dug -> redeemed (+ undo); never affects bricks
-    familyPack.ts           IndexedDB load/save/remove of the family pack; parse + validate (zod-free, hand-written)
+    faces.ts                faceUrl(id, expression) -> BASE_URL + faces/<id>-<expr>.webp
+    reset.ts                resetEverything() + ?reset=1 handling
     settings.ts             mute, volume
     ui.ts                   current screen, orientation, modal state
   audio/
@@ -35,17 +36,16 @@ src/
     speech.ts               speechSynthesis wrapper with per-character pitch/rate; word-boundary highlighting callback; stubbed under ?test=1
   three/
     Brick.tsx               instanced stud-brick primitives (BrickGrid, BrickBox)
-    Avatar.tsx              chunky brick body + face plate (portrait texture from pack or default face); expression prop
+    Avatar.tsx              chunky brick body + face plate (portrait texture from public/faces); expression prop
     Model.tsx               <Model name fallback> wrapper for future .glb swaps
     Island.tsx              hub island geometry
     Pet.tsx                 wandering pets with trick on tap
     Wand.tsx                wand + sparkle particles
     CameraRig.tsx           drag-to-rotate orbit + fly-to-building
   screens/
-    Title.tsx               "Happy {ordinal} Birthday, Luna!", waving avatar, Play, long-press (3s) -> grown-up
+    Title.tsx               "Happy {ordinal} Birthday, Luna!", waving avatar, Play
     Hub.tsx                 island, 5 buildings, hosts, pets, cake platform, coupon box, closet, dig spots
     Rotate.tsx              portrait "turn me sideways"
-    GrownUp.tsx             reset, unlock all, pack import/remove, coupons list, volume, replay finale
     Finale.tsx
     Closet.tsx, CouponBox.tsx, CouponCard.tsx, DigSpot.tsx
   zones/
@@ -56,14 +56,15 @@ src/
   test/                     window.__game test hooks (only when ?test=1)
 scripts/
   portraits/generate.ts, style.ts, contact-sheet.ts
-  pack/build.ts             npm run pack -> private/family-pack.json + private/coupon-passwords.md
+  pack/passwords-cli.ts     npm run passwords -> src/config/passwords.ts + private/coupon-passwords.md
+  faces/build.ts            npm run faces:build -> public/faces/*.webp from private/portraits
   pack/passwords.ts         word list + crypto generator (also imported by unit tests)
   verify/privacy.ts         git-tracked check + dist scan
   verify/size.ts            gzip budget 1.5 MB
   dev-lan.ts                vite --host + QR code
 tests/unit/**               vitest
-tests/e2e/**                playwright; fixtures/family-pack.fixture.json (generated fake faces, fake passwords)
-private/                    gitignored: portraits, family-pack.json, coupon-passwords.md
+tests/e2e/**                playwright
+private/                    gitignored: portrait sources, coupon-passwords.md
 photos/                     gitignored: real photos
 ```
 
@@ -74,21 +75,14 @@ export type PersonId = 'luna' | 'mom' | 'dad' | 'julian' | 'darian' | 'rudolph' 
 export type Expression = 'happy' | 'surprised' | 'silly';
 export type ZoneId = 'story' | 'science' | 'tennis' | 'music' | 'woods';
 export type CouponId = 'movies' | 'videogames' | 'shopping' | 'icecream';
-export type Screen = { kind: 'title' } | { kind: 'hub' } | { kind: 'zone'; zone: ZoneId } | { kind: 'challenge'; zone: ZoneId } | { kind: 'finale' } | { kind: 'grownup' };
-
-export interface FamilyPack {
-  schemaVersion: 1;
-  portraits: Partial<Record<PersonId, Partial<Record<Expression, string>>>>; // data:image/webp;base64,...
-  album: string[];               // data URLs, 1600px max edge
-  passwords: Record<CouponId, string>;  // WORD-WORD-NN
-  message?: string;              // finale message from Mom & Dad
-}
+export type Screen = { kind: 'title' } | { kind: 'hub' } | { kind: 'zone'; zone: ZoneId } | { kind: 'challenge'; zone: ZoneId } | { kind: 'finale' };
 ```
 
 ## Conventions
 
-- Tap targets ≥ 64px; no hover UI. Use `onPointerDown` for game taps (touch latency).
-- DPR capped at 1.5 via `<Canvas dpr={[1, 1.5]}>`; `frameloop="always"` only in 3D screens.
+- Tap targets ≥ 64px on iPad, ≥ 52px on phones (`--btn-min`); sizes scale via `--ui-scale` (`src/ui/scale.ts`: `u()`, `f()`, `inset()`), HUDs use safe-area insets; landscape only, no portrait layouts.
+- Original rule: tap targets ≥ 64px; no hover UI. Use `onPointerDown` for game taps (touch latency).
+- DPR capped at 1.5 (1.25 on phones) via `maxDpr()`; `frameloop="always"` only in 3D screens.
 - All game text copy lives in the zone module or `src/config/copy.ts`; nothing hardcodes Luna's age.
 - `?test=1` exposes `window.__game` with: `autoPlay(zone)`, `completeChallenge(zone)`, `getState()`, `skipAnimations()`. Inert without the flag.
 - Speech + audio stubs are automatic under `?test=1`.

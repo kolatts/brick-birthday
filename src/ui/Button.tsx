@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
+import { f, u } from './scale';
 
 export const palette = {
   pink: '#FF5CA8',
@@ -33,17 +34,17 @@ export function Button({ children, onClick, tone = 'pink', big = false, disabled
       disabled={disabled}
       onClick={onClick}
       style={{
-        minWidth: 64,
-        minHeight: big ? 96 : 64,
-        padding: big ? '12px 56px' : '10px 28px',
-        fontSize: big ? 44 : 24,
+        minWidth: 'var(--btn-min)',
+        minHeight: big ? `max(calc(var(--btn-min) * 1.3), ${u(96)})` : 'var(--btn-min)',
+        padding: big ? `${u(12)} ${u(56)}` : `${u(10)} ${u(28)}`,
+        fontSize: big ? f(44) : f(24),
         fontWeight: 800,
         fontFamily: 'inherit',
         color: dark ? palette.navy : '#fff',
         background: palette[tone],
-        border: `4px solid ${palette.navy}`,
-        borderRadius: big ? 40 : 28,
-        boxShadow: `0 6px 0 ${palette.navy}`,
+        border: `${u(4)} solid ${palette.navy}`,
+        borderRadius: big ? u(40) : u(28),
+        boxShadow: `0 ${u(6)} 0 ${palette.navy}`,
         cursor: 'pointer',
         opacity: disabled ? 0.5 : 1,
         ...style,
@@ -59,10 +60,10 @@ export function Panel({ children, style }: { children: ReactNode; style?: CSSPro
     <div
       style={{
         background: palette.cream,
-        border: `4px solid ${palette.navy}`,
-        borderRadius: 28,
-        boxShadow: `0 8px 0 ${palette.navy}`,
-        padding: 24,
+        border: `${u(4)} solid ${palette.navy}`,
+        borderRadius: u(28),
+        boxShadow: `0 ${u(8)} 0 ${palette.navy}`,
+        padding: u(24),
         color: palette.navy,
         ...style,
       }}

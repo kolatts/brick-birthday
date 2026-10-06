@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { WORDS, cryptoInt, generatePassword, generatePasswords } from '../../scripts/pack/passwords';
+import { PASSWORD_RE, WORDS, cryptoInt, generatePassword, generatePasswords } from '../../scripts/pack/passwords';
 import { COUPON_IDS } from '../../src/types';
-import { PASSWORD_RE } from '../../src/state/familyPack';
 
 describe('word list', () => {
   it('is large, unique, uppercase A-Z, 3-8 letters', () => {

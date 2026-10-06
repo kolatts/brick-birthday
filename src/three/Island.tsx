@@ -182,8 +182,8 @@ export function ZoneMarkers({ onTap, bricks }: ZoneMarkersProps) {
                 <div
                   data-testid={`label-${z}`}
                   style={{
-                    padding: '4px 12px', borderRadius: 16, background: def.built ? '#FFF4E0' : '#FFE9A8', color: '#1D2A44',
-                    border: '3px solid #1D2A44', fontWeight: 800, fontSize: 17, whiteSpace: 'nowrap', pointerEvents: 'none',
+                    padding: 'calc(4px * var(--ui-scale)) calc(12px * var(--ui-scale))', borderRadius: 16, background: def.built ? '#FFF4E0' : '#FFE9A8', color: '#1D2A44',
+                    border: '3px solid #1D2A44', fontWeight: 800, fontSize: 'max(13px, calc(17px * var(--ui-scale)))', whiteSpace: 'nowrap', pointerEvents: 'none',
                     boxShadow: '0 3px 0 #1D2A44',
                   }}
                 >

@@ -48,7 +48,8 @@ export function CameraRig({
   const size = useThree((s) => s.size);
   const aspect = size.width / Math.max(1, size.height);
   // keep the whole island in view on narrow screens
-  const fit = Math.max(1, 1.62 / aspect);
+  // and on short (phone) viewports, where HUD rows eat vertical space, pull back a little further
+  const fit = Math.max(1, 1.62 / aspect) * (size.height < 500 ? 1.22 : 1);
 
   const st = useRef({
     az: azimuth, pol: polar, rad: radius,

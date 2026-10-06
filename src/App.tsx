@@ -1,18 +1,16 @@
 import { Suspense, useEffect } from 'react';
 import type { Screen, ZoneId } from './types';
 import { useUi, currentOrientation } from './state/ui';
-import { useFamilyPack } from './state/familyPack';
 import { Title } from './screens/Title';
 import { Hub } from './screens/Hub';
 import { Rotate } from './screens/Rotate';
-import { GrownUp } from './screens/GrownUp';
 import { ZonePlaceholder } from './screens/ZonePlaceholder';
 import { Button } from './ui/Button';
 import { zoneModules } from './zones/registry';
 import { playMusic, setSpeaking, type TrackId } from './audio/engine';
 import { onSpeaking } from './audio/speech';
 
-/** Which music bed belongs to a screen; null keeps whatever is playing (e.g. the grown-up page). */
+/** Which music bed belongs to a screen; null keeps whatever is playing. */
 export function trackForScreen(screen: Screen): TrackId | null {
   switch (screen.kind) {
     case 'title': return 'title';
@@ -58,11 +56,9 @@ export default function App() {
   const screen = useUi((s) => s.screen);
   const orientation = useUi((s) => s.orientation);
   const setOrientation = useUi((s) => s.setOrientation);
-  const initPack = useFamilyPack((s) => s.init);
   useMusicForScreen();
 
   useEffect(() => {
-    void initPack();
     const onResize = () => setOrientation(currentOrientation());
     window.addEventListener('resize', onResize);
     window.addEventListener('orientationchange', onResize);
@@ -73,7 +69,7 @@ export default function App() {
       window.removeEventListener('resize', onResize);
       window.removeEventListener('orientationchange', onResize);
     };
-  }, [initPack, setOrientation]);
+  }, [setOrientation]);
 
   return (
     <>
@@ -82,7 +78,6 @@ export default function App() {
       {screen.kind === 'zone' && <ZoneRoute zone={screen.zone} />}
       {screen.kind === 'challenge' && <ZoneRoute zone={screen.zone} challenge />}
       {screen.kind === 'finale' && <FinalePlaceholder />}
-      {screen.kind === 'grownup' && <GrownUp />}
       {orientation === 'portrait' && <Rotate />}
     </>
   );

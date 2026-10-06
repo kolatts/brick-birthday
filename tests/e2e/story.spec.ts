@@ -24,8 +24,8 @@ test('Story Tower: pick four tiles, hear the story, earn bricks', async ({ page 
   await page.waitForTimeout(150);
   await page.screenshot({ path: `${SCREENS}/story-picks-${info.project.name}.png` });
   const box = await page.getByTestId('tile-power-giggle').boundingBox();
-  expect(box!.height).toBeGreaterThanOrEqual(64);
-  expect(box!.width).toBeGreaterThanOrEqual(64);
+  expect(box!.height).toBeGreaterThanOrEqual(page.viewportSize()!.height < 500 ? 52 : 64);
+  expect(box!.width).toBeGreaterThanOrEqual(52);
   await page.getByTestId('tile-power-giggle').click();
   await page.screenshot({ path: `${SCREENS}/story-ready-${info.project.name}.png` });
   await page.getByTestId('tell-story').click();

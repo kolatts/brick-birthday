@@ -1,6 +1,7 @@
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { Builder, type Prim, type PrimType, type V3 } from './prims';
+import { maxDpr } from '../ui/scale';
 
 /** Shared unit geometries (scaled per instance). Low-poly on purpose. */
 const geos: Record<PrimType, THREE.BufferGeometry> = {
@@ -116,7 +117,7 @@ export function BrickGrid({ cols, rows, cell = 1, height = 0.4, colors, position
 
 /** Shared canvas props: capped DPR, preserved buffer for screenshots, iPad-friendly GL options. */
 export const canvasProps = {
-  dpr: [1, 1.5] as [number, number],
+  dpr: [1, maxDpr()] as [number, number],
   frameloop: 'always' as const,
   flat: true,
   gl: { preserveDrawingBuffer: true, antialias: true, powerPreference: 'high-performance' as const },

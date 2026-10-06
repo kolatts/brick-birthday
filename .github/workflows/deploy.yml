@@ -17,8 +17,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      FAMILY_PACK_FIXTURE: tests/e2e/fixtures/family-pack.fixture.json
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

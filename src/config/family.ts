@@ -90,6 +90,14 @@ export const family: Record<PersonId, Person> = {
 
 export const people: Person[] = Object.values(family);
 
+/** Daddy's note on the title screen. Spoken by `dad` (registered in src/config/copy.ts). */
+export const welcomeMessage = {
+  heading: 'A note from Daddy',
+  body: "Luna, I am so very proud of your creativity, your kindness, and your ambition. I can't wait to see the mark you make on the world.",
+  signoff: 'Love, Daddy',
+  explainer: 'Beat the minigames to earn Daddy-Daughter Date coupons!',
+} as const;
+
 export const finaleMessage = 'TODO: message from Mom and Dad';
 
 export const lunaFacts = {

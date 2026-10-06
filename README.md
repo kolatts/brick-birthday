@@ -6,15 +6,16 @@ A personalized, brick-built birthday game for Luna (iPad Safari, landscape, touc
 
 | Script | What it does |
 | --- | --- |
-| `npm run dev` | Dev server at `http://localhost:5173/` (auto-loads `private/family-pack.json` in dev only) |
+| `npm run dev` | Dev server at `http://localhost:5173/` |
 | `npm run dev:lan` | Dev server on the LAN, prints a URL and QR code for the iPad |
 | `npm run build` / `preview` | Production build / serve it at `http://localhost:4173/brick-birthday/` |
 | `npm run typecheck` / `lint` / `test:unit` | tsc, ESLint, Vitest |
 | `npm run verify:size` / `verify:privacy` | Gzip JS budget (1.5 MB); privacy scan of git + `dist/` |
-| `npm run test:e2e` | Playwright (Chromium + iPad WebKit) against `vite preview` |
+| `npm run test:e2e` | Playwright (Chromium, iPad WebKit, iPhone WebKit) against `vite preview` |
 | `npm run verify` | All of the above, in order, failing fast |
-| `npm run fixtures` | Regenerates the fake family-pack fixture used by tests |
-| `npm run pack`, `portraits` | Stubs until milestone 2 |
+| `npm run faces:build` | Converts `private/portraits/*.png` to committed `public/faces/*.webp` |
+| `npm run passwords` | Generates/keeps `src/config/passwords.ts` (+ `private/coupon-passwords.md`); `-- --new-passwords` renews |
+| `npm run portraits` | Generates cartoon portrait sources into `private/portraits/` |
 
 Add `?test=1` to the URL to expose `window.__game` test hooks and stub speech.
 
@@ -24,7 +25,7 @@ All speech uses pre-generated Azure neural clips in `public/voices/` (same-origi
 
 ## Privacy model
 
-`photos/` and `private/` are gitignored and must never be committed or bundled. Real faces and coupon passwords reach the iPad only via a **family pack** JSON file imported on the Grown-up screen (long-press the title for 3 seconds); it is stored in IndexedDB on that device. `verify:privacy` fails if git tracks those folders or if `dist/` contains pack data, passwords, API-key patterns or large embedded images. Tests use an obviously fake fixture pack.
+`photos/` and `private/` are gitignored and must never be committed or bundled: they hold the real photos and generation sources. The cartoon faces in `public/faces/` and the coupon passwords in `src/config/passwords.ts` are generated art/plain strings and intentionally public. There is no in-app import and no grown-up screen; `?reset=1` clears progress on a device. `verify:privacy` fails if git tracks `photos/` or `private/`, if `dist/` contains API-key patterns or images over 200 KB, or if any image in `public/` or `dist/` is byte-identical to a file in `photos/`.
 
 ## Testing on an iPad
 

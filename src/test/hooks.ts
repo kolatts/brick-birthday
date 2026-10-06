@@ -2,8 +2,8 @@ import type { Screen, ZoneId } from '../types';
 import { useProgress } from '../state/progress';
 import { useCoupons } from '../state/coupons';
 import { useUi } from '../state/ui';
-import { useFamilyPack } from '../state/familyPack';
 import { zones } from '../config/zones';
+import { resetEverything } from '../state/reset';
 
 type AutoPlay = () => void | Promise<void>;
 const registry = new Map<ZoneId, AutoPlay>();
@@ -34,6 +34,8 @@ export interface GameHooks {
   autoPlay: (zone: ZoneId) => Promise<void>;
   completeChallenge: (zone: ZoneId) => void;
   skipAnimations: () => void;
+  reset: () => void;
+  unlockAll: () => void;
 }
 
 declare global {
@@ -57,8 +59,7 @@ export function installTestHooks(): void {
         totalBricks: p.totalBricks(),
         goalReached: p.goalReached(),
         challengesDone: p.challengesDone,
-        coupons: { challengeComplete: c.challengeComplete, dug: c.dug, redeemed: c.redeemed },
-        packLoaded: useFamilyPack.getState().pack !== null,
+        coupons: { challengeComplete: c.challengeComplete, dug: c.dug },
       };
     },
     setScreen: (s) => useUi.getState().setScreen(s),
@@ -68,6 +69,10 @@ export function installTestHooks(): void {
     completeChallenge: (zone) => {
       if (!zones[zone].built) return;
       useCoupons.getState().markChallengeComplete(zone);
+    },
+    reset: resetEverything,
+    unlockAll: () => {
+      useProgress.getState().unlockAll();
     },
     skipAnimations: () => {
       window.__skipAnim = true;

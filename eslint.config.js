@@ -4,8 +4,9 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', 'test-results', 'playwright-report', 'photos', 'private', '.claude'] },
+  { ignores: ['dist', 'node_modules', 'test-results', 'playwright-report', 'photos', 'private', '.claude', 'public', 'scratchpad'] },
   js.configs.recommended,
+  { files: ['**/*.{js,mjs,cjs}'], languageOptions: { globals: { ...globals.node } } },
   ...tseslint.configs.recommended,
   {
     files: ['**/*.{ts,tsx}'],

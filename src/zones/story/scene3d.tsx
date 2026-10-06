@@ -1,4 +1,5 @@
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { FitFov } from '../../three/FitFov';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { canvasProps, StaticBatch } from '../../three/Brick';
@@ -460,6 +461,7 @@ export function SceneCanvas({ children }: { children: React.ReactNode }) {
       data-testid="story-canvas"
       style={{ position: 'absolute', inset: 0 }}
     >
+      <FitFov base={40} />
       <Suspense fallback={null}>{children}</Suspense>
     </Canvas>
   );

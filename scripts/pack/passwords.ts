@@ -3,6 +3,8 @@ import type { CouponId } from '../../src/types';
 
 export { WORDS };
 
+export const PASSWORD_RE = /^[A-Z]{3,8}-[A-Z]{3,8}-\d{2}$/;
+
 /** Uniform random integer in [0, max) from the Web Crypto CSPRNG (rejection sampling, no modulo bias). */
 export function cryptoInt(max: number): number {
   if (!Number.isInteger(max) || max <= 0 || max > 0x100000000) throw new RangeError('max out of range');

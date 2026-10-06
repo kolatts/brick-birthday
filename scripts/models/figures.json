@@ -1,0 +1,126 @@
+{
+  "comment": "Parameters for build_figures.py; mirrors src/config/family.ts + src/three/avatarParts.ts (a unit test keeps them in sync).",
+  "coordinates": "three.js frame (Y up, +Z front); exported with export_yup=False so values map 1:1",
+  "headSpec": {
+    "r": 0.5,
+    "h": 0.92,
+    "depth": 0.92,
+    "bevel": 0.13,
+    "topBevel": 0.22,
+    "cheek": 0.03,
+    "cheekY": -0.2
+  },
+  "plate": {
+    "yLo": -0.4,
+    "yHi": 0.34,
+    "arc": 0.85
+  },
+  "torso": {
+    "h": 0.82,
+    "wTop": 1.02,
+    "wBottom": 0.76,
+    "depth": 0.58
+  },
+  "closetItems": [
+    "bow",
+    "dress",
+    "cape",
+    "visor",
+    "labcoat",
+    "boots",
+    "sunglasses",
+    "pethats"
+  ],
+  "figures": {
+    "luna": {
+      "kind": "person",
+      "bodyColor": "#FF5CA8",
+      "hairStyle": "wavy-pulled-back",
+      "hairColor": "#3B2418",
+      "skinTone": "#B98259",
+      "accessory": "tiara",
+      "pants": "#FF8FC3",
+      "shoes": "#E63C8F",
+      "legH": 0.34,
+      "portraitSkin": "#C27B4E"
+    },
+    "mom": {
+      "kind": "person",
+      "bodyColor": "#E63946",
+      "hairStyle": "long-straight",
+      "hairColor": "#3B2418",
+      "skinTone": "#F5D5BD",
+      "accessory": "sunglasses",
+      "pants": "#FFF1D6",
+      "shoes": "#FFD60A",
+      "legH": 0.5,
+      "portraitSkin": "#E4A577"
+    },
+    "dad": {
+      "kind": "person",
+      "bodyColor": "#3A86FF",
+      "hairStyle": "bald",
+      "hairColor": "#2B1B12",
+      "skinTone": "#6B4226",
+      "accessory": "guitar",
+      "pants": "#1D2A44",
+      "shoes": "#6B4423",
+      "legH": 0.52,
+      "portraitSkin": "#884D30"
+    },
+    "julian": {
+      "kind": "person",
+      "bodyColor": "#7AE582",
+      "hairStyle": "wavy-short",
+      "hairColor": "#A47B52",
+      "skinTone": "#F5D5BD",
+      "accessory": "sunglasses",
+      "pants": "#26407A",
+      "shoes": "#FFFFFF",
+      "legH": 0.48,
+      "portraitSkin": "#EDB586"
+    },
+    "darian": {
+      "kind": "person",
+      "bodyColor": "#FFD60A",
+      "hairStyle": "curly-fluffy",
+      "hairColor": "#3B2418",
+      "skinTone": "#F5D5BD",
+      "accessory": "visor",
+      "pants": "#5B8DEF",
+      "shoes": "#E63946",
+      "legH": 0.48,
+      "portraitSkin": "#E8B78D"
+    },
+    "rudolph": {
+      "kind": "pet",
+      "species": "dog",
+      "bodyColor": "#9AA0A6",
+      "outfitColor": "#C8A97E",
+      "accessory": "curled tail",
+      "headY": 1.0,
+      "headZ": 0.48,
+      "headR": 0.4,
+      "headH": 0.64,
+      "headDepth": 0.88,
+      "plateW": 0.78,
+      "plateH": 0.56,
+      "portraitFur": "#E3BB89"
+    },
+    "jinglebells": {
+      "kind": "pet",
+      "species": "cat",
+      "bodyColor": "#3A2A22",
+      "outfitColor": "#8A5A2B",
+      "accessory": "bell collar",
+      "headY": 0.95,
+      "headZ": 0.38,
+      "headR": 0.36,
+      "headH": 0.58,
+      "headDepth": 0.88,
+      "plateW": 0.7,
+      "plateH": 0.52,
+      "portraitFur": "#AB996E"
+    }
+  }
+}

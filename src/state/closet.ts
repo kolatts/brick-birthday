@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { toggleEquipped } from '../config/closet';
 
 const KEY = 'brick-birthday:closet';
 
@@ -21,7 +22,7 @@ interface ClosetState {
 
 export const useCloset = create<ClosetState>((set) => ({
   equipped: load(),
-  toggle: (id) => set((s) => ({ equipped: s.equipped.includes(id) ? s.equipped.filter((x) => x !== id) : [...s.equipped, id] })),
+  toggle: (id) => set((s) => ({ equipped: toggleEquipped(s.equipped, id) })),
   reset: () => set({ equipped: [] }),
 }));
 

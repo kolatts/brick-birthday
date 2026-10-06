@@ -3,6 +3,7 @@ import { say, stopSpeaking, isTestMode } from '../../audio/speech';
 import { safeSfx as sfx } from './ui';
 import { useUi } from '../../state/ui';
 import { Button, palette } from '../../ui/Button';
+import { f, u, useIsPhone } from '../../ui/scale';
 import { Backdrop, Bubble, MomPortrait, softPanel } from './ui';
 import { TheaterCanvas } from './scene3d';
 import { MOM_MOVIE_CHEER, MOM_MOVIE_DONE, MOM_MOVIE_INTRO, MOM_MOVIE_NEXT, MOM_MOVIE_RETRY, MOM_MOVIE_SILLY } from './lines';
@@ -122,13 +123,14 @@ export function Challenge() {
   };
 
   const showStage = phase === 'curtains' || phase === 'silly' || phase === 'cheer' || phase === 'finished';
+  const phone = useIsPhone();
   const current = scene >= 0 ? story.scenes[(slots as number[])[scene]] : null;
 
   return (
     <Backdrop testId="challenge-screen-story">
       <TheaterCanvas icon={current?.icon ?? '🎬'} curtainsOpen={phase === 'curtains' ? curtainsOpen : true} />
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', padding: '16px 28px 20px', gap: 14 }}>
-        <header style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', padding: `calc(${u(16)} + var(--sat)) calc(${u(28)} + var(--sar)) calc(${u(20)} + var(--sab)) calc(${u(28)} + var(--sal))`, gap: u(14) }}>
+        <header style={{ display: 'flex', alignItems: 'center', gap: u(18) }}>
           <MomPortrait />
           <div style={{ flex: 1 }}>
             <Bubble testId="movie-title">
@@ -144,9 +146,9 @@ export function Challenge() {
         </header>
 
         {!showStage && (
-          <section style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center', justifyContent: 'center', ...softPanel, margin: '0 auto', padding: '14px 24px 20px', width: 'min(1000px, 100%)' }}>
-            <div style={{ fontSize: 30, fontWeight: 800 }}>Tap the pictures in story order</div>
-            <div style={{ display: 'flex', gap: 16, justifyContent: 'center', width: '100%' }}>
+          <section style={{ flex: 1, minHeight: u(0), display: 'flex', flexDirection: 'column', gap: u(14), alignItems: 'center', justifyContent: 'center', ...softPanel, margin: '0 auto', padding: `${u(14)} ${u(24)} ${u(20)}`, width: 'min(1000px, 100%)' }}>
+            <div style={{ fontSize: f(30), fontWeight: 800 }}>Tap the pictures in story order</div>
+            <div style={{ display: 'flex', gap: u(16), justifyContent: 'center', width: '100%' }}>
               {slots.map((v, i) => (
                 <button
                   key={i}
@@ -156,23 +158,24 @@ export function Challenge() {
                   onClick={() => remove(i)}
                   style={{
                     ...cardBase,
+                    minHeight: `max(56px, ${u(150)})`,
                     background: v === null ? 'rgba(255,244,224,.55)' : '#FFF4E0',
                     borderStyle: v === null ? 'dashed' : 'solid',
-                    boxShadow: v === null ? 'none' : `0 8px 0 ${palette.navy}`,
+                    boxShadow: v === null ? 'none' : `0 ${u(8)} 0 ${palette.navy}`,
                   }}
                 >
                   {v === null ? (
-                    <span style={{ fontSize: 56, fontWeight: 900, opacity: 0.5 }}>{i + 1}</span>
+                    <span style={{ fontSize: f(phone ? 24 : 56), fontWeight: 900, opacity: 0.5 }}>{i + 1}</span>
                   ) : (
                     <>
-                      <span style={{ fontSize: 64 }}>{story.scenes[v].icon}</span>
-                      <span style={lineStyle}>{story.scenes[v].line}</span>
+                      <span style={{ fontSize: f(64) }}>{story.scenes[v].icon}</span>
+                      {!phone && <span style={lineStyle}>{story.scenes[v].line}</span>}
                     </>
                   )}
                 </button>
               ))}
             </div>
-            <div style={{ display: 'flex', gap: 16, justifyContent: 'center', width: '100%', minHeight: 230 }}>
+            <div style={{ display: 'flex', gap: u(16), justifyContent: 'center', width: '100%', minHeight: phone ? undefined : u(230) }}>
               {pool.map((idx) =>
                 slots.includes(idx) ? (
                   <div key={idx} style={{ ...cardBase, border: '4px dashed transparent', background: 'transparent', boxShadow: 'none' }} />
@@ -184,44 +187,44 @@ export function Challenge() {
                     data-testid={`card-${idx}`}
                     data-order={test ? idx : undefined}
                     onClick={() => place(idx)}
-                    style={{ ...cardBase, background: '#FFF4E0', boxShadow: `0 8px 0 ${palette.navy}` }}
+                    style={{ ...cardBase, background: '#FFF4E0', boxShadow: `0 ${u(8)} 0 ${palette.navy}` }}
                   >
-                    <span style={{ fontSize: 64 }}>{story.scenes[idx].icon}</span>
+                    <span style={{ fontSize: f(64) }}>{story.scenes[idx].icon}</span>
                     <span style={lineStyle}>{story.scenes[idx].line}</span>
                   </button>
                 ),
               )}
             </div>
-            <Button big tone="yellow" testId="play-movie" disabled={slots.some((s) => s === null)} onClick={() => void play()}>
+            <Button big={!phone} tone="yellow" testId="play-movie" disabled={slots.some((s) => s === null)} onClick={() => void play()}>
               🍿 Play movie!
             </Button>
           </section>
         )}
 
         {showStage && (
-          <section style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+          <section style={{ flex: 1, minHeight: u(0), display: 'flex', flexDirection: 'column', alignItems: 'center', gap: u(14) }}>
             {phase === 'silly' && (
-              <div data-testid="silly-message" style={{ fontSize: 44, fontWeight: 900, color: palette.red, background: '#FFF4E0', border: `4px solid ${palette.navy}`, borderRadius: 28, padding: '8px 28px' }}>
+              <div data-testid="silly-message" style={{ fontSize: f(44), fontWeight: 900, color: palette.red, background: '#FFF4E0', border: `${u(4)} solid ${palette.navy}`, borderRadius: u(28), padding: `${u(8)} ${u(28)}` }}>
                 Wait… that's not right! 🤪
               </div>
             )}
-            <div data-testid="movie-stage" style={{ position: 'relative', flex: 1, minHeight: 0, width: 'min(900px, 100%)' }}>
+            <div data-testid="movie-stage" style={{ position: 'relative', flex: 1, minHeight: u(0), width: 'min(900px, 100%)' }}>
               {phase === 'cheer' && (
-                <div style={{ position: 'absolute', top: 14, left: 0, right: 0, textAlign: 'center', fontSize: 52, fontWeight: 900, color: '#fff', textShadow: '0 4px 0 #1D2A44' }} data-testid="cheer">
+                <div style={{ position: 'absolute', top: u(14), left: u(0), right: u(0), textAlign: 'center', fontSize: f(52), fontWeight: 900, color: '#fff', textShadow: '0 4px 0 #1D2A44' }} data-testid="cheer">
                   Bravo! 👏
                 </div>
               )}
               {phase === 'finished' && (
-                <div data-testid="movie-finished" style={{ position: 'absolute', inset: '10% 8%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, textAlign: 'center', padding: 24, ...softPanel, background: 'rgba(255,244,224,.92)', animation: 'st-pop .5s ease-out' }}>
-                  <div style={{ fontSize: 80 }}>🎉🏆🎉</div>
-                  <div style={{ fontSize: 46, fontWeight: 900, color: palette.red }}>You did it!</div>
-                  <div style={{ fontSize: 34, fontWeight: 800 }}>Something is buried near the Story Tower…</div>
+                <div data-testid="movie-finished" style={{ position: 'absolute', inset: '10% 8%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: u(12), textAlign: 'center', padding: u(24), ...softPanel, background: 'rgba(255,244,224,.92)', animation: 'st-pop .5s ease-out' }}>
+                  <div style={{ fontSize: f(80) }}>🎉🏆🎉</div>
+                  <div style={{ fontSize: f(46), fontWeight: 900, color: palette.red }}>You did it!</div>
+                  <div style={{ fontSize: f(34), fontWeight: 800 }}>Something is buried near the Story Tower…</div>
                 </div>
               )}
-              <div data-testid="curtains" data-open={curtainsOpen ? 'true' : 'false'} style={{ position: 'absolute', top: 0, left: 0, width: 1, height: 1 }} />
+              <div data-testid="curtains" data-open={curtainsOpen ? 'true' : 'false'} style={{ position: 'absolute', top: u(0), left: u(0), width: u(1), height: u(1) }} />
               {current && (
-                <div key={scene} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, textAlign: 'center', animation: 'st-pop .4s ease-out' }}>
-                  <div data-testid="scene-line" style={{ display: 'inline-block', fontSize: 36, fontWeight: 800, maxWidth: 800, padding: '10px 26px', ...softPanel, background: 'rgba(255,244,224,.92)' }}>{current.line}</div>
+                <div key={scene} style={{ position: 'absolute', bottom: u(0), left: u(0), right: u(0), textAlign: 'center', animation: 'st-pop .4s ease-out' }}>
+                  <div data-testid="scene-line" style={{ display: 'inline-block', fontSize: f(36), fontWeight: 800, maxWidth: u(800), padding: `${u(10)} ${u(26)}`, ...softPanel, background: 'rgba(255,244,224,.92)' }}>{current.line}</div>
                 </div>
               )}
             </div>
@@ -238,29 +241,31 @@ export function Challenge() {
 }
 
 const cardBase: React.CSSProperties = {
-  width: 200,
-  minHeight: 220,
+  flex: '1 1 0',
+  minWidth: 0,
+  maxWidth: `max(${u(200)}, 22vw)`,
+  minHeight: u(220),
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: 8,
-  padding: 10,
+  gap: u(8),
+  padding: u(10),
   fontFamily: 'inherit',
   color: palette.navy,
-  border: `5px solid ${palette.navy}`,
-  borderRadius: 26,
+  border: `${u(5)} solid ${palette.navy}`,
+  borderRadius: u(26),
   cursor: 'pointer',
 };
 
-const lineStyle: React.CSSProperties = { fontSize: 22, fontWeight: 800, lineHeight: 1.15 };
+const lineStyle: React.CSSProperties = { fontSize: f(22), fontWeight: 800, lineHeight: 1.15 };
 
 const progressStyle: React.CSSProperties = {
-  fontSize: 40,
+  fontSize: f(40),
   fontWeight: 900,
   background: palette.yellow,
-  border: `4px solid ${palette.navy}`,
-  borderRadius: 28,
-  boxShadow: `0 6px 0 ${palette.navy}`,
-  padding: '6px 22px',
+  border: `${u(4)} solid ${palette.navy}`,
+  borderRadius: u(28),
+  boxShadow: `0 ${u(6)} 0 ${palette.navy}`,
+  padding: `${u(6)} ${u(22)}`,
 };

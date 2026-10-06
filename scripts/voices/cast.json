@@ -31,8 +31,8 @@
   },
   "dad": {
     "voice": "en-US-DavisNeural",
-    "pitch": "-6%",
-    "rate": "-8%"
+    "pitch": "+9%",
+    "rate": "-3%"
   },
   "julian": {
     "voice": "en-US-AndrewNeural",

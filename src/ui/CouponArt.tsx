@@ -9,8 +9,8 @@ const FALLBACK: Record<CouponId, { bg: string; icon: string }> = {
   icecream: { bg: '#7AE582', icon: '🍨' },
 };
 
-/** Coupon illustration (brick-built art from public/art); tiny inline SVG stand-in if the image is missing. */
-export function CouponArt({ id, size = 220 }: { id: CouponId; size?: number }) {
+/** Coupon illustration from public/art: the Daddy-and-Luna date scene, or the small brick-object icon; tiny inline SVG stand-in if the image is missing. */
+export function CouponArt({ id, size = 220, variant = 'scene' }: { id: CouponId; size?: number; variant?: 'scene' | 'icon' }) {
   const [failed, setFailed] = useState(false);
   const fb = FALLBACK[id];
   if (failed) {
@@ -24,7 +24,7 @@ export function CouponArt({ id, size = 220 }: { id: CouponId; size?: number }) {
   return (
     <img
       data-testid={`coupon-art-${id}`}
-      src={`${import.meta.env.BASE_URL}${couponById(id).illustration}`}
+      src={`${import.meta.env.BASE_URL}${variant === 'icon' ? couponById(id).icon : couponById(id).illustration}`}
       alt={couponById(id).title}
       width={size}
       height={size}

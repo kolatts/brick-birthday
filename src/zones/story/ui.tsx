@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { palette } from '../../ui/Button';
+import { f, u } from '../../ui/scale';
 import { sfx, type SfxName } from '../../audio/engine';
 
 /** Tone throws if two blips start at the same instant (fast taps); a missed blip must never block a tap. */
@@ -52,11 +53,11 @@ export function MomPortrait() {
         background: palette.red,
         color: '#fff',
         fontWeight: 900,
-        fontSize: 30,
-        padding: '10px 22px',
-        borderRadius: 26,
-        border: `4px solid ${palette.navy}`,
-        boxShadow: `0 6px 0 ${palette.navy}`,
+        fontSize: f(30),
+        padding: `${u(10)} ${u(22)}`,
+        borderRadius: u(26),
+        border: `${u(4)} solid ${palette.navy}`,
+        boxShadow: `0 ${u(6)} 0 ${palette.navy}`,
       }}
     >
       Mom
@@ -68,7 +69,7 @@ export function MomPortrait() {
 export const softPanel: CSSProperties = {
   background: 'rgba(255, 244, 224, 0.62)',
   border: '4px solid rgba(29, 42, 68, 0.35)',
-  borderRadius: 32,
+  borderRadius: u(32),
   backdropFilter: 'blur(3px)',
 };
 
@@ -78,11 +79,11 @@ export function Bubble({ children, testId }: { children: ReactNode; testId?: str
       data-testid={testId}
       style={{
         background: '#FFF4E0',
-        border: `4px solid ${palette.navy}`,
-        borderRadius: 28,
-        boxShadow: `0 6px 0 ${palette.navy}`,
-        padding: '14px 24px',
-        fontSize: 30,
+        border: `${u(4)} solid ${palette.navy}`,
+        borderRadius: u(28),
+        boxShadow: `0 ${u(6)} 0 ${palette.navy}`,
+        padding: `${u(14)} ${u(24)}`,
+        fontSize: f(30),
         fontWeight: 800,
         lineHeight: 1.25,
       }}

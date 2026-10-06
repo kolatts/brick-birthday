@@ -37,7 +37,7 @@ export const voices: Record<SpeakerId, VoiceDef> = {
   narrator: { voice: 'en-US-AnaNeural', pitch: '+0%', rate: '-4%', fallback: { pitch: 1.2, rate: 0.95 }, note: 'The storybook voice Luna knows.' },
   luna: { voice: 'en-US-AnaNeural', pitch: '+10%', rate: '+2%', fallback: { pitch: 1.5, rate: 1.0 }, note: 'Luna herself, a touch brighter.' },
   mom: { voice: 'en-US-JennyNeural', pitch: '+0%', rate: '-4%', fallback: { pitch: 1.2, rate: 0.95 }, note: 'Warm, kind, storytelling.' },
-  dad: { voice: 'en-US-DavisNeural', pitch: '-6%', rate: '-8%', fallback: { pitch: 0.7, rate: 0.9 }, note: 'Deep, warm, easygoing.' },
+  dad: { voice: 'en-US-DavisNeural', pitch: '+9%', rate: '-3%', fallback: { pitch: 1.05, rate: 0.97 }, note: 'Deep, warm, easygoing.' },
   julian: { voice: 'en-US-AndrewNeural', pitch: '+4%', rate: '+4%', fallback: { pitch: 1.0, rate: 1.05 }, note: 'Older brother, quick and friendly.' },
   darian: { voice: 'en-US-BrandonNeural', pitch: '+2%', rate: '+0%', fallback: { pitch: 0.95, rate: 1.0 }, note: 'Older brother, relaxed.' },
   rudolph: { voice: 'en-US-AnaNeural', pitch: '+18%', rate: '+8%', fallback: { pitch: 1.7, rate: 1.1 }, note: 'Pet: bouncy and eager.' },

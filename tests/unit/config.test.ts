@@ -48,7 +48,9 @@ describe('zones and coupons config', () => {
       expect(zones[c.zone]).toBeDefined();
       expect(zones[c.zone].coupon).toBe(c.id);
       expect(c.line).toBe(`Good for one Daddy-Daughter ${c.title} Date!`);
-      expect(c.illustration).toBe(`art/coupon-${c.id}.webp`);
+      expect(c.illustration).toBe(`art/coupon-scene-${c.id}.webp`);
+      expect(c.icon).toBe(`art/coupon-${c.id}.webp`);
+      expect(c.experience).toMatch(/with Daddy$/);
     }
     expect(zones.story.coupon).toBe('movies');
     expect(zones.science.coupon).toBe('videogames');

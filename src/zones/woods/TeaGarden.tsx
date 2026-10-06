@@ -16,6 +16,7 @@ import { useUi } from '../../state/ui';
 import { sfx } from '../../audio/engine';
 import { say } from '../../audio/speech';
 import { Button, palette } from '../../ui/Button';
+import { f, inset, u, ub } from '../../ui/scale';
 import { hudButton } from './ui';
 
 type V3 = [number, number, number];
@@ -225,18 +226,18 @@ function Chip({ g }: { g: GuestId }) {
       aria-label={GUEST_NAMES[g]}
       onClick={() => guestTap(g)}
       style={{
-        position: 'relative', width: 72, height: 72, borderRadius: 24, padding: 0, cursor: 'pointer',
-        border: `4px solid ${isTarget && !pickingTreat ? '#FFD60A' : palette.navy}`,
-        background: done ? '#C9F7D0' : '#FFF4E0', boxShadow: `0 4px 0 ${palette.navy}`, flex: '0 0 auto',
+        position: 'relative', width: ub(72), height: ub(72), borderRadius: u(24), padding: u(0), cursor: 'pointer',
+        border: `${u(4)} solid ${isTarget && !pickingTreat ? '#FFD60A' : palette.navy}`,
+        background: done ? '#C9F7D0' : '#FFF4E0', boxShadow: `0 ${u(4)} 0 ${palette.navy}`, flex: '0 0 auto',
         outline: isTarget && !pickingTreat ? '3px solid #FF5CA8' : 'none',
       }}
     >
       {emoji || bad ? (
-        <span style={{ fontSize: 40, lineHeight: '56px' }}>{emoji ?? GUEST_NAMES[g][0]}</span>
+        <span style={{ fontSize: f(40), lineHeight: 1 }}>{emoji ?? GUEST_NAMES[g][0]}</span>
       ) : (
-        <img src={faceUrl(g)} alt="" width={56} height={56} style={{ borderRadius: 16, objectFit: 'cover' }} onError={() => setBad(true)} />
+        <img src={faceUrl(g)} alt="" style={{ width: '82%', height: '82%', borderRadius: u(16), objectFit: 'cover' }} onError={() => setBad(true)} />
       )}
-      <span style={{ position: 'absolute', left: -2, right: -2, bottom: -14, display: 'flex', justifyContent: 'center', gap: 2, fontSize: 18 }}>
+      <span style={{ position: 'absolute', left: u(-2), right: u(-2), bottom: u(-14), display: 'flex', justifyContent: 'center', gap: u(2), fontSize: f(18) }}>
         <span style={{ opacity: hasTea ? 1 : 0.28 }}>☕</span>
         <span style={{ opacity: hasTreat ? 1 : 0.28 }}>🍪</span>
       </span>
@@ -247,9 +248,9 @@ function Chip({ g }: { g: GuestId }) {
 function BrickIcon({ size = 120 }: { size?: number }) {
   return (
     <div style={{ position: 'relative', width: size, height: size * 0.62, animation: 'woods-bounce 0.9s ease-in-out infinite' }}>
-      <div style={{ position: 'absolute', inset: 0, top: size * 0.12, background: '#FF5CA8', border: `5px solid ${palette.navy}`, borderRadius: 14 }} />
+      <div style={{ position: 'absolute', inset: 0, top: size * 0.12, background: '#FF5CA8', border: `${u(5)} solid ${palette.navy}`, borderRadius: u(14) }} />
       {[0.16, 0.5, 0.84].map((x, i) => (
-        <div key={i} style={{ position: 'absolute', left: `${x * 100 - 9}%`, top: 0, width: '18%', height: size * 0.18, background: '#FF8FC4', border: `4px solid ${palette.navy}`, borderRadius: 8 }} />
+        <div key={i} style={{ position: 'absolute', left: `${x * 100 - 9}%`, top: u(0), width: '18%', height: size * 0.18, background: '#FF8FC4', border: `${u(4)} solid ${palette.navy}`, borderRadius: u(8) }} />
       ))}
     </div>
   );
@@ -304,23 +305,23 @@ export function TeaHud() {
   return (
     <>
       {/* Pour controls */}
-      <div style={{ position: 'absolute', left: 22, bottom: 140, zIndex: 60, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
-        <div style={{ fontSize: 20, fontWeight: 900, color: palette.navy, textShadow: '0 2px 0 #fff' }}>Let go in the green!</div>
-        <div data-testid="pour-meter" style={{ width: 150, height: 30, border: `4px solid ${palette.navy}`, borderRadius: 16, background: '#FFF4E0', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 0, bottom: 0, left: pct(LEVEL_PERFECT_MIN), width: pct(LEVEL_PERFECT_MAX - LEVEL_PERFECT_MIN), background: '#7AE582' }} />
-          <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: pct(level), background: 'rgba(199,119,63,0.85)' }} />
+      <div style={{ position: 'absolute', left: inset('left', 22), bottom: inset('bottom', 140), zIndex: 60, display: 'flex', flexDirection: 'column', gap: u(8), alignItems: 'flex-start' }}>
+        <div style={{ fontSize: f(20), fontWeight: 900, color: palette.navy, textShadow: '0 2px 0 #fff' }}>Let go in the green!</div>
+        <div data-testid="pour-meter" style={{ width: u(150), height: u(30), border: `${u(4)} solid ${palette.navy}`, borderRadius: u(16), background: '#FFF4E0', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: u(0), bottom: u(0), left: pct(LEVEL_PERFECT_MIN), width: pct(LEVEL_PERFECT_MAX - LEVEL_PERFECT_MIN), background: '#7AE582' }} />
+          <div style={{ position: 'absolute', top: u(0), bottom: u(0), left: u(0), width: pct(level), background: 'rgba(199,119,63,0.85)' }} />
         </div>
         <button
           type="button"
           data-testid="pour-btn"
           onPointerDown={(e) => { e.preventDefault(); startPour(); }}
-          style={{ ...hudButton('#FF5CA8'), width: 150, height: 96, fontSize: 24, borderRadius: 30, touchAction: 'none' }}
+          style={{ ...hudButton('#FF5CA8'), minWidth: 108, width: ub(150), height: ub(96), fontSize: f(24), lineHeight: 1.1, borderRadius: u(30), touchAction: 'none' }}
         >
           🫖 Hold to pour
         </button>
       </div>
       {/* Treats */}
-      <div style={{ position: 'absolute', right: 22, bottom: 140, zIndex: 60, display: 'flex', gap: 10 }}>
+      <div style={{ position: 'absolute', right: inset('right', 22), bottom: inset('bottom', 140), zIndex: 60, display: 'flex', gap: u(10) }}>
         {TREATS.map((t) => (
           <button
             key={t.id}
@@ -328,32 +329,32 @@ export function TeaHud() {
             data-testid={`treat-${t.id}`}
             aria-label={t.label}
             onClick={() => selectTreat(treatChoice === t.id ? null : t.id)}
-            style={{ ...hudButton(treatChoice === t.id ? '#FFD60A' : '#FFF4E0'), width: 84, height: 84, fontSize: 44, borderRadius: 28 }}
+            style={{ ...hudButton(treatChoice === t.id ? '#FFD60A' : '#FFF4E0'), width: ub(84), height: ub(84), fontSize: f(44), borderRadius: u(28) }}
           >
             {t.emoji}
           </button>
         ))}
       </div>
       {/* Guest bar */}
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 30, zIndex: 60, display: 'flex', justifyContent: 'center', gap: 6, padding: '0 10px' }}>
+      <div style={{ position: 'absolute', left: inset('left', 0), right: inset('right', 0), bottom: inset('bottom', 30), zIndex: 60, display: 'flex', justifyContent: 'center', gap: u(6), padding: '0 10px' }}>
         {guests.map((g) => <Chip key={g} g={g} />)}
       </div>
       {badge && (
-        <div key={badge.id} data-testid="pour-result" style={{ position: 'absolute', left: '50%', top: '38%', transform: 'translate(-50%,-50%)', zIndex: 70, fontSize: 64, fontWeight: 900, color: '#fff', WebkitTextStroke: `3px ${palette.navy}`, textShadow: `0 6px 0 ${palette.navy}`, animation: 'woods-pop 1.4s ease-out forwards', pointerEvents: 'none' }}>
+        <div key={badge.id} data-testid="pour-result" style={{ position: 'absolute', left: '50%', top: '38%', transform: 'translate(-50%,-50%)', zIndex: 70, fontSize: f(64), fontWeight: 900, color: '#fff', WebkitTextStroke: `${u(3)} ${palette.navy}`, textShadow: `0 ${u(6)} 0 ${palette.navy}`, animation: 'woods-pop 1.4s ease-out forwards', pointerEvents: 'none' }}>
           {badge.text}
         </div>
       )}
       {celebrating && (
         <div data-testid="brick-celebration" style={{ position: 'absolute', inset: 0, zIndex: 90, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(29,42,68,0.35)' }}>
-          <div style={{ background: palette.cream, border: `5px solid ${palette.navy}`, borderRadius: 36, boxShadow: `0 10px 0 ${palette.navy}`, padding: '28px 44px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, maxWidth: 760 }}>
+          <div style={{ background: palette.cream, border: `${u(5)} solid ${palette.navy}`, borderRadius: u(36), boxShadow: `0 ${u(10)} 0 ${palette.navy}`, padding: `${u(28)} ${u(44)}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: u(16), maxWidth: u(760) }}>
             <BrickIcon />
-            <div data-testid="celebration-text" style={{ fontSize: 44, fontWeight: 900, textAlign: 'center', color: palette.navy }}>
+            <div data-testid="celebration-text" style={{ fontSize: f(44), fontWeight: 900, textAlign: 'center', color: palette.navy }}>
               {firstBrick ? 'You earned a Birthday Brick!' : 'What a lovely tea party!'}
             </div>
-            <div style={{ fontSize: 26, fontWeight: 700, textAlign: 'center' }}>
+            <div style={{ fontSize: f(26), fontWeight: 700, textAlign: 'center' }}>
               {firstBrick ? 'The whole forest says thank you, Luna!' : 'Everybody is full of tea and giggles.'}
             </div>
-            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: u(14), flexWrap: 'wrap', justifyContent: 'center' }}>
               <Button testId="replay-tea" tone="mint" onClick={() => { sfx('tap'); void say('Another tea party!', { speaker: 'luna' }); replayTeaParty(); }}>Tea party again</Button>
               {bricks >= 1 && <Button testId="challenge-btn-celebration" tone="yellow" onClick={() => setScreen({ kind: 'challenge', zone: 'woods' })}>Tea Party Orders challenge</Button>}
               <Button testId="back-to-island-celebration" tone="cream" onClick={() => setScreen({ kind: 'hub' })}>Back to island</Button>

@@ -34,5 +34,11 @@ export default defineConfig({
       name: 'ipad-webkit',
       use: { ...devices['iPad (gen 7) landscape'], hasTouch: true },
     },
+    {
+      name: 'iphone-webkit',
+      use: { ...devices['iPhone 13 landscape'], hasTouch: true },
+      // CI runs only the mobile layout checks and the smoke tests on the phone profile.
+      ...(process.env.CI ? { testMatch: /(mobile|smoke)\.spec\.ts$/ } : {}),
+    },
   ],
 });
