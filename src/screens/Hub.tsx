@@ -220,12 +220,22 @@ export function Hub() {
         return;
       }
       sfx('pop');
-      flying.current = true;
       const l = layout[id];
-      rig.current?.flyTo([l.pos[0], 1.2, l.pos[2]], { radius: 8, azimuth: l.ry, polar: 1.1 }, () => {
+      let flyGuard = 0;
+      const go = () => {
         flying.current = false;
+        window.clearTimeout(flyGuard);
         setScreen({ kind: 'zone', zone: id });
-      });
+      };
+      if (!rig.current) {
+        // Rig not mounted yet (tap during load): enter the zone directly instead of locking up.
+        go();
+        return;
+      }
+      flying.current = true;
+      // Safety net: never leave the hub unresponsive if the fly-in callback is lost.
+      flyGuard = window.setTimeout(go, 2000);
+      rig.current.flyTo([l.pos[0], 1.2, l.pos[2]], { radius: 8, azimuth: l.ry, polar: 1.1 }, go);
     },
     [setScreen],
   );
