@@ -14,7 +14,7 @@ import { BrickTree, Cat, Dog, HoppingFriend, StumpSpot } from './models';
 import { TeaGardenScene, TeaHud } from './TeaGarden';
 import { PET_LINES } from './facts';
 import {
-  STUMP_POS, TEA_CENTER, TREE_COUNT, disposeWoods, doWand, doWater, initWoods, showCaption, tapStump, useWoods,
+  STUMP_POS, TEA_CENTER, TREE_COUNT, disposeWoods, guestWorldPos, doWand, doWater, initWoods, showCaption, tapStump, useWoods,
 } from './woodsState';
 import { SKY, WOODS_CSS, hudButton } from './ui';
 
@@ -75,12 +75,14 @@ const BG_TREES: { p: V3; s: number; h: number }[] = [
 
 function CameraRig() {
   const teaReady = useWoods((s) => s.teaReady);
+  const guestTarget = useWoods((s) => s.pourTarget);
   const { camera } = useThree();
   const look = useRef(new THREE.Vector3(0, 0.9, 0.5));
   useFrame((_, dt) => {
     const k = Math.min(1, dt * 2.2);
-    const pos: V3 = teaReady ? [0, 8.4, 16.8] : [0, 6.4, 10.6];
-    const tgt: V3 = teaReady ? [0, 0.8, TEA_CENTER[2] - 0.4] : [0, 1.2, 0.2];
+    const gx = guestTarget ? guestWorldPos(guestTarget)[0] : 0;
+    const pos: V3 = teaReady ? [gx * 0.3, 6.9, 15.6] : [0, 6.4, 10.6];
+    const tgt: V3 = teaReady ? [gx * 0.5, 0.3, TEA_CENTER[2] - 1.4] : [0, 1.2, 0.2];
     camera.position.x += (pos[0] - camera.position.x) * k;
     camera.position.y += (pos[1] - camera.position.y) * k;
     camera.position.z += (pos[2] - camera.position.z) * k;

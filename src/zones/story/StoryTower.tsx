@@ -5,7 +5,7 @@ import { safeSfx as sfx } from './ui';
 import { useProgress } from '../../state/progress';
 import { useUi } from '../../state/ui';
 import { Button, palette } from '../../ui/Button';
-import { f, u } from '../../ui/scale';
+import { f, u, ub } from '../../ui/scale';
 import { heroes, heroTile, places, powers, problems, type Picks, type Tile } from './options';
 import { bonusSentence, defaultSeed, generateStory, heroById, storyFragmentsBySentence, titleFragments, type Story } from './generator';
 import { finishStory } from './rewards';
@@ -39,6 +39,18 @@ interface Cursor {
 
 const wordsOf = (s: string) => s.split(/\s+/).filter(Boolean);
 
+/** Greedy pages of one or two sentences (one when the pair would be long). */
+export function paginate(sentences: string[]): number[][] {
+  const pages: number[][] = [];
+  let i = 0;
+  while (i < sentences.length) {
+    const two = i + 1 < sentences.length && sentences[i].length + sentences[i + 1].length <= 150;
+    pages.push(two ? [i, i + 1] : [i]);
+    i += two ? 2 : 1;
+  }
+  return pages;
+}
+
 export function Zone() {
   const setScreen = useUi((s) => s.setScreen);
   const storyBricks = useProgress((s) => s.bricks.story);
@@ -51,6 +63,7 @@ export function Zone() {
   const [cursor, setCursor] = useState<Cursor>({ s: -1, w: -1 });
   const [earned, setEarned] = useState(0);
   const [wandUsed, setWandUsed] = useState(false);
+  const [paused, setPaused] = useState(false);
   const [celebOpen, setCelebOpen] = useState(false);
   const [burst, setBurst] = useState(0);
   const [hop, setHop] = useState(0);
@@ -126,6 +139,28 @@ export function Zone() {
     if (run.current === id) setCursor({ s, w: words.length });
   };
 
+  const finish = (id: number) => {
+    if (run.current !== id) return;
+    const res = finishStory(heroById((picks as Picks).hero).kind);
+    setEarned(res.earned);
+    setCelebOpen(res.earned > 0);
+    if (res.earned > 0) sfx('fanfare');
+    else sfx('sparkle');
+    setPaused(false);
+    setPhase('done');
+  };
+
+  /** Narrates sentences `from`..`to` (default: all); auto-advances pages; finishes the story at the end. */
+  const playLoop = async (from: number, id: number, to?: number) => {
+    for (let i = from; i < (to ?? sentencesRef.current.length); i++) {
+      if (run.current !== id) return;
+      await speakSentence(fragsRef.current[i], i, id);
+      if (run.current !== id) return;
+      await pause();
+    }
+    if (to === undefined) finish(id);
+  };
+
   const tell = async (count = tellCount) => {
     const id = ++run.current;
     const p = picks as Picks;
@@ -136,29 +171,50 @@ export function Zone() {
     setSentences(sentencesRef.current);
     setWandUsed(false);
     setEarned(0);
+    setPaused(false);
     setPhase('telling');
     setCursor({ s: -1, w: -1 });
     await sayFragments(titleFragments(p, defaultSeed(p) + count * 7919));
-    for (let i = 0; i < sentencesRef.current.length; i++) {
-      if (run.current !== id) return;
-      await speakSentence(fragsRef.current[i], i, id);
-      if (run.current !== id) return;
-      await pause();
-    }
     if (run.current !== id) return;
-    const res = finishStory(heroById(p.hero).kind);
-    setEarned(res.earned);
-    setCelebOpen(res.earned > 0);
-    if (res.earned > 0) sfx('fanfare');
-    else sfx('sparkle');
-    setPhase('done');
+    await playLoop(0, id);
+  };
+
+  const pages = useMemo(() => paginate(sentences), [sentences]);
+  const curSentence = Math.max(0, cursor.s);
+  const pageIdx = Math.max(0, pages.findIndex((pg) => pg.includes(curSentence)));
+  const page = pages[pageIdx] ?? [];
+  const lastPage = pageIdx >= pages.length - 1;
+
+  const jump = (from: number, to?: number) => {
+    const id = ++run.current;
+    stopSpeaking();
+    setPaused(false);
+    void playLoop(from, id, to);
+  };
+  const replay = () => (phase === 'done' ? jump(page[0], page[page.length - 1] + 1) : jump(page[0]));
+  const next = () => {
+    if (lastPage) {
+      const id = ++run.current;
+      stopSpeaking();
+      finish(id);
+    } else jump(pages[pageIdx + 1][0]);
+  };
+  const togglePause = () => {
+    if (paused) jump(curSentence);
+    else {
+      run.current++;
+      stopSpeaking();
+      setPaused(true);
+    }
   };
 
   const useWand = () => {
-    if (wandUsed || phase !== 'telling') return;
+    if (phase !== 'telling') return;
     sfx('sparkle');
-    setWandUsed(true);
     setBurst((b) => b + 1);
+    setHop((h) => h + 1);
+    if (wandUsed) return;
+    setWandUsed(true);
     const extra = bonusSentence(defaultSeed(picks as Picks) + tellCount);
     sentencesRef.current = [...sentencesRef.current, extra];
     fragsRef.current = [...fragsRef.current, [{ speaker: 'narrator', text: extra }]];
@@ -264,76 +320,100 @@ export function Zone() {
 
         {(phase === 'telling' || phase === 'done') && (
           <section style={{ flex: 1, minHeight: u(0), display: 'flex', gap: u(20), alignItems: 'stretch', position: 'relative' }}>
-            <div
-              data-testid="story-page"
-              style={{
-                flex: 1,
-                minHeight: u(0),
-                alignSelf: 'flex-start',
-                maxHeight: '100%',
-                overflowY: 'auto',
-                background: '#FFF9EC',
-                border: `${u(5)} solid ${palette.navy}`,
-                borderRadius: u(32),
-                boxShadow: `0 ${u(10)} 0 ${palette.navy}`,
-                padding: `${u(22)} ${u(30)}`,
-                fontSize: f(34),
-                lineHeight: 1.45,
-                fontWeight: 700,
-                maxWidth: '54vw',
-              }}
-            >
-              <h2 style={{ margin: '0 0 12px', fontSize: f(44), color: palette.red }}>{story?.title}</h2>
-              <p data-testid="story-text" style={{ margin: u(0) }}>
-                {sentences.map((sent, si) => (
-                  <span key={si} style={{ display: 'inline' }}>
-                    {wordsOf(sent).map((w, wi) => {
-                      const current = cursor.s === si && cursor.w === wi;
-                      const read = si < cursor.s || (si === cursor.s && wi < cursor.w);
-                      const hidden = si > cursor.s && phase === 'telling';
-                      return (
-                        <span
-                          key={wi}
-                          data-current={current ? 'true' : undefined}
-                          style={{
-                            background: current ? palette.yellow : 'transparent',
-                            borderRadius: u(10),
-                            padding: '0 4px',
-                            color: hidden ? '#C9BFB0' : read ? '#5A6A8A' : palette.navy,
-                            transition: 'background .1s',
-                          }}
-                        >
-                          {w}{' '}
-                        </span>
-                      );
-                    })}
-                  </span>
-                ))}
-              </p>
+            <div style={{ flex: '0 0 46vw', maxWidth: '46vw', display: 'flex', flexDirection: 'column', gap: u(16), minHeight: u(0) }}>
+              <div
+                data-testid="story-page"
+                data-sentences={sentences.length}
+                style={{
+                  minHeight: u(230),
+                  background: '#FFF9EC',
+                  border: `${u(5)} solid ${palette.navy}`,
+                  borderRadius: u(32),
+                  boxShadow: `0 ${u(10)} 0 ${palette.navy}`,
+                  padding: `${u(22)} ${u(28)}`,
+                  fontSize: f(36),
+                  lineHeight: 1.5,
+                  fontWeight: 700,
+                  textAlign: 'left',
+                  color: palette.navy,
+                }}
+              >
+                <p data-testid="story-text" style={{ margin: u(0) }}>
+                  {page.map((si) => (
+                    <span key={si}>
+                      {wordsOf(sentences[si]).map((w, wi) => {
+                        const current = cursor.s === si && cursor.w === wi;
+                        return (
+                          <span
+                            key={wi}
+                            data-current={current ? 'true' : undefined}
+                            style={{
+                              background: current ? '#FFE98A' : 'transparent',
+                              borderRadius: u(8),
+                              boxShadow: current ? `0 ${u(5)} 0 ${palette.red}` : undefined,
+                            }}
+                          >
+                            {w}{' '}
+                          </span>
+                        );
+                      })}
+                    </span>
+                  ))}
+                </p>
+                <p data-testid="story-full" aria-hidden style={{ display: 'none' }}>
+                  {sentences.join(' ')}
+                </p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: u(14) }}>
+                <Button tone="cream" testId="story-replay" ariaLabel="Replay this page" onClick={replay} style={ctl}>
+                  🔁 Replay
+                </Button>
+                {phase === 'telling' && (
+                  <>
+                    <Button tone="cream" testId="story-pause" ariaLabel={paused ? 'Resume' : 'Pause'} onClick={togglePause} style={ctl}>
+                      {paused ? '▶ Resume' : '⏸ Pause'}
+                    </Button>
+                    <Button tone="yellow" testId="story-next" ariaLabel="Next page" onClick={next} style={{ ...ctl, marginLeft: 'auto' }}>
+                      Next ▶
+                    </Button>
+                  </>
+                )}
+                {phase === 'done' && (
+                  <div aria-label={`Page ${pageIdx + 1} of ${pages.length}`} style={{ display: 'flex', gap: u(6), marginLeft: 'auto' }}>
+                    {pages.map((_, i) => (
+                      <span key={i} style={{ width: u(14), height: u(14), borderRadius: '50%', border: `${u(2)} solid ${palette.navy}`, background: i <= pageIdx ? palette.navy : 'transparent' }} />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-            <div style={{ position: 'absolute', right: u(0), top: u(0), width: u(210), display: 'flex', flexDirection: 'column', alignItems: 'center', gap: u(16) }}>
+            <div style={{ position: 'absolute', right: u(0), bottom: u(0), width: u(230), display: 'flex', flexDirection: 'column', alignItems: 'center', gap: u(12) }}>
               {phase === 'telling' && (
-                <button
-                  type="button"
-                  data-testid="wand-button"
-                  aria-label="Wand moment"
-                  disabled={wandUsed}
-                  onClick={useWand}
-                  style={{
-                    width: u(150),
-                    height: u(150),
-                    fontSize: f(80),
-                    borderRadius: '50%',
-                    border: `${u(5)} solid ${palette.navy}`,
-                    background: wandUsed ? '#E8DCC0' : palette.yellow,
-                    cursor: 'pointer',
-                    animation: wandUsed ? undefined : 'st-glow 1.4s ease-in-out infinite',
-                  }}
-                >
-                  🌟
-                </button>
+                <>
+                  <button
+                    type="button"
+                    data-testid="wand-button"
+                    aria-label="Make magic"
+                    onClick={useWand}
+                    style={{
+                      width: u(120),
+                      height: u(120),
+                      minWidth: 'var(--btn-min)',
+                      minHeight: 'var(--btn-min)',
+                      fontSize: f(64),
+                      borderRadius: '50%',
+                      border: `${u(5)} solid ${palette.navy}`,
+                      background: palette.yellow,
+                      boxShadow: `0 ${u(6)} 0 ${palette.navy}`,
+                      cursor: 'pointer',
+                      animation: wandUsed ? undefined : 'st-glow 1.4s ease-in-out infinite',
+                    }}
+                  >
+                    🌟
+                  </button>
+                  <div style={{ fontSize: f(28), fontWeight: 900, textAlign: 'center', background: '#FFF4E0', border: `${u(3)} solid ${palette.navy}`, borderRadius: u(20), padding: `${u(2)} ${u(14)}` }}>Make magic!</div>
+                </>
               )}
-              {phase === 'telling' && <div style={{ fontSize: f(26), fontWeight: 800, textAlign: 'center' }}>{wandUsed ? 'Sparkle!' : 'Tap the star for magic!'}</div>}
               {phase === 'done' && (
                 <>
                   <Button big tone="mint" onClick={again} testId="again" style={{ padding: `${u(12)} ${u(28)}`, fontSize: f(42) }}>
@@ -362,6 +442,8 @@ export function Zone() {
     </Backdrop>
   );
 }
+
+const ctl: React.CSSProperties = { minWidth: u(170), minHeight: ub(72), fontSize: f(26), whiteSpace: 'nowrap', padding: `${u(8)} ${u(18)}` };
 
 const chip: React.CSSProperties = {
   display: 'flex',
@@ -439,7 +521,7 @@ function Sparkles({ burst }: { burst: number }) {
   );
   if (!burst) return null;
   return (
-    <div key={burst} data-testid="sparkle-burst" aria-hidden style={{ position: 'absolute', right: u(100), top: '30%', pointerEvents: 'none' }}>
+    <div key={burst} data-testid="sparkle-burst" aria-hidden style={{ position: 'absolute', left: '50%', top: u(60), pointerEvents: 'none' }}>
       {bits.map((b, i) => (
         <span
           key={i}

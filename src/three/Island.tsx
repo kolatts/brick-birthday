@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, useState, useEffect } from 'react';
-import { useFrame, type ThreeEvent } from '@react-three/fiber';
+import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import type { ZoneId } from '../types';
@@ -151,23 +151,63 @@ const hitGeo = new THREE.BoxGeometry(1, 1, 1);
 
 interface ZoneMarkersProps {
   onTap: (zone: ZoneId) => void;
-  bricks: Record<ZoneId, number>;
 }
 
-/** Invisible tap targets over each building plus floating name labels. */
-export function ZoneMarkers({ onTap, bricks }: ZoneMarkersProps) {
+const _v = new THREE.Vector3();
+
+/**
+ * Invisible tap targets over each building plus small map labels. Labels are anchored above their
+ * building and nudged apart in screen space each frame so they never collide; on phones the bottom
+ * buttons already carry the names, so the labels are hidden.
+ */
+export function ZoneMarkers({ onTap }: ZoneMarkersProps) {
   // drei <Html> drops the very first instance when mounted in the Canvas's first commit; mount labels a frame later.
   const [ready, setReady] = useState(false);
   useEffect(() => {
     const id = requestAnimationFrame(() => setReady(true));
     return () => cancelAnimationFrame(id);
   }, []);
+  const camera = useThree((s) => s.camera);
+  const size = useThree((s) => s.size);
+  const els = useRef<Record<string, HTMLDivElement | null>>({});
+  const phone = size.height < 500;
+  const anchors = useMemo(
+    () => ZONE_IDS.map((z) => ({ z, p: new THREE.Vector3(layout[z].pos[0], zones[z].built ? layout[z].labelY : layout[z].pos[1] + 2.6, layout[z].pos[2]) })),
+    [],
+  );
+  useFrame(() => {
+    if (!ready || phone) return;
+    const placed: { x0: number; x1: number; y0: number; y1: number }[] = [];
+    const items = anchors
+      .map((a) => {
+        _v.copy(a.p).project(camera);
+        return { z: a.z, x: (_v.x * 0.5 + 0.5) * size.width, y: (-_v.y * 0.5 + 0.5) * size.height, el: els.current[a.z] };
+      })
+      .filter((i) => i.el)
+      .sort((a, b) => b.y - a.y); // lowest on screen keeps its spot; the rest nudge up
+    for (const it of items) {
+      const el = it.el!;
+      const w = el.offsetWidth + 8;
+      const h = el.offsetHeight + 6;
+      let dy = 0;
+      for (let k = 0; k < 8; k++) {
+        const r = { x0: it.x - w / 2, x1: it.x + w / 2, y0: it.y + dy - h / 2, y1: it.y + dy + h / 2 };
+        const hit = placed.find((q) => r.x0 < q.x1 && r.x1 > q.x0 && r.y0 < q.y1 && r.y1 > q.y0);
+        if (!hit) break;
+        dy = hit.y0 - h / 2 - it.y - 1;
+      }
+      // keep clear of the top HUD row
+      const minY = size.height * 0.14 + h / 2;
+      if (it.y + dy < minY) dy = minY - it.y;
+      placed.push({ x0: it.x - w / 2, x1: it.x + w / 2, y0: it.y + dy - h / 2, y1: it.y + dy + h / 2 });
+      el.style.transform = `translateY(${dy.toFixed(1)}px)`;
+    }
+  });
   return (
     <>
       {ZONE_IDS.map((z) => {
         const l = layout[z];
         const def = zones[z];
-        const done = bricks[z] >= def.bricks;
         const tap = (e: ThreeEvent<MouseEvent>) => {
           if (e.delta > 6) return;
           e.stopPropagation();
@@ -177,17 +217,17 @@ export function ZoneMarkers({ onTap, bricks }: ZoneMarkersProps) {
         return (
           <group key={z}>
             <mesh visible={false} geometry={hitGeo} position={p} scale={l.hit} rotation-y={l.ry} onClick={tap} />
-            {ready && (
+            {ready && !phone && (
               <Html position={[l.pos[0], def.built ? l.labelY : l.pos[1] + 2.6, l.pos[2]]} center zIndexRange={[20, 10]} style={{ pointerEvents: 'none' }}>
                 <div
+                  ref={(el) => void (els.current[z] = el)}
                   data-testid={`label-${z}`}
                   style={{
-                    padding: 'calc(4px * var(--ui-scale)) calc(12px * var(--ui-scale))', borderRadius: 16, background: def.built ? '#FFF4E0' : '#FFE9A8', color: '#1D2A44',
-                    border: '3px solid #1D2A44', fontWeight: 800, fontSize: 'max(13px, calc(17px * var(--ui-scale)))', whiteSpace: 'nowrap', pointerEvents: 'none',
-                    boxShadow: '0 3px 0 #1D2A44',
+                    padding: '2px 9px', borderRadius: 10, background: def.built ? 'rgba(29,42,68,0.82)' : 'rgba(90,100,120,0.7)', color: def.built ? '#fff' : '#E4E8F0',
+                    fontWeight: 800, fontSize: 14, lineHeight: 1.3, whiteSpace: 'nowrap', pointerEvents: 'none', letterSpacing: 0.2,
                   }}
                 >
-                  {def.built ? `${def.title} ${done ? '⭐' : `${bricks[z]}/${def.bricks}`}` : `🏗 ${def.title}`}
+                  {def.title}
                 </div>
               </Html>
             )}

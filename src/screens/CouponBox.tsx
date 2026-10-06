@@ -5,6 +5,7 @@ import { useCoupons } from '../state/coupons';
 import { Button } from '../ui/Button';
 import { f, scaleForHeight, u } from '../ui/scale';
 import { CouponArt } from '../ui/CouponArt';
+import { LockIcon } from '../ui/Icons';
 import { Password } from './CouponCard';
 
 function Item({ c, onOpen }: { c: CouponDef; onOpen: (id: CouponId) => void }) {
@@ -18,13 +19,16 @@ function Item({ c, onOpen }: { c: CouponDef; onOpen: (id: CouponId) => void }) {
       data-status={earned ? status : pending ? 'pending' : 'locked'}
       onClick={earned ? () => onOpen(c.id) : undefined}
       style={{
-        position: 'relative', background: earned ? '#FFFBEF' : '#D6D9DF', border: `${u(4)} solid #1D2A44`, borderRadius: u(24),
-        boxShadow: `0 ${u(6)} 0 #1D2A44`, padding: u(12), display: 'flex', gap: u(12), alignItems: 'center', minHeight: u(150),
-        filter: earned ? 'none' : 'grayscale(1)', color: '#1D2A44',
+        position: 'relative', background: earned ? '#FFFBEF' : '#E4E1DA', border: `${u(4)} solid ${earned ? '#1D2A44' : '#A9A59C'}`, borderRadius: u(24),
+        boxShadow: earned ? `0 ${u(6)} 0 #1D2A44` : 'none', padding: u(12), display: 'flex', gap: u(12), alignItems: 'center', minHeight: u(150),
+        color: earned ? '#1D2A44' : '#5B6070', cursor: earned ? 'pointer' : 'default',
       }}
     >
-      <div style={{ opacity: earned ? 1 : 0.45 }}>
-        <CouponArt id={c.id} variant="icon" size={Math.round(Math.max(56, 110 * scaleForHeight(window.innerHeight)))} />
+      <div style={{ position: 'relative', flex: '0 0 auto' }}>
+        <div style={{ opacity: earned ? 1 : 0.5, filter: earned ? 'none' : 'grayscale(1)' }}>
+          <CouponArt id={c.id} size={Math.round(Math.max(64, 130 * scaleForHeight(window.innerHeight)))} />
+        </div>
+        {!earned && <LockIcon size={36} style={{ position: 'absolute', right: 2, bottom: 2 }} />}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: f(28), fontWeight: 900 }}>{c.title}</div>
@@ -34,7 +38,7 @@ function Item({ c, onOpen }: { c: CouponDef; onOpen: (id: CouponId) => void }) {
           <div style={{ fontSize: f(20), fontWeight: 800 }}>Treasure is buried on the island! Go dig it up!</div>
         ) : (
           <div style={{ fontSize: f(20), fontWeight: 800 }}>
-            {zone.built ? `🔒 Finish the ${zone.title} challenge!` : `🔒 The ${zone.title} is still being built`}
+            {zone.built ? `Finish the ${zone.title} challenge!` : `The ${zone.title} is still being built`}
           </div>
         )}
       </div>

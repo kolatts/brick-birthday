@@ -36,9 +36,14 @@ export const COPY = {
   finaleEnd: 'Happy birthday, Luna! We love you so much!',
 } as const;
 
+/** Spoken when Luna taps a locked closet item: how many Birthday Bricks it needs (1-7) and where to earn them. */
+export const closetLockedLine = (bricks: number): string =>
+  `Earn ${bricks} Birthday ${bricks === 1 ? 'Brick' : 'Bricks'} to wear this! Play in the Story Tower and the Whispering Woods.`;
+
 /** Flat list consumed by scripts/voices/lines.ts. */
 export const copyLines: CopyLine[] = [
   ...Object.values(COPY).map((text) => ({ speaker: 'narrator' as const, text })),
+  ...[1, 2, 3, 4, 5, 6, 7].map((n) => ({ speaker: 'narrator' as const, text: closetLockedLine(n) })),
   // Daddy's note on the title screen ("Read it to me")
   { speaker: 'dad', text: welcomeMessage.body },
   { speaker: 'dad', text: welcomeMessage.signoff },

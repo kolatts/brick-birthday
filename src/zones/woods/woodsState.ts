@@ -226,6 +226,22 @@ export function selectTreat(t: TreatId | null): void {
   if (t) showCaption('Hint', 'Now tap who gets the treat!', 'hint', 4000);
 }
 
+/** Select the next/previous guest (wraps around). */
+export function stepTarget(dir: 1 | -1): void {
+  const list = guestsFor(TREE_COUNT);
+  const cur = Math.max(0, list.indexOf(get().pourTarget ?? list[0]));
+  selectTarget(list[(cur + dir + list.length) % list.length]);
+}
+
+/** Gives a treat to the selected guest (or the next one still waiting). */
+export function giveTreat(t: TreatId): void {
+  const list = guestsFor(TREE_COUNT);
+  const g = get().pourTarget ?? list.find((x) => !get().treat[x]) ?? list[0];
+  set({ selectedTreat: t, pourTarget: g });
+  serveTreat(g);
+  set({ selectedTreat: null });
+}
+
 export function startPour(): void {
   if (get().pouring || get().celebrating) return;
   const target = get().pourTarget && !get().tea[get().pourTarget!] ? get().pourTarget : nextTeaTarget();

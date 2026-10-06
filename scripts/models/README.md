@@ -72,3 +72,53 @@ illuminate the figures; closet overlays are hidden for review only. Review copie
 camera and lights are created after export and never enter the GLB. Review PNGs
 are local artifacts in `test-results/blender/`. The Python exporter itself rejects
 any output of 300,000 bytes or more, including direct Blender invocations.
+
+
+## Smooth human sculpt (October 2026)
+
+Human hands are watertight, cupped quad surfaces with asymmetric finger/thumb ends,
+a visible notch and Catmull-Clark subdivision level 2. Their palms turn inward;
+rounded skin cuffs connect to continuous sleeves with hemispherical shoulders.
+Luna's left mitten closes around a gold wand shaft. Both wand and hand are baked
+into `ArmMeshL`, so they move together around the unchanged `ArmL` shoulder pivot.
+
+The human torso, legs and shoes use additional subdivision; rounded hip and
+shoulder inserts soften the joint transitions. Luna has a 6.5% larger head,
+a smooth pulled-back cap and bun, longer lashes, four round studs and a permanent
+pink dress hem. Existing `Item_*` overlays and all three geometry expressions
+remain available. The pets use the original construction path and their approved
+GLBs are not rebuilt by the human-only command below.
+
+```powershell
+& "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" --background --python scripts/models/build_figures.py -- --only luna,mom,dad,julian,darian --review test-results/blender
+```
+
+Subdivision is evaluated before a human-only mesh reduction pass budgets the
+**complete asset** to about 38,500 triangles, including hidden closet items and
+all expressions. Face geometry is retained intact; arm meshes receive a larger
+share of the budget to protect hand silhouettes. Flat vertex colours, opaque
+face materials and the original Draco quantization settings are retained.
+The export log reports actual triangulated counts, not polygon counts.
+
+Review renders use the same three-light sheet for every human. Luna additionally
+gets `test-results/blender/luna-hands.png`, a close-up of both hands and the wand
+contact. Five sculpt/render reviews were performed: continuous hands/proportions,
+mesh budget/shoes/wrist clearance, sleeve and dress silhouette, then rounded
+shoulder and hem-intersection cleanup, and wrist/shaft clearance refinement.
+The first two sheets are retained in
+`test-results/blender/pass-1/` and `pass-2/`; final sheets are at the top level.
+
+
+Final GLB validation (Blender 5.2.2 LTS; counts from exported index accessors):
+
+| Figure | Bytes | Triangles (all expressions and closet items) |
+| --- | ---: | ---: |
+| Luna | 122,368 | 38,486 |
+| Mom | 104,380 | 38,496 |
+| Dad | 106,436 | 38,497 |
+| Julian | 105,064 | 38,497 |
+| Darian | 107,024 | 38,496 |
+
+Verified original `Item_*` names, all expression groups, unchanged shoulder
+transforms, Draco on every primitive, and no texture/image payloads. Rudolph and
+Jingle Bells match their pre-edit SHA-256 hashes byte for byte.

@@ -145,7 +145,7 @@ function OpenBook() {
     return p.prims;
   }, []);
   return (
-    <group position={[4.5, 2.05, 0.95]} rotation={[-0.95, 0, 0]}>
+    <group position={[4.5, 1.45, 1.05]} rotation={[-0.75, 0, 0]}>
       <StaticBatch prims={b} />
     </group>
   );
@@ -319,7 +319,7 @@ function Tower({ picks, hop, burst }: TowerSceneProps) {
   const heroPos: V3 = [6.5, 0, 0.9];
   return (
     <>
-      <Rig pos={[2, 4.2, 15.5]} look={[2, 2.7, 0]} />
+      <Rig pos={[3.2, 3.2, 13]} look={[3.2, 2.1, 0]} />
       <Lights />
       <BrickWall position={[3, 4, -0.4]} size={[30, 10]} />
       <StaticBatch prims={prims} />

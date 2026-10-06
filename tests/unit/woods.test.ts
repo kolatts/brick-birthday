@@ -18,7 +18,7 @@ describe('tea pouring', () => {
     expect(judgePour(LEVEL_PERFECT_MIN - 0.01)).toBe('ok');
     expect(judgePour(LEVEL_PERFECT_MIN)).toBe('perfect');
     expect(judgePour(LEVEL_PERFECT_MAX)).toBe('perfect');
-    expect(judgePour(0.97)).toBe('ok');
+    expect(judgePour(0.99)).toBe('ok');
     expect(judgePour(1)).toBe('splash');
     expect(judgePour(1.3)).toBe('splash');
   });

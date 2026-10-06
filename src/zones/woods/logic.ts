@@ -4,9 +4,9 @@
 /** Seconds of holding to fill a cup right to the brim. */
 export const POUR_SECONDS = 2.4;
 export type PourResult = 'low' | 'ok' | 'perfect' | 'splash';
-export const LEVEL_OK_MIN = 0.28;
-export const LEVEL_PERFECT_MIN = 0.55;
-export const LEVEL_PERFECT_MAX = 0.95;
+export const LEVEL_OK_MIN = 0.22;
+export const LEVEL_PERFECT_MIN = 0.45;
+export const LEVEL_PERFECT_MAX = 0.98;
 
 /** Cup fill level (0..1.4) after holding for `heldSeconds`. 1 = brim; above = overflow. */
 export const levelAt = (heldSeconds: number): number => Math.max(0, Math.min(1.4, heldSeconds / POUR_SECONDS));

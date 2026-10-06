@@ -13,6 +13,7 @@ import { useSettings } from '../state/settings';
 import { Button, Panel, palette } from '../ui/Button';
 import { f, inset, u } from '../ui/scale';
 import { Confetti } from '../ui/Confetti';
+import { BrickIcon } from '../ui/Icons';
 import { setMuted, sfx } from '../audio/engine';
 import { registerPerf } from '../test/hooks';
 import { canvasProps } from '../three/Brick';
@@ -99,7 +100,6 @@ interface SceneProps {
 }
 
 function Scene({ rigRef, birthday, petHats, onZone, onReady, onConfetti, onDug, rigEnabled }: SceneProps) {
-  const bricks = useProgress((s) => s.bricks);
   const total = useProgress((s) => s.totalBricks());
   const tapGround = (e: ThreeEvent<MouseEvent>) => {
     if (e.delta > 6) return;
@@ -111,13 +111,13 @@ function Scene({ rigRef, birthday, petHats, onZone, onReady, onConfetti, onDug, 
   return (
     <>
       <Lights />
-      <CameraRig apiRef={rigRef} enabled={rigEnabled} azimuth={VIEW_AZIMUTH} />
+      <CameraRig apiRef={rigRef} enabled={rigEnabled} azimuth={VIEW_AZIMUTH} target={[0, 0.1, 0]} radius={20} />
       <Island builtKey={BUILT_KEY} totalBricks={total} candles={CANDLES} />
       <Life builtKey={BUILT_KEY} birthday={birthday} candles={CANDLES} />
       <mesh visible={false} position={[0, 0.05, 0]} rotation-x={-Math.PI / 2} onClick={tapGround}>
         <planeGeometry args={[14, 14]} />
       </mesh>
-      <ZoneMarkers onTap={onZone} bricks={bricks} />
+      <ZoneMarkers onTap={onZone} />
       {HOSTS.map((h, i) => {
         const p = hostPos(h.zone, zones[h.zone].built || PREVIEW_ALL);
         return <Avatar key={h.id} id={h.id} wave scale={0.8} position={p} rotationY={FACE_CAMERA} phase={i * 1.3} />;
@@ -205,21 +205,19 @@ export function Hub() {
       </Canvas>
       {ready && <div data-testid="hub-ready" style={{ display: 'none' }} data-birthday={birthday} />}
 
-      <div style={{ position: 'absolute', top: inset('top', 12), left: inset('left', 12), display: 'flex', gap: u(12), zIndex: 40 }}>
+      <div style={{ position: 'absolute', top: inset('top', 12), left: inset('left', 12), display: 'flex', gap: u(12), zIndex: 40, alignItems: 'center' }}>
         <Button tone="cream" testId="home-button" style={hudBtn} onClick={() => setScreen({ kind: 'title' })}>Home</Button>
         <Button tone="cream" testId="mute-button" style={hudBtn} ariaLabel={muted ? 'Unmute' : 'Mute'} onClick={() => setMuted(!muted)}>{muted ? '🔇' : '🔊'}</Button>
-      </div>
-
-      <div
-        data-testid="brick-counter"
-        style={{
-          position: 'absolute', top: `calc(${inset('top', 12)} + var(--btn-min) + ${u(14)})`, left: inset('left', 12), zIndex: 40, minHeight: 'var(--btn-min)', padding: `0 ${u(20)}`,
-          display: 'flex', alignItems: 'center', gap: u(10), background: palette.cream, border: `${u(4)} solid ${palette.navy}`, borderRadius: u(32),
-          boxShadow: `0 ${u(6)} 0 ${palette.navy}`, fontSize: f(24), fontWeight: 900, color: palette.navy, whiteSpace: 'nowrap',
-        }}
-      >
-        <span aria-hidden>🧱</span>
-        <span>{total}/{goal} Birthday Bricks</span>
+        <div
+          data-testid="brick-counter"
+          style={{
+            minHeight: 'var(--btn-min)', padding: `0 ${u(18)}`, display: 'flex', alignItems: 'center', gap: u(10), background: 'rgba(255,244,224,0.92)',
+            border: `${u(3)} solid ${palette.navy}`, borderRadius: u(32), fontSize: f(22), fontWeight: 900, color: palette.navy, whiteSpace: 'nowrap',
+          }}
+        >
+          <BrickIcon size={32} />
+          <span>Birthday Bricks {total} of {goal}</span>
+        </div>
       </div>
 
       <div style={{ position: 'absolute', top: inset('top', 12), right: inset('right', 12), display: 'flex', gap: u(12), zIndex: 40 }}>
@@ -259,14 +257,21 @@ export function Hub() {
               onClick={() => enter(id)}
               style={{
                 pointerEvents: 'auto', minWidth: u(150), minHeight: `max(var(--btn-min), ${u(72)})`, padding: `${u(6)} ${u(14)}`, fontFamily: 'inherit', fontWeight: 900, fontSize: f(19), lineHeight: 1.15,
-                color: light ? palette.navy : '#fff', background: z.color, border: `${u(4)} solid ${palette.navy}`, borderRadius: u(24),
-                boxShadow: `0 ${u(6)} 0 ${palette.navy}`, cursor: 'pointer', opacity: z.built ? 1 : 0.85,
-                textShadow: light ? 'none' : '0 2px 0 rgba(29,42,68,0.55)',
+                color: !z.built ? '#6B7488' : light ? palette.navy : '#fff', background: z.built ? z.color : '#D5D9E0', border: `${u(4)} solid ${z.built ? palette.navy : '#9AA3B5'}`, borderRadius: u(24),
+                boxShadow: `0 ${u(6)} 0 ${z.built ? palette.navy : '#9AA3B5'}`, cursor: 'pointer', opacity: 1,
+                textShadow: !z.built || light ? 'none' : '0 2px 0 rgba(29,42,68,0.55)',
               }}
             >
               {z.title}
               <br />
-              {z.built ? `🧱 ${bricks[id]}/${z.bricks}` : '🏗'}
+              {z.built ? (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: u(6) }}>
+                  <BrickIcon size={22} />
+                  {bricks[id]}/{z.bricks}
+                </span>
+              ) : (
+                <span aria-label="Coming soon" style={{ fontSize: f(16) }}>🚧</span>
+              )}
             </button>
           );
         })}

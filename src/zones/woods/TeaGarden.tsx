@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { RoundedBox } from '@react-three/drei';
+import { Html, RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
 import { B, Cone, Cy, mat, popScale, easeOutBack } from './fx';
 import { Cat, Dog, FriendModel, Person, faceUrl } from './models';
 import {
-  TEA_CENTER, TREATS, cupWorldPos, endPour, guestTap, guestWorldPos, guestsFor, replayTeaParty, seatAngle,
-  selectTreat, startPour, useWoods, TREE_COUNT,
+  TEA_CENTER, TREATS, cupWorldPos, endPour, giveTreat, guestTap, guestWorldPos, guestsFor, nextTeaTarget, replayTeaParty, seatAngle,
+  startPour, stepTarget, useWoods, TREE_COUNT,
 } from './woodsState';
 import { playSting } from '../../audio/engine';
 import { GUEST_EMOJI, GUEST_NAMES, type FriendId, type GuestId } from './facts';
@@ -22,6 +22,71 @@ import { hudButton } from './ui';
 type V3 = [number, number, number];
 const OPEN_CYL = new THREE.CylinderGeometry(1, 0.78, 1, 14, 1, true);
 const cupMat = new THREE.MeshStandardMaterial({ color: '#FFFFFF', flatShading: true, side: THREE.DoubleSide });
+
+const RING_CUP = new THREE.RingGeometry(0.2, 0.3, 28);
+const RING_CUP_MAT = new THREE.MeshBasicMaterial({ color: '#FFD60A', side: THREE.DoubleSide });
+const RING_IN = new THREE.RingGeometry(0.78, 0.98, 36);
+const RING_OUT = new THREE.RingGeometry(0.98, 1.1, 36);
+const RING_IN_MAT = new THREE.MeshBasicMaterial({ color: '#FFF4E0', side: THREE.DoubleSide });
+const RING_OUT_MAT = new THREE.MeshBasicMaterial({ color: '#1D2A44', side: THREE.DoubleSide });
+
+/** Cream-and-navy ring on the ground under the selected guest. */
+function SelectRing() {
+  const target = useWoods((st) => st.pourTarget);
+  const g = useRef<THREE.Group>(null);
+  useFrame(({ clock }) => { if (g.current) g.current.scale.setScalar(1.15 + Math.sin(clock.elapsedTime * 4) * 0.06); });
+  if (!target) return null;
+  const p = guestWorldPos(target);
+  return (
+    <group position={[p[0], 0.18, p[2]]}>
+      <group ref={g}>
+        <mesh rotation-x={-Math.PI / 2} geometry={RING_IN} material={RING_IN_MAT} />
+        <mesh rotation-x={-Math.PI / 2} geometry={RING_OUT} material={RING_OUT_MAT} />
+      </group>
+    </group>
+  );
+}
+
+/** Fill gauge attached to the cup being filled, with a symbol-based "Release!" cue in the success window. */
+function CupGauge() {
+  const pouring = useWoods((st) => st.pouring);
+  const target = useWoods((st) => st.pourTarget);
+  const fill = useRef<HTMLDivElement>(null);
+  const cue = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!pouring) return;
+    let raf = 0;
+    const tick = () => {
+      const lv = levelAt((performance.now() - pouring.start) / 1000);
+      const inWin = lv >= LEVEL_PERFECT_MIN && lv <= LEVEL_PERFECT_MAX;
+      if (fill.current) fill.current.style.height = `${Math.min(100, lv * 100)}%`;
+      if (cue.current) {
+        cue.current.textContent = lv >= 1 ? '💦 Oops!' : inWin ? '✋ Release!' : lv < LEVEL_PERFECT_MIN ? '⏳ Keep going…' : '⚠ Almost full!';
+        cue.current.style.background = inWin ? '#7AE582' : '#FFF4E0';
+        cue.current.style.transform = inWin ? 'scale(1.12)' : 'scale(1)';
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [pouring]);
+  if (!pouring || !target) return null;
+  const c = cupWorldPos(target);
+  const H = 'calc(150px * var(--ui-scale))';
+  return (
+    <Html position={[c[0] + 0.55, c[1] + 0.9, c[2]]} center zIndexRange={[30, 20]} style={{ pointerEvents: 'none' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, color: '#1D2A44', fontWeight: 900 }}>
+        <div data-testid="pour-meter" style={{ position: 'relative', width: 'calc(38px * var(--ui-scale))', height: H, border: '4px solid #1D2A44', borderRadius: 16, background: '#FFF4E0', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', left: 0, right: 0, bottom: `${LEVEL_PERFECT_MIN * 100}%`, height: `${(LEVEL_PERFECT_MAX - LEVEL_PERFECT_MIN) * 100}%`, background: 'repeating-linear-gradient(45deg,#7AE582,#7AE582 6px,#5CCB68 6px,#5CCB68 12px)', borderTop: '3px solid #1D2A44', borderBottom: '3px solid #1D2A44' }} />
+          <div ref={fill} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '0%', background: 'rgba(199,119,63,0.9)' }} />
+        </div>
+        <div ref={cue} style={{ whiteSpace: 'nowrap', fontSize: 'max(16px, calc(24px * var(--ui-scale)))', padding: '4px 12px', border: '3px solid #1D2A44', borderRadius: 16, background: '#FFF4E0', marginBottom: 4 }}>
+          ⏳ Keep going…
+        </div>
+      </div>
+    </Html>
+  );
+}
 
 function Pop({ bornAt, position, rotY = 0, scale = 1, onTap, children }: { bornAt: number; position: V3; rotY?: number; scale?: number; onTap?: () => void; children: ReactNode }) {
   const g = useRef<THREE.Group>(null);
@@ -49,6 +114,9 @@ function Cup({ g, filled, isTarget }: { g: GuestId; filled: boolean; isTarget: b
       <Cy p={[0, 0.01, 0]} s={[0.1, 0.03, 0.1]} c="#FFFFFF" />
       <mesh ref={liquid} geometry={useMemo(() => new THREE.CylinderGeometry(1, 1, 1, 12), [])} material={mat('#C7773F')} />
       <B p={[0.17, 0.12, 0]} s={[0.08, 0.1, 0.04]} c="#FF8FB8" />
+      {isTarget && !filled && (
+        <mesh rotation-x={-Math.PI / 2} position={[0, 0.015, 0]} geometry={RING_CUP} material={RING_CUP_MAT} />
+      )}
     </group>
   );
 }
@@ -196,6 +264,8 @@ export function TeaGardenScene() {
           {target && !celebrating && <Marker g={target} />}
         </group>
       </group>
+      {!celebrating && <SelectRing />}
+      {!celebrating && <CupGauge />}
       {guests.map((g, i) => {
         const p = guestWorldPos(g);
         const yaw = Math.atan2(TEA_CENTER[0] - p[0], TEA_CENTER[2] + 0.5 - p[2]);
@@ -211,37 +281,140 @@ export function TeaGardenScene() {
 }
 
 // ---- HUD -----------------------------------------------------------------------------------------
+function GuestFace({ g, size }: { g: GuestId; size: string }) {
+  const [bad, setBad] = useState(false);
+  const emoji = GUEST_EMOJI[g];
+  return emoji || bad ? (
+    <span style={{ fontSize: f(36), lineHeight: 1 }}>{emoji ?? GUEST_NAMES[g][0]}</span>
+  ) : (
+    <img src={faceUrl(g)} alt="" style={{ width: size, height: size, borderRadius: u(16), objectFit: 'cover' }} onError={() => setBad(true)} />
+  );
+}
+
 function Chip({ g }: { g: GuestId }) {
   const hasTea = useWoods((s) => !!s.tea[g]);
   const hasTreat = useWoods((s) => !!s.treat[g]);
   const isTarget = useWoods((s) => s.pourTarget === g);
-  const pickingTreat = useWoods((s) => s.selectedTreat !== null);
-  const [bad, setBad] = useState(false);
-  const emoji = GUEST_EMOJI[g];
   const done = hasTea && hasTreat;
   return (
     <button
       type="button"
       data-testid={`guest-${g}`}
       aria-label={GUEST_NAMES[g]}
+      aria-pressed={isTarget}
       onClick={() => guestTap(g)}
       style={{
-        position: 'relative', width: ub(72), height: ub(72), borderRadius: u(24), padding: u(0), cursor: 'pointer',
-        border: `${u(4)} solid ${isTarget && !pickingTreat ? '#FFD60A' : palette.navy}`,
-        background: done ? '#C9F7D0' : '#FFF4E0', boxShadow: `0 ${u(4)} 0 ${palette.navy}`, flex: '0 0 auto',
-        outline: isTarget && !pickingTreat ? '3px solid #FF5CA8' : 'none',
+        position: 'relative', width: ub(66), height: ub(66), borderRadius: u(22), padding: u(0), cursor: 'pointer', flex: '0 0 auto',
+        border: `${u(4)} solid ${isTarget ? '#FF5CA8' : palette.navy}`,
+        background: done ? '#C9F7D0' : '#FFF4E0', boxShadow: isTarget ? `0 0 0 ${u(4)} #FFD60A` : `0 ${u(3)} 0 ${palette.navy}`,
+        transform: isTarget ? 'translateY(-4px) scale(1.06)' : undefined, transition: 'transform .12s',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}
     >
-      {emoji || bad ? (
-        <span style={{ fontSize: f(40), lineHeight: 1 }}>{emoji ?? GUEST_NAMES[g][0]}</span>
-      ) : (
-        <img src={faceUrl(g)} alt="" style={{ width: '82%', height: '82%', borderRadius: u(16), objectFit: 'cover' }} onError={() => setBad(true)} />
+      <GuestFace g={g} size="86%" />
+      {(hasTea || hasTreat) && (
+        <span style={{ position: 'absolute', right: u(-6), top: u(-8), display: 'flex', gap: u(1), fontSize: f(15), background: done ? '#7AE582' : '#fff', border: `${u(2)} solid ${palette.navy}`, borderRadius: u(12), padding: `0 ${u(3)}` }}>
+          {done ? '✓' : (<>{hasTea && '☕'}{hasTreat && '🍪'}</>)}
+        </span>
       )}
-      <span style={{ position: 'absolute', left: u(-2), right: u(-2), bottom: u(-14), display: 'flex', justifyContent: 'center', gap: u(2), fontSize: f(18) }}>
-        <span style={{ opacity: hasTea ? 1 : 0.28 }}>☕</span>
-        <span style={{ opacity: hasTreat ? 1 : 0.28 }}>🍪</span>
-      </span>
     </button>
+  );
+}
+
+const arrowBtn: React.CSSProperties = { width: ub(64), height: ub(64), fontSize: f(30), borderRadius: u(24) };
+
+/** One bottom panel: who is selected, what they still need, the treats, and the pour control. */
+function ServePanel({ pouring }: { pouring: boolean }) {
+  const selected = useWoods((s) => s.pourTarget);
+  const tea = useWoods((s) => s.tea);
+  const treat = useWoods((s) => s.treat);
+  const guests = guestsFor(TREE_COUNT);
+  const holdAt = useRef(0);
+  const g = selected ?? guests[0];
+  const needsTea = !tea[g];
+  const needsTreat = !treat[g];
+
+  useEffect(() => {
+    if (!selected) useWoods.setState({ pourTarget: nextTeaTarget() ?? guests[0] });
+  }, [selected, guests]);
+
+  // Hold-to-pour: letting go after a real hold stops the pour. A quick tap leaves it running; tap again to stop.
+  useEffect(() => {
+    const up = () => {
+      if (holdAt.current && performance.now() - holdAt.current > 380) endPour();
+      holdAt.current = 0;
+    };
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+    return () => { window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); };
+  }, []);
+
+  const need = (done: boolean, icon: string, label: string) => (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: u(4), opacity: done ? 0.55 : 1, textDecoration: done ? 'line-through' : 'none', fontWeight: 800 }}>
+      <span aria-hidden>{icon}</span>{label}{done && <span aria-label="done"> ✓</span>}
+    </span>
+  );
+
+  return (
+    <div
+      data-testid="serve-panel"
+      style={{
+        position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: inset('bottom', 10), zIndex: 60, width: 'min(96vw, 1040px)',
+        background: 'rgba(255,244,224,0.96)', border: `${u(4)} solid ${palette.navy}`, borderRadius: u(30), boxShadow: `0 ${u(6)} 0 ${palette.navy}`,
+        padding: u(10), display: 'flex', flexDirection: 'column', gap: u(8),
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: u(12) }}>
+        <button
+          type="button"
+          data-testid="pour-btn"
+          aria-label={pouring ? 'Release! Stop pouring' : 'Pour tea'}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            if (useWoods.getState().pouring) { endPour(); holdAt.current = 0; return; }
+            holdAt.current = performance.now();
+            startPour();
+          }}
+          style={{
+            ...hudButton(pouring ? '#FFD60A' : '#FF5CA8'), color: pouring ? palette.navy : '#fff', width: ub(190), height: ub(88), fontSize: f(26), lineHeight: 1.05,
+            borderRadius: u(28), touchAction: 'none', flexDirection: 'column', flex: '0 0 auto',
+          }}
+        >
+          {pouring ? '✋ Release!' : '🫖 Pour tea'}
+          <span style={{ fontSize: f(15), fontWeight: 700 }}>{pouring ? 'tap or let go' : 'tap or hold'}</span>
+        </button>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: u(10), minWidth: 0 }}>
+          <button type="button" data-testid="guest-prev" aria-label="Previous guest" onClick={() => stepTarget(-1)} style={{ ...hudButton('#FFF4E0'), ...arrowBtn, flex: '0 0 auto' }}>◀</button>
+          <div data-testid="selected-guest" style={{ display: 'flex', alignItems: 'center', gap: u(10), minWidth: 0 }}>
+            <GuestFace g={g} size={ub(56)} />
+            <div style={{ lineHeight: 1.2 }}>
+              <div style={{ fontSize: f(26), fontWeight: 900 }}>{GUEST_NAMES[g]}</div>
+              <div style={{ fontSize: f(19), display: 'flex', gap: u(10), flexWrap: 'wrap' }}>
+                {!needsTea && !needsTreat ? <span style={{ fontWeight: 800 }}>All set! ✓</span> : (<>Needs {need(!needsTea, '☕', 'tea')}{need(!needsTreat, '🍪', 'treat')}</>)}
+              </div>
+            </div>
+          </div>
+          <button type="button" data-testid="guest-next" aria-label="Next guest" onClick={() => stepTarget(1)} style={{ ...hudButton('#FFF4E0'), ...arrowBtn, flex: '0 0 auto' }}>▶</button>
+        </div>
+        <div style={{ display: 'flex', gap: u(8), flex: '0 0 auto' }}>
+          {TREATS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              data-testid={`treat-${t.id}`}
+              aria-label={`Give ${t.label} to ${GUEST_NAMES[g]}`}
+              onClick={() => giveTreat(t.id)}
+              style={{ ...hudButton('#FFE3F0'), width: ub(76), height: ub(76), fontSize: f(38), borderRadius: u(24), opacity: needsTreat ? 1 : 0.5 }}
+            >
+              {t.emoji}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: u(6), paddingTop: u(6), flexWrap: 'nowrap', overflow: 'visible' }}>
+        {guests.map((x) => <Chip key={x} g={x} />)}
+      </div>
+    </div>
   );
 }
 
@@ -261,35 +434,24 @@ export function TeaHud() {
   const bricks = useProgress((s) => s.bricks.woods);
   const pouring = useWoods((s) => s.pouring);
   const lastPour = useWoods((s) => s.lastPour);
-  const treatChoice = useWoods((s) => s.selectedTreat);
   const celebrating = useWoods((s) => s.celebrating);
   const firstBrick = useWoods((s) => s.firstBrick);
-  const [level, setLevel] = useState(0);
 
   useEffect(() => {
     if (celebrating) void playSting('celebrate');
   }, [celebrating]);
 
-  // Drive the on-screen meter, and auto-finish (splash!) when the cup overflows.
+  // Auto-finish (splash!) when the cup overflows.
   useEffect(() => {
-    if (!pouring) { setLevel(0); return; }
+    if (!pouring) return;
     let raf = 0;
     const tick = () => {
-      const lv = levelAt((performance.now() - pouring.start) / 1000);
-      setLevel(lv);
-      if (lv >= 1) { endPour(); return; }
+      if (levelAt((performance.now() - pouring.start) / 1000) >= 1) { endPour(); return; }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [pouring]);
-
-  useEffect(() => {
-    const up = () => endPour();
-    window.addEventListener('pointerup', up);
-    window.addEventListener('pointercancel', up);
-    return () => { window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); };
-  }, []);
 
   const [badge, setBadge] = useState<{ id: number; text: string } | null>(null);
   useEffect(() => {
@@ -300,45 +462,9 @@ export function TeaHud() {
     return () => clearTimeout(t);
   }, [lastPour]);
 
-  const guests = guestsFor(TREE_COUNT);
-  const pct = (v: number) => `${Math.min(100, (v / 1.0) * 100)}%`;
   return (
     <>
-      {/* Pour controls */}
-      <div style={{ position: 'absolute', left: inset('left', 22), bottom: inset('bottom', 140), zIndex: 60, display: 'flex', flexDirection: 'column', gap: u(8), alignItems: 'flex-start' }}>
-        <div style={{ fontSize: f(20), fontWeight: 900, color: palette.navy, textShadow: '0 2px 0 #fff' }}>Let go in the green!</div>
-        <div data-testid="pour-meter" style={{ width: u(150), height: u(30), border: `${u(4)} solid ${palette.navy}`, borderRadius: u(16), background: '#FFF4E0', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: u(0), bottom: u(0), left: pct(LEVEL_PERFECT_MIN), width: pct(LEVEL_PERFECT_MAX - LEVEL_PERFECT_MIN), background: '#7AE582' }} />
-          <div style={{ position: 'absolute', top: u(0), bottom: u(0), left: u(0), width: pct(level), background: 'rgba(199,119,63,0.85)' }} />
-        </div>
-        <button
-          type="button"
-          data-testid="pour-btn"
-          onPointerDown={(e) => { e.preventDefault(); startPour(); }}
-          style={{ ...hudButton('#FF5CA8'), minWidth: 108, width: ub(150), height: ub(96), fontSize: f(24), lineHeight: 1.1, borderRadius: u(30), touchAction: 'none' }}
-        >
-          🫖 Hold to pour
-        </button>
-      </div>
-      {/* Treats */}
-      <div style={{ position: 'absolute', right: inset('right', 22), bottom: inset('bottom', 140), zIndex: 60, display: 'flex', gap: u(10) }}>
-        {TREATS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            data-testid={`treat-${t.id}`}
-            aria-label={t.label}
-            onClick={() => selectTreat(treatChoice === t.id ? null : t.id)}
-            style={{ ...hudButton(treatChoice === t.id ? '#FFD60A' : '#FFF4E0'), width: ub(84), height: ub(84), fontSize: f(44), borderRadius: u(28) }}
-          >
-            {t.emoji}
-          </button>
-        ))}
-      </div>
-      {/* Guest bar */}
-      <div style={{ position: 'absolute', left: inset('left', 0), right: inset('right', 0), bottom: inset('bottom', 30), zIndex: 60, display: 'flex', justifyContent: 'center', gap: u(6), padding: '0 10px' }}>
-        {guests.map((g) => <Chip key={g} g={g} />)}
-      </div>
+      <ServePanel pouring={!!pouring} />
       {badge && (
         <div key={badge.id} data-testid="pour-result" style={{ position: 'absolute', left: '50%', top: '38%', transform: 'translate(-50%,-50%)', zIndex: 70, fontSize: f(64), fontWeight: 900, color: '#fff', WebkitTextStroke: `${u(3)} ${palette.navy}`, textShadow: `0 ${u(6)} 0 ${palette.navy}`, animation: 'woods-pop 1.4s ease-out forwards', pointerEvents: 'none' }}>
           {badge.text}

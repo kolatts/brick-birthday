@@ -17,6 +17,8 @@ test('title loads with the computed age heading', async ({ page }, info) => {
   await expect(page.getByTestId('play-button')).toBeVisible();
   const box = await page.getByTestId('play-button').boundingBox();
   expect(box!.height).toBeGreaterThanOrEqual(page.viewportSize()!.height < 500 ? 52 : 64);
+  await expect(page.getByTestId('title-avatar').locator('canvas')).toBeVisible();
+  await page.waitForTimeout(900); // let the 3D hero finish loading before the screenshot
   await page.screenshot({ path: `${SCREENS}/title-${info.project.name}.png` });
 });
 

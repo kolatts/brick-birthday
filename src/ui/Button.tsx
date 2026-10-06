@@ -29,6 +29,7 @@ export function Button({ children, onClick, tone = 'pink', big = false, disabled
   return (
     <button
       type="button"
+      className="btn"
       data-testid={testId}
       aria-label={ariaLabel}
       disabled={disabled}

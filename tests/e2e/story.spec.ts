@@ -23,6 +23,7 @@ test('Story Tower: pick four tiles, hear the story, earn bricks', async ({ page 
   await page.getByTestId('tile-problem-teapot').click();
   await page.waitForTimeout(150);
   await page.screenshot({ path: `${SCREENS}/story-picks-${info.project.name}.png` });
+  await page.getByTestId('tile-power-giggle').scrollIntoViewIfNeeded();
   const box = await page.getByTestId('tile-power-giggle').boundingBox();
   expect(box!.height).toBeGreaterThanOrEqual(page.viewportSize()!.height < 500 ? 52 : 64);
   expect(box!.width).toBeGreaterThanOrEqual(52);
@@ -31,7 +32,16 @@ test('Story Tower: pick four tiles, hear the story, earn bricks', async ({ page 
   await page.getByTestId('tell-story').click();
   await expect(page.getByTestId('story-page')).toBeVisible();
   await page.screenshot({ path: `${SCREENS}/story-playing-${info.project.name}.png` });
-  const text = await page.getByTestId('story-text').innerText();
+  const text = (await page.getByTestId('story-full').textContent())!;
+  const minH = page.viewportSize()!.height < 500 ? 52 : 64;
+  for (const id of ['story-replay', 'story-pause', 'story-next', 'wand-button']) {
+    // Pause is only rendered while narration plays; under the ?test=1 stub it may already be gone.
+    const loc = page.getByTestId(id);
+    if ((await loc.count()) === 0) continue;
+    const b = await loc.boundingBox();
+    if (b) expect(b.height, id).toBeGreaterThanOrEqual(minH);
+  }
+  expect((await page.getByTestId('story-text').innerText()).length).toBeLessThan(text.length * 0.6);
   expect(text).toContain('Mom');
   expect(text).not.toMatch(/undefined|TODO|\{/);
   await expect(page.getByTestId('brick-celebration')).toBeVisible({ timeout: 15_000 });
@@ -54,7 +64,7 @@ test('wand moment adds a bonus sentence', async ({ page }) => {
   await page.getByTestId('wand-button').click();
   await expect(page.getByTestId('sparkle-burst')).toBeAttached();
   await expect(page.getByTestId('again')).toBeVisible({ timeout: 15_000 });
-  const sentences = (await page.getByTestId('story-text').innerText()).split(/(?<=[.!?])\s+/).length;
+  const sentences = ((await page.getByTestId('story-full').textContent())!).split(/(?<=[.!?])\s+/).length;
   expect(sentences).toBeGreaterThanOrEqual(5);
 });
 

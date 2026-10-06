@@ -26,9 +26,14 @@ function CouponRow({ size }: { size: number }) {
             key={id}
             data-testid={`title-coupon-${id}`}
             data-earned={earned}
-            style={{ background: palette.cream, border: `${u(3)} solid ${palette.navy}`, borderRadius: u(16), padding: u(3), filter: earned ? 'none' : 'grayscale(1)', opacity: earned ? 1 : 0.6 }}
+            title={earned ? undefined : 'Locked'}
+            style={{
+              position: 'relative', borderRadius: u(16), padding: u(3), background: earned ? palette.cream : 'transparent',
+              border: earned ? `${u(3)} solid ${palette.navy}` : `${u(3)} solid transparent`, filter: earned ? 'none' : 'grayscale(1)', opacity: earned ? 1 : 0.6,
+            }}
           >
             <CouponArt id={id} size={size} />
+            {!earned && <span aria-hidden style={{ position: 'absolute', right: 0, bottom: 0, fontSize: f(20), filter: 'none', lineHeight: 1 }}>🔒</span>}
           </div>
         );
       })}
@@ -89,8 +94,8 @@ export function Title() {
   return (
     <div className="screen center-col" style={{ background: 'linear-gradient(#FFB3D6, #FFF4E0)', padding: `var(--sat) var(--sar) var(--sab) var(--sal)` }} data-testid="title-screen">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: u(8), width: '100%', padding: '0 2vw', boxSizing: 'border-box' }}>
-        <div data-testid="title-avatar" style={{ width: 'min(26vw, 400px)', height: 'min(62vh, 560px)', flex: '0 0 auto' }}>
-          <Canvas {...canvasProps} camera={{ position: [0, 2.0, 7.2], fov: 34 }} onCreated={({ camera }) => camera.lookAt(0, 1.5, 0)}>
+        <div data-testid="title-avatar" style={{ width: 'min(30vw, 420px)', height: 'min(70vh, 620px)', flex: '0 0 auto', marginRight: '-4vw' }}>
+          <Canvas {...canvasProps} camera={{ position: [0.3, 2.1, 10.2], fov: 34 }} onCreated={({ camera }) => camera.lookAt(0.2, 1.55, 0)}>
             <Lights />
             <Avatar id="luna" wave wand scale={1.3} rotationY={0.3} />
           </Canvas>
@@ -98,9 +103,10 @@ export function Title() {
         <div className="center-col" style={{ flex: '0 1 auto', gap: u(14), minWidth: 0 }}>
           <h1
             data-testid="title-heading"
-            style={{ margin: 0, fontSize: phone ? 'clamp(24px, 9vh, 40px)' : 'clamp(30px, min(4.4vw, 7vh), 62px)', color: '#E63946', textShadow: `0 ${u(4)} 0 #1D2A44`, padding: `0 ${u(12)}` }}
+            style={{ margin: 0, fontSize: phone ? 'clamp(24px, 9vh, 40px)' : 'clamp(28px, min(3.7vw, 6.4vh), 56px)', color: '#E63946', textShadow: '0 3px 0 rgba(255,255,255,0.85)', padding: `0 ${u(12)}`, lineHeight: 1.05 }}
           >
-            Happy {ordinal(age)} Birthday, Luna!
+            <span style={{ whiteSpace: 'nowrap' }}>Happy {ordinal(age)} Birthday,</span>{' '}
+            <span style={{ display: 'block' }}>Luna!</span>
           </h1>
           <Button
             big

@@ -39,7 +39,10 @@ body {
 }
 
 button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-button:active:not(:disabled) { transform: translateY(4px); }
+button:active:not(:disabled) { transform: translateY(4px) scale(0.98); }
+/* shared pressed state: the 3D "drop" shadow collapses as the button sinks */
+.btn:active:not(:disabled) { box-shadow: 0 2px 0 #1D2A44 !important; filter: brightness(0.96); }
+button:focus-visible { outline: 4px solid #3A86FF; outline-offset: 3px; }
 
 .screen { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; }
 .screen h1, .screen h2 { line-height: 1.1; }

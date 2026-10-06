@@ -454,10 +454,41 @@ def foot_shape(width):
     return sh
 
 
-def c_hand(R, tube, sweep=math.radians(250)):
-    """C-shaped hand (torus arc + rounded tips), gap facing +z, centred on the ring centre."""
-    t = torus(R, tube, sweep, 20, 10)
-    return t, sweep
+def toy_hand(grip=False):
+    """Single watertight quad surface: cupped palm, curled fingers and thumb notch.
+
+    The relaxed mitten opens downwards; the gripping mitten wraps a Y-axis shaft.
+    Rounded tips belong to the same surface, never overlapping tip spheres.
+    """
+    segs, radial = 16, 8
+    verts, faces = [], []
+    sweep = math.radians(320 if grip else 265)
+    for i in range(segs + 1):
+        t = i / segs
+        angle = math.radians(110 if grip else -42) + sweep * t
+        tip = math.sin(math.pi * t) ** 0.28
+        radius = ((0.052 if grip else 0.068) + 0.014 * math.sin(math.pi * t) - 0.015 * t) * (0.12 + 0.88 * tip)
+        for j in range(radial):
+            v = TAU * j / radial
+            if grip:
+                r = 0.088 + radius * math.cos(v)
+                verts.append((r * math.cos(angle), radius * math.sin(v) * 1.35,
+                              r * math.sin(angle)))
+            else:
+                r = 0.094 + radius * math.cos(v)
+                verts.append((r * math.cos(angle), r * math.sin(angle) * 1.10,
+                              radius * math.sin(v) * 0.78 + 0.025 * math.sin(angle)))
+    for i in range(segs):
+        for j in range(radial):
+            k = (j + 1) % radial
+            faces.append((i*radial+j, i*radial+k, (i+1)*radial+k, (i+1)*radial+j))
+    faces.extend([tuple(range(radial-1,-1,-1)), tuple(segs*radial+j for j in range(radial))])
+    return Shape(verts, faces, [("SUBSURF", dict(levels=2, render_levels=2))])
+
+
+def human_smooth(shape, level=1):
+    shape.mods.append(("SUBSURF", dict(levels=level, render_levels=level)))
+    return shape
 
 
 def person_parts(fid, f, root, mats):
@@ -468,7 +499,7 @@ def person_parts(fid, f, root, mats):
     base = 0.2 + leg_h
     torso_h = SPEC["torso"]["h"]
     torso_y = base + torso_h / 2
-    head_y = base + torso_h + HEAD["h"] / 2 - 0.05
+    head_y = base + torso_h + HEAD["h"] / 2 + 0.015
     shoulder_y = base + torso_h - 0.16
     top = HEAD["h"] / 2
     prof = head_profile(HEAD, 2.0)
@@ -477,16 +508,17 @@ def person_parts(fid, f, root, mats):
     # ---------------- Body (static)
     B = Role("Body")
     for sx in (-1, 1):
-        B.add(rbox(0.34, leg_h + 0.06, 0.34, 0.12, taper=0.84), f["pants"], (sx * 0.2, 0.2 + leg_h / 2 + 0.03, 0))
-        B.add(foot_shape(0.34), f["shoes"], (sx * 0.2, 0.0, -0.02))
-    B.add(rbox(0.82, 0.2, 0.46, 0.09), f["pants"], (0, base + 0.02, 0))
-    B.add(rbox(SPEC["torso"]["wTop"], torso_h, SPEC["torso"]["depth"], 0.17, taper=SPEC["torso"]["wBottom"] / SPEC["torso"]["wTop"], seg=5), body_c, (0, torso_y, 0))
+        B.add(rbox(0.34, leg_h + 0.06, 0.34, 0.12, taper=0.84, sub=2), f["pants"], (sx * 0.2, 0.2 + leg_h / 2 + 0.03, 0))
+        B.add(rbox(0.36, 0.22, 0.55, 0.085, seg=3, sub=2), f["shoes"], (sx * 0.2, 0.11, 0.065))
+    if fid != "luna":
+        B.add(rbox(0.82, 0.2, 0.46, 0.09, sub=2), f["pants"], (0, base + 0.02, 0))
+    B.add(rbox(SPEC["torso"]["wTop"], torso_h, SPEC["torso"]["depth"], 0.23, taper=SPEC["torso"]["wBottom"] / SPEC["torso"]["wTop"], seg=3, sub=2), body_c, (0, torso_y, 0))
     B.add(rbox(0.62, 0.48, 0.07, 0.025, seg=3), lighten(body_c, 0.28), (0, torso_y + 0.03, 0.295))
     for sx in (-1, 1):
         for sy in (-1, 1):
-            st = lathe([(0.075, 0.0), (0.075, 0.035), (0.06, 0.05), (0.03, 0.058), (0.0, 0.06)], 20)
-            B.add(st, lighten(body_c, 0.5), (sx * 0.15, torso_y + sy * 0.12 + 0.03, 0.33), rot=(math.pi / 2, 0, 0))
-    B.add(cylinder(0.16, 0.16, 0.2, 20), skin, (0, base + torso_h + 0.03, 0))
+            st = lathe([(0.075, 0.0), (0.075, 0.035), (0.06, 0.05), (0.03, 0.058), (0.0, 0.06)], 32)
+            B.add(human_smooth(st), lighten(body_c, 0.5), (sx * 0.15, torso_y + sy * 0.12 + 0.03, 0.33), rot=(math.pi / 2, 0, 0))
+    B.add(capsule(0.145, 0.08, 32, 10), skin, (0, base + torso_h + 0.03, 0))
     B.add(torus(0.2, 0.04, TAU, 32, 10), lighten(body_c, 0.22), (0, base + torso_h + 0.005, 0), rot=(math.pi / 2, 0, 0), sc=(1, 1, 0.85))
     if "guitar" in f["accessory"]:
         wood = "#E8742A"
@@ -501,6 +533,13 @@ def person_parts(fid, f, root, mats):
         B.add(rbox(0.09, 0.72, 0.05, 0.02), "#4A2E1A", place((0, 0.68, 0.01)), rotmat=gm.to_quaternion().to_matrix().to_4x4())
         B.add(rbox(0.15, 0.24, 0.06, 0.03), "#2B2B33", place((0, 1.12, 0.0)), rotmat=gm.to_quaternion().to_matrix().to_4x4())
         B.add(rbox(1.0, 0.06, 0.04, 0.015), "#1D2A44", (0, torso_y + 0.02, 0.31), rot=(0, 0, 0.78))
+    for sx in (-1, 1):
+        B.add(sphere(0.19, 0.17, 0.18, 28, 16), f["pants"], (sx * 0.2, base - 0.025, 0))
+        B.add(sphere(0.15, 0.15, 0.16, 28, 16), body_c, (sx * 0.48, shoulder_y - 0.025, 0))
+    if fid == "luna":
+        hem = lathe([(0, -0.09), (0.46, -0.09), (0.51, -0.06), (0.50, -0.015),
+                     (0.40, 0.105), (0.37, 0.12), (0, 0.12)], 40, zs=0.64)
+        B.add(human_smooth(hem), body_c, (0, base + 0.015, 0))
     body_ob = B.finish(root, figure_mat)
 
     # ---------------- Arms (pivot at the shoulder)
@@ -513,38 +552,47 @@ def person_parts(fid, f, root, mats):
 
     def arm_role(side, col_sleeve, cuff, name, extra=1.0):
         A = Role(name)
-        A.add(sphere(0.16 * extra, 0.16 * extra, 0.16 * extra, 28, 16), col_sleeve)
-        limb = tube([(0, 0, 0), (0, -0.16, 0), tuple(E), tuple(mid), tuple(W)], lambda t: (0.135 - 0.03 * t - 0.012 * math.sin(math.pi * t * 2) ** 2) * extra, 28, 20)
-        A.add(limb, col_sleeve)
-        A.add(cylinder(0.13 * extra, 0.135 * extra, 0.06, 24), cuff, tuple(W - u * 0.025), rot=(-bend, 0, 0))
+        # One continuous sleeve, with a sampled hemispherical shoulder dome.
+        profile = [(0, -0.58), (0.085, -0.575), (0.108, -0.55),
+                   (0.112, -0.52), (0.12, -0.40), (0.132, -0.28),
+                   (0.15, -0.14), (0.16, 0)]
+        for i in range(1, 9):
+            angle = math.pi / 2 * i / 8
+            profile.append((0.16 * math.cos(angle), 0.16 * math.sin(angle)))
+        profile[-1] = (0, 0.16)
+        limb = lathe(profile, 32)
+        limb.verts = [(x * extra, y, z * extra + max(0, -y - 0.28) * math.sin(bend))
+                      for x, y, z in limb.verts]
+        A.add(human_smooth(limb), col_sleeve)
+        A.add(sphere(0.114 * extra, 0.064, 0.114 * extra, 32, 16), cuff,
+              tuple(W + u * 0.005), rot=(-bend, 0, 0))
         return A
 
     arms = {}
     for side, sx in (("L", -1), ("R", 1)):
         piv = empty("Arm" + side, root, (sx * 0.66, shoulder_y, 0))
-        A = arm_role(side, body_c, lighten(body_c, 0.35), "ArmMesh" + side)
-        hs, sweep = c_hand(0.13, 0.075)
-        gap = sweep + (TAU - sweep) / 2
-        hm = Matrix.Rotation(-bend, 4, "X") @ Matrix.Rotation(math.pi / 2, 4, "Y") @ Matrix.Rotation(math.pi - gap, 4, "Z")
-        # bake the hand's own orientation into its verts, then place it
-        hs.verts = [tuple(hm @ Vector(v)) for v in hs.verts]
-        A.add(hs, skin, (hand.x, hand.y - 0.1, hand.z + 0.02))
-        for a in (0.0, sweep):
-            tip = sphere(0.075, 0.075, 0.075, 16, 10)
-            c = hm @ Vector((0.13 * math.cos(a), 0.13 * math.sin(a), 0))
-            A.add(tip, skin, (hand.x + c.x, hand.y - 0.1 + c.y, hand.z + 0.02 + c.z))
+        A = arm_role(side, body_c, skin, "ArmMesh" + side)
+        grip = fid == "luna" and side == "L"
+        hand_pos = Vector((0, W.y - 0.14, W.z + (0.17 if grip else 0.035)))
+        hm = Matrix.Rotation(sx * 0.30, 4, "Y")
+        A.add(toy_hand(grip), skin, tuple(hand_pos), rotmat=hm)
+        A.add(capsule(0.075, 0.015, 28, 8), skin, tuple(W + u * 0.005), rot=(-bend, 0, 0))
+        if grip:
+            # Shaft and closed fingers share a centre and the shoulder pivot.
+            A.add(capsule(0.033, 0.67, 24, 6), "#FFD60A", tuple(hand_pos + Vector((0, 0.22, 0))))
+            A.add(star_shape(0.19, 0.075), "#FFD60A", tuple(hand_pos + Vector((0, 0.66, 0))))
         A.finish(piv, figure_mat)
         arms[side] = piv
 
     # ---------------- Head (pivot at the head centre)
     head = empty("Head", root, (0, head_y, 0))
     Hd = Role("HeadMesh")
-    Hd.add(head_shape(HEAD), skin)
+    Hd.add(human_smooth(head_shape(HEAD, 48)), skin)
     for sx in (-1, 1):
         Hd.add(capsule(0.075, 0.07, 14, 4), skin, (sx * 0.5, -0.04, 0), sc=(0.7, 1, 1))
     Hd.add(cylinder(0.1, 0.085, 0.05, 20), skin, (0, top + 0.012, 0))
     style = f["hairStyle"]
-    lock = lambda x, y, z, ln, r, rot, c=hc, sc=(1, 1, 1): Hd.add(capsule(r, ln, 12, 3), c, (x, y, z), rot=rot, sc=sc)
+    lock = lambda x, y, z, ln, r, rot, c=hc, sc=(1, 1, 1): Hd.add(capsule(r, ln, 32, 10), c, (x, y, z), rot=rot, sc=sc)
 
     def hl(front, side, back):
         return lambda phi: front + (side - front) * smoothstep(0.75, 1.5, abs(phi)) + (back - side) * smoothstep(1.9, 2.7, abs(phi))
@@ -575,7 +623,7 @@ def person_parts(fid, f, root, mats):
         Hd.add(hair_cap(HEAD, hl(0.22, 0.02, -0.1), 0.05, 0.085, (0.035, 9, 17)), hc)
 
         def curl(x, y, z, r, c=hc):
-            Hd.add(sphere(r, r * 0.95, r, 18, 10), c, (x, y, z))
+            Hd.add(sphere(r, r * 0.95, r, 32, 18), c, (x, y, z))
 
         for i in range(8):
             an = TAU * i / 8
@@ -590,8 +638,8 @@ def person_parts(fid, f, root, mats):
             curl(-0.24 + i * 0.16, 0.27, 0.32 - abs(i - 1.5) * 0.04, 0.09)
         curl(0, 0.05, -0.42, 0.2)
     else:  # wavy-pulled-back (Luna): cap, bun, scrunchie
-        Hd.add(hair_cap(HEAD, hl(0.25, 0.1, -0.2), 0.032, 0.05, (0.01, 6, 12)), hc)
-        Hd.add(sphere(0.2, 0.19, 0.2, 24, 14), hcl, (0, top + 0.1, -0.26))
+        Hd.add(hair_cap(HEAD, hl(0.25, 0.1, -0.2), 0.042, 0.06, (0.004, 6, 12)), hc)
+        Hd.add(sphere(0.215, 0.20, 0.22, 40, 24), hc, (0, top + 0.1, -0.26))
         Hd.add(torus(0.13, 0.035, TAU, 24, 8), "#FF5CA8", (0, top + 0.04, -0.24), rot=(math.pi / 2 - 0.5, 0, 0))
         # tiara
         tilt = -0.10
@@ -607,6 +655,8 @@ def person_parts(fid, f, root, mats):
         visor_parts(Hd, "#E63946")
     Hd.finish(head, figure_mat)
     face_parts(fid, f, head, HEAD)
+    if fid == "luna":
+        head.scale = (1.065, 1.065, 1.065)
 
     # ---------------- Luna's closet: garments as separate named, toggleable meshes
     if fid == "luna":
@@ -724,7 +774,7 @@ def closet_items(root, head, arms, mat, d):
             W = d["W"]
             R.add(sphere(0.175, 0.175, 0.175, 24, 14), col)
             R.add(tube([(0, 0, 0), (0, -0.16, 0), tuple(E), tuple(mid), tuple(W)], lambda t: 0.148 - 0.03 * t, 24, 20), col)
-            R.add(cylinder(0.14, 0.145, 0.06, 24), cuff, tuple(W - u * 0.025), rot=(-bend, 0, 0))
+            R.add(cylinder(0.14, 0.145, 0.06, 24), cuff, tuple(W + u * 0.005), rot=(-bend, 0, 0))
             R.finish(arms[side], mat)
 
     # head items
@@ -903,7 +953,7 @@ def face_parts(fid, f, head, spec):
                 if fid == "luna":
                     for n in range(2):
                         line([(x + side * 0.052, ey + 0.042 + n * 0.021),
-                              (x + side * (0.094 + n * 0.009), ey + 0.066 + n * 0.033)], radius=0.010)
+                              (x + side * (0.12 + n * 0.012), ey + 0.081 + n * 0.038)], radius=0.010)
             by = (0.171 if surprised else 0.139) if fid == "darian" else (0.226 if surprised else 0.196)
             line([(x + t * 0.062, by + 0.013 * (1 - t * t)) for t in (-1, -0.5, 0, 0.5, 1)], radius=0.011)
             oval(side * 0.315, -0.098, 0.071, 0.038, SPEC["faceStyle"]["blush"], offset=0.006, depth=0.003)
@@ -1001,11 +1051,50 @@ def render_review(root, fid, directory):
     os.makedirs(directory, exist_ok=True)
     scene.render.filepath = os.path.join(directory, fid + '.png')
     bpy.ops.render.render(write_still=True)
+    if fid == "luna":
+        for ob in scene.objects:
+            if ob.type == 'MESH':
+                ob.hide_render = True
+        for ob in originals:
+            ancestors = [ob]
+            parent = ob.parent
+            while parent:
+                ancestors.append(parent)
+                parent = parent.parent
+            ob.hide_render = any(a.name.startswith("Item_") or
+                (a.name.startswith("Face_") and a.name != "Face_happy") for a in ancestors)
+        cam.location = (2.4, 1.5, 8)
+        target = Vector((0, 0.68, 0.08))
+        forward = (target - cam.location).normalized()
+        right = forward.cross(Vector((0, 1, 0))).normalized()
+        up = right.cross(forward)
+        cam.rotation_euler = Matrix((right, up, -forward)).transposed().to_euler()
+        cam_data.ortho_scale = 1.95
+        scene.render.filepath = os.path.join(directory, 'luna-hands.png')
+        bpy.ops.render.render(write_still=True)
 
 
 # ----------------------------------------------------------------------------- driver
 def reset_scene():
     bpy.ops.wm.read_factory_settings(use_empty=True)
+
+
+def budget_human(root, target=38500):
+    meshes = [o for o in root.children_recursive if o.type == 'MESH']
+    count = lambda ob: sum(len(p.vertices) - 2 for p in ob.data.polygons)
+    ink = sum(count(o) for o in meshes if o.name.startswith('Ink_'))
+    arms = sum(count(o) for o in meshes if o.name.startswith('ArmMesh'))
+    sculpt = sum(count(o) for o in meshes if not o.name.startswith(('Ink_', 'ArmMesh')))
+    arm_ratio = 0.65
+    ratio = min(1.0, (target - ink - arms * arm_ratio) / sculpt)
+    for ob in meshes:
+        if ob.name.startswith('Ink_'):
+            continue
+        bpy.context.view_layer.objects.active = ob
+        mod = ob.modifiers.new('MoldedSurfaceBudget', 'DECIMATE')
+        mod.ratio = arm_ratio if ob.name.startswith('ArmMesh') else ratio
+        mod.use_collapse_triangulate = True
+        bpy.ops.object.modifier_apply(modifier=mod.name)
 
 
 def export(root, path):
@@ -1071,10 +1160,12 @@ def main():
         root = bpy.data.objects.new("Figure_" + fid, None)
         bpy.context.scene.collection.objects.link(root)
         (person_parts if f["kind"] == "person" else pet_parts)(fid, f, root, mats)
+        if f["kind"] == "person":
+            budget_human(root)
         path = os.path.join(out, fid + ".glb")
         export(root, path)
-        tris = sum(len(o.data.polygons) for o in bpy.data.objects if o.type == "MESH")
-        print("EXPORTED %s -> %s (%d bytes, ~%d polys)" % (fid, path, os.path.getsize(path), tris))
+        tris = sum(len(p.vertices) - 2 for o in root.children_recursive if o.type == "MESH" for p in o.data.polygons)
+        print("EXPORTED %s -> %s (%d bytes, %d triangles)" % (fid, path, os.path.getsize(path), tris))
         if os.path.getsize(path) >= 300_000:
             raise RuntimeError("GLB exceeds 300 KB: " + path)
         if review:

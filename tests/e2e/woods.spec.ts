@@ -123,8 +123,8 @@ test('tea garden: pour perfectly, overfill for a splash, serve a treat', async (
   await page.screenshot({ path: `${SCREENS}/woods-tea-splash-${proj}.png` });
   await page.mouse.up();
 
-  await page.getByTestId('treat-cookie').click();
   await page.getByTestId('guest-julian').click();
+  await page.getByTestId('treat-cookie').click();
   await expect(page.getByTestId('caption')).toContainText('scientifically the best cookie');
 });
 
