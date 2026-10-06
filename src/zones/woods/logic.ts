@@ -20,14 +20,14 @@ export function judgePour(level: number): PourResult {
 
 // ---- Tea Party Orders ------------------------------------------------------
 export type ItemId = 'sugar' | 'lemon' | 'milk' | 'cake' | 'cookie' | 'scone' | 'honey';
-export const ITEMS: { id: ItemId; label: string; emoji: string }[] = [
-  { id: 'sugar', label: 'Sugar cube', emoji: '🧊' },
-  { id: 'lemon', label: 'Lemon slice', emoji: '🍋' },
-  { id: 'milk', label: 'Milk', emoji: '🥛' },
-  { id: 'cake', label: 'Strawberry cake', emoji: '🍰' },
-  { id: 'cookie', label: 'Cookie', emoji: '🍪' },
-  { id: 'scone', label: 'Scone', emoji: '🥐' },
-  { id: 'honey', label: 'Honey', emoji: '🍯' },
+export const ITEMS: { id: ItemId; label: string; icon: string }[] = [
+  { id: 'sugar', label: 'Sugar cube', icon: 'sugar-cube' },
+  { id: 'lemon', label: 'Lemon slice', icon: 'lemon' },
+  { id: 'milk', label: 'Milk', icon: 'milk' },
+  { id: 'cake', label: 'Strawberry cake', icon: 'cake' },
+  { id: 'cookie', label: 'Cookie', icon: 'cookie' },
+  { id: 'scone', label: 'Scone', icon: 'scone' },
+  { id: 'honey', label: 'Honey', icon: 'honey' },
 ];
 export const itemById = (id: ItemId) => ITEMS.find((i) => i.id === id)!;
 

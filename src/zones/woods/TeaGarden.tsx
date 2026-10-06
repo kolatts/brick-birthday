@@ -5,18 +5,20 @@ import * as THREE from 'three';
 import { B, Cone, Cy, mat, popScale, easeOutBack } from './fx';
 import { Cat, Dog, FriendModel, Person, faceUrl } from './models';
 import {
-  TEA_CENTER, TREATS, cupWorldPos, endPour, giveTreat, guestTap, guestWorldPos, guestsFor, nextTeaTarget, replayTeaParty, seatAngle,
-  startPour, stepTarget, useWoods, TREE_COUNT,
+  TEA_CENTER, TREATS, cupWorldPos, endPour, giveTreat, guestTap, guestWorldPos, guestsFor, isServed, nextTeaTarget, replayTeaParty, seatAngle,
+  servedGuests, startPour, stepTarget, useWoods, TREE_COUNT,
 } from './woodsState';
 import { playSting } from '../../audio/engine';
-import { GUEST_EMOJI, GUEST_NAMES, type FriendId, type GuestId } from './facts';
+import { GUEST_ICON, GUEST_NAMES, GUEST_WANTS, isFamilyGuest, type FamilyGuestId, type FriendId, type GuestId } from './facts';
 import { LEVEL_PERFECT_MAX, LEVEL_PERFECT_MIN, levelAt } from './logic';
 import { useProgress } from '../../state/progress';
 import { useUi } from '../../state/ui';
 import { sfx } from '../../audio/engine';
 import { say } from '../../audio/speech';
 import { Button, palette } from '../../ui/Button';
+import { CouponChallengeButton } from '../../ui/ZoneHud';
 import { f, inset, u, ub } from '../../ui/scale';
+import { ChevronIcon, Icon } from '../../ui/Icons';
 import { hudButton } from './ui';
 
 type V3 = [number, number, number];
@@ -61,7 +63,7 @@ function CupGauge() {
       const inWin = lv >= LEVEL_PERFECT_MIN && lv <= LEVEL_PERFECT_MAX;
       if (fill.current) fill.current.style.height = `${Math.min(100, lv * 100)}%`;
       if (cue.current) {
-        cue.current.textContent = lv >= 1 ? '💦 Oops!' : inWin ? '✋ Release!' : lv < LEVEL_PERFECT_MIN ? '⏳ Keep going…' : '⚠ Almost full!';
+        cue.current.textContent = lv >= 1 ? 'Oops!' : inWin ? 'Release!' : lv < LEVEL_PERFECT_MIN ? 'Keep going…' : 'Almost full!';
         cue.current.style.background = inWin ? '#7AE582' : '#FFF4E0';
         cue.current.style.transform = inWin ? 'scale(1.12)' : 'scale(1)';
       }
@@ -95,6 +97,17 @@ function Pop({ bornAt, position, rotY = 0, scale = 1, onTap, children }: { bornA
     g.current?.scale.setScalar(k);
   });
   return <group ref={g} position={position} rotation={[0, rotY, 0]} onPointerDown={onTap}>{children}</group>;
+}
+
+/** Gentle hop while the forest friends cheer (the group thank-you moment). */
+function Cheer({ active, seed, children }: { active: boolean; seed: number; children: ReactNode }) {
+  const g = useRef<THREE.Group>(null);
+  useFrame(({ clock }) => {
+    if (!g.current) return;
+    g.current.position.y = active ? Math.abs(Math.sin(clock.elapsedTime * 6 + seed)) * 0.28 : 0;
+    g.current.rotation.z = active ? Math.sin(clock.elapsedTime * 8 + seed) * 0.14 : 0;
+  });
+  return <group ref={g}>{children}</group>;
 }
 
 function Cup({ g, filled, isTarget }: { g: GuestId; filled: boolean; isTarget: boolean }) {
@@ -231,6 +244,7 @@ export function TeaGardenScene() {
   const treat = useWoods((s) => s.treat);
   const target = useWoods((s) => s.pourTarget);
   const celebrating = useWoods((s) => s.celebrating);
+  const cheer = useWoods((s) => s.friendsCheer);
   const rise = useRef<THREE.Group>(null);
   const pad = useRef<THREE.Group>(null);
   const guests = guestsFor(TREE_COUNT);
@@ -255,12 +269,16 @@ export function TeaGardenScene() {
         <group>
           <Table />
           <Teapot />
-          {guests.map((g) => (
-            <group key={g}>
-              <Cup g={g} filled={!!tea[g]} isTarget={target === g} />
-              {treat[g] && <Treat g={g} kind={treatKinds[g]} />}
-            </group>
-          ))}
+          {guests.map((g) => {
+            const family = isFamilyGuest(g);
+            const wantsTea = !family || GUEST_WANTS[g] === 'tea';
+            return (
+              <group key={g}>
+                {wantsTea && <Cup g={g} filled={family ? !!tea[g] : cheer} isTarget={target === g} />}
+                {(family ? !!treat[g] : cheer) && <Treat g={g} kind={treatKinds[g]} />}
+              </group>
+            );
+          })}
           {target && !celebrating && <Marker g={target} />}
         </group>
       </group>
@@ -270,11 +288,11 @@ export function TeaGardenScene() {
         const p = guestWorldPos(g);
         const yaw = Math.atan2(TEA_CENTER[0] - p[0], TEA_CENTER[2] + 0.5 - p[2]);
         const bornAt = teaStartAt + 1300 + i * 170;
-        const happy = !!tea[g] && !!treat[g];
+        const happy = isFamilyGuest(g) ? isServed(g, { tea, treat }) : cheer;
         if (g === 'rudolph') return <Pop key={g} bornAt={bornAt} position={p} rotY={yaw} scale={1.1} onTap={() => guestTap(g)}><Dog position={[0, 0, 0]} bob={happy} /></Pop>;
         if (g === 'jinglebells') return <Pop key={g} bornAt={bornAt} position={p} rotY={yaw} scale={1.15} onTap={() => guestTap(g)}><Cat position={[0, 0, 0]} bob={happy} /></Pop>;
-        if (g === 'mom' || g === 'dad' || g === 'julian' || g === 'darian') return <Person key={g} scale={1.0} id={g} position={p} rotY={yaw} bornAt={bornAt} happy={happy} onTap={() => guestTap(g)} />;
-        return <Pop key={g} bornAt={bornAt} position={p} rotY={yaw} scale={1.35} onTap={() => guestTap(g)}><FriendModel type={g as FriendId} /></Pop>;
+        if (g === 'luna' || g === 'mom' || g === 'dad' || g === 'julian' || g === 'darian') return <Person key={g} scale={1.0} id={g} position={p} rotY={yaw} bornAt={bornAt} happy={happy} onTap={() => guestTap(g)} />;
+        return <Pop key={g} bornAt={bornAt} position={p} rotY={yaw} scale={1.35} onTap={() => guestTap(g)}><Cheer active={cheer} seed={i}><FriendModel type={g as FriendId} /></Cheer></Pop>;
       })}
     </group>
   );
@@ -283,19 +301,18 @@ export function TeaGardenScene() {
 // ---- HUD -----------------------------------------------------------------------------------------
 function GuestFace({ g, size }: { g: GuestId; size: string }) {
   const [bad, setBad] = useState(false);
-  const emoji = GUEST_EMOJI[g];
-  return emoji || bad ? (
-    <span style={{ fontSize: f(36), lineHeight: 1 }}>{emoji ?? GUEST_NAMES[g][0]}</span>
+  const icon = GUEST_ICON[g];
+  return icon || bad ? (
+    icon ? <Icon id={icon} size={f(48)} /> : <span style={{ fontSize: f(36), lineHeight: 1 }}>{GUEST_NAMES[g][0]}</span>
   ) : (
     <img src={faceUrl(g)} alt="" style={{ width: size, height: size, borderRadius: u(16), objectFit: 'cover' }} onError={() => setBad(true)} />
   );
 }
 
-function Chip({ g }: { g: GuestId }) {
-  const hasTea = useWoods((s) => !!s.tea[g]);
-  const hasTreat = useWoods((s) => !!s.treat[g]);
+function Chip({ g }: { g: FamilyGuestId }) {
+  const done = useWoods((s) => isServed(g, s));
   const isTarget = useWoods((s) => s.pourTarget === g);
-  const done = hasTea && hasTreat;
+  const want = GUEST_WANTS[g];
   return (
     <button
       type="button"
@@ -312,11 +329,9 @@ function Chip({ g }: { g: GuestId }) {
       }}
     >
       <GuestFace g={g} size="86%" />
-      {(hasTea || hasTreat) && (
-        <span style={{ position: 'absolute', right: u(-6), top: u(-8), display: 'flex', gap: u(1), fontSize: f(15), background: done ? '#7AE582' : '#fff', border: `${u(2)} solid ${palette.navy}`, borderRadius: u(12), padding: `0 ${u(3)}` }}>
-          {done ? '✓' : (<>{hasTea && '☕'}{hasTreat && '🍪'}</>)}
-        </span>
-      )}
+      <span data-testid={`guest-${g}-${done ? 'done' : want}`} style={{ position: 'absolute', right: u(-6), top: u(-8), display: 'flex', gap: u(1), fontSize: f(15), background: done ? '#7AE582' : '#fff', border: `${u(2)} solid ${palette.navy}`, borderRadius: u(12), padding: `0 ${u(3)}` }}>
+        {done ? '✓' : <Icon id={want === 'tea' ? 'teacup' : 'cookie'} size={f(18)} />}
+      </span>
     </button>
   );
 }
@@ -328,15 +343,17 @@ function ServePanel({ pouring }: { pouring: boolean }) {
   const selected = useWoods((s) => s.pourTarget);
   const tea = useWoods((s) => s.tea);
   const treat = useWoods((s) => s.treat);
-  const guests = guestsFor(TREE_COUNT);
+  const guests = servedGuests();
   const holdAt = useRef(0);
-  const g = selected ?? guests[0];
-  const needsTea = !tea[g];
-  const needsTreat = !treat[g];
+  const g: FamilyGuestId = selected && isFamilyGuest(selected) ? selected : guests[0];
+  const want = GUEST_WANTS[g];
+  const served = isServed(g, { tea, treat });
+  const celebrating = useWoods((s) => s.celebrating);
+  const thanking = useWoods((s) => s.friendsCheer && !s.celebrating);
 
   useEffect(() => {
-    if (!selected) useWoods.setState({ pourTarget: nextTeaTarget() ?? guests[0] });
-  }, [selected, guests]);
+    if (!selected && !thanking && !celebrating) useWoods.setState({ pourTarget: nextTeaTarget() ?? guests[0] });
+  }, [selected, guests, thanking, celebrating]);
 
   // Hold-to-pour: letting go after a real hold stops the pour. A quick tap leaves it running; tap again to stop.
   useEffect(() => {
@@ -349,11 +366,6 @@ function ServePanel({ pouring }: { pouring: boolean }) {
     return () => { window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); };
   }, []);
 
-  const need = (done: boolean, icon: string, label: string) => (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: u(4), opacity: done ? 0.55 : 1, textDecoration: done ? 'line-through' : 'none', fontWeight: 800 }}>
-      <span aria-hidden>{icon}</span>{label}{done && <span aria-label="done"> ✓</span>}
-    </span>
-  );
 
   return (
     <div
@@ -380,21 +392,25 @@ function ServePanel({ pouring }: { pouring: boolean }) {
             borderRadius: u(28), touchAction: 'none', flexDirection: 'column', flex: '0 0 auto',
           }}
         >
-          {pouring ? '✋ Release!' : '🫖 Pour tea'}
+          {pouring ? 'Release!' : (<span style={{ display: 'inline-flex', alignItems: 'center', gap: u(6) }}><Icon id="teapot" size={f(32)} />Pour tea</span>)}
           <span style={{ fontSize: f(15), fontWeight: 700 }}>{pouring ? 'tap or let go' : 'tap or hold'}</span>
         </button>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: u(10), minWidth: 0 }}>
-          <button type="button" data-testid="guest-prev" aria-label="Previous guest" onClick={() => stepTarget(-1)} style={{ ...hudButton('#FFF4E0'), ...arrowBtn, flex: '0 0 auto' }}>◀</button>
+          <button type="button" data-testid="guest-prev" aria-label="Previous guest" onClick={() => stepTarget(-1)} style={{ ...hudButton('#FFF4E0'), ...arrowBtn, flex: '0 0 auto' }}><ChevronIcon dir="left" size="60%" /></button>
           <div data-testid="selected-guest" style={{ display: 'flex', alignItems: 'center', gap: u(10), minWidth: 0 }}>
             <GuestFace g={g} size={ub(56)} />
             <div style={{ lineHeight: 1.2 }}>
               <div style={{ fontSize: f(26), fontWeight: 900 }}>{GUEST_NAMES[g]}</div>
               <div style={{ fontSize: f(19), display: 'flex', gap: u(10), flexWrap: 'wrap' }}>
-                {!needsTea && !needsTreat ? <span style={{ fontWeight: 800 }}>All set! ✓</span> : (<>Needs {need(!needsTea, '☕', 'tea')}{need(!needsTreat, '🍪', 'treat')}</>)}
+                {served ? <span style={{ fontWeight: 800 }}>All set! ✓</span> : (
+                  <span data-testid="guest-want" data-want={want} style={{ display: 'inline-flex', alignItems: 'center', gap: u(6), fontWeight: 800 }}>
+                    Wants <Icon id={want === 'tea' ? 'teacup' : 'cookie'} size={f(28)} />{want === 'tea' ? 'a cup of tea' : 'a treat'}
+                  </span>
+                )}
               </div>
             </div>
           </div>
-          <button type="button" data-testid="guest-next" aria-label="Next guest" onClick={() => stepTarget(1)} style={{ ...hudButton('#FFF4E0'), ...arrowBtn, flex: '0 0 auto' }}>▶</button>
+          <button type="button" data-testid="guest-next" aria-label="Next guest" onClick={() => stepTarget(1)} style={{ ...hudButton('#FFF4E0'), ...arrowBtn, flex: '0 0 auto' }}><ChevronIcon size="60%" /></button>
         </div>
         <div style={{ display: 'flex', gap: u(8), flex: '0 0 auto' }}>
           {TREATS.map((t) => (
@@ -404,9 +420,9 @@ function ServePanel({ pouring }: { pouring: boolean }) {
               data-testid={`treat-${t.id}`}
               aria-label={`Give ${t.label} to ${GUEST_NAMES[g]}`}
               onClick={() => giveTreat(t.id)}
-              style={{ ...hudButton('#FFE3F0'), width: ub(76), height: ub(76), fontSize: f(38), borderRadius: u(24), opacity: needsTreat ? 1 : 0.5 }}
+              style={{ ...hudButton('#FFE3F0'), width: ub(76), height: ub(76), fontSize: f(38), borderRadius: u(24), opacity: want === 'treat' && !served ? 1 : 0.5 }}
             >
-              {t.emoji}
+              <Icon id={t.icon} size="72%" />
             </button>
           ))}
         </div>
@@ -482,7 +498,7 @@ export function TeaHud() {
             </div>
             <div style={{ display: 'flex', gap: u(14), flexWrap: 'wrap', justifyContent: 'center' }}>
               <Button testId="replay-tea" tone="mint" onClick={() => { sfx('tap'); void say('Another tea party!', { speaker: 'luna' }); replayTeaParty(); }}>Tea party again</Button>
-              {bricks >= 1 && <Button testId="challenge-btn-celebration" tone="yellow" onClick={() => setScreen({ kind: 'challenge', zone: 'woods' })}>Tea Party Orders challenge</Button>}
+              {bricks >= 1 && <CouponChallengeButton zone="woods" testId="challenge-btn-celebration" onClick={() => setScreen({ kind: 'challenge', zone: 'woods' })} />}
               <Button testId="back-to-island-celebration" tone="cream" onClick={() => setScreen({ kind: 'hub' })}>Back to island</Button>
             </div>
           </div>

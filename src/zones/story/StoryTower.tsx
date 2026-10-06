@@ -2,10 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { say, sayFragments, stopSpeaking, isTestMode, type Fragment } from '../../audio/speech';
 import { playSting } from '../../audio/engine';
 import { safeSfx as sfx } from './ui';
-import { useProgress } from '../../state/progress';
 import { useUi } from '../../state/ui';
 import { Button, palette } from '../../ui/Button';
 import { f, u, ub } from '../../ui/scale';
+import { ChevronIcon, Icon, iconUrl } from '../../ui/Icons';
+import { CouponChallengeButton, GoalPill } from '../../ui/ZoneHud';
 import { heroes, heroTile, places, powers, problems, type Picks, type Tile } from './options';
 import { bonusSentence, defaultSeed, generateStory, heroById, storyFragmentsBySentence, titleFragments, type Story } from './generator';
 import { finishStory } from './rewards';
@@ -53,7 +54,6 @@ export function paginate(sentences: string[]): number[][] {
 
 export function Zone() {
   const setScreen = useUi((s) => s.setScreen);
-  const storyBricks = useProgress((s) => s.bricks.story);
   const [phase, setPhase] = useState<Phase>('pick');
   const [step, setStep] = useState(0);
   const [picks, setPicks] = useState<Partial<Picks>>({});
@@ -262,6 +262,7 @@ export function Zone() {
             Back to island
           </Button>
         </header>
+        <GoalPill text="finish a story, then a family story" style={{ alignSelf: 'flex-start', marginTop: u(-6) }} />
 
         {phase === 'pick' && (
           <section style={{ flex: 1, minHeight: u(0), display: 'flex', flexDirection: 'column', gap: u(12) }}>
@@ -303,17 +304,17 @@ export function Zone() {
                 const t = s.tiles.find((x) => x.id === picks[s.key]);
                 return (
                   <div key={s.key} style={chip}>
-                    {t?.image ? <img src={t.image} alt="" draggable={false} style={{ width: f(64), height: f(64), objectFit: 'contain' }} /> : <span style={{ fontSize: f(52) }}>{t?.icon}</span>}
+                    {t && <img src={t.image ?? iconUrl(t.icon ?? '')} alt="" draggable={false} style={{ width: f(64), height: f(64), objectFit: 'contain' }} />}
                     <span style={{ fontSize: f(26), fontWeight: 800 }}>{t?.label}</span>
                   </div>
                 );
               })}
             </div>
             <Button big tone="yellow" onClick={() => void tell()} testId="tell-story">
-              ✨ Tell my story! ✨
+              <Icon id="sparkle" size={f(36)} gap={u(8)} />Tell my story!<Icon id="sparkle" size={f(36)} style={{ marginLeft: u(8) }} />
             </Button>
             <Button tone="cream" onClick={goBackStep}>
-              ◀ Change a pick
+              <ChevronIcon dir="left" size={f(20)} />Change a pick
             </Button>
           </section>
         )}
@@ -366,15 +367,15 @@ export function Zone() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: u(14) }}>
                 <Button tone="cream" testId="story-replay" ariaLabel="Replay this page" onClick={replay} style={ctl}>
-                  🔁 Replay
+                  <Icon id="replay" size={f(28)} gap={u(8)} />Replay
                 </Button>
                 {phase === 'telling' && (
                   <>
                     <Button tone="cream" testId="story-pause" ariaLabel={paused ? 'Resume' : 'Pause'} onClick={togglePause} style={ctl}>
-                      {paused ? '▶ Resume' : '⏸ Pause'}
+                      {paused ? 'Resume' : 'Pause'}
                     </Button>
                     <Button tone="yellow" testId="story-next" ariaLabel="Next page" onClick={next} style={{ ...ctl, marginLeft: 'auto' }}>
-                      Next ▶
+                      Next<ChevronIcon size={f(20)} />
                     </Button>
                   </>
                 )}
@@ -409,7 +410,7 @@ export function Zone() {
                       animation: wandUsed ? undefined : 'st-glow 1.4s ease-in-out infinite',
                     }}
                   >
-                    🌟
+                    <Icon id="star" size="70%" />
                   </button>
                   <div style={{ fontSize: f(28), fontWeight: 900, textAlign: 'center', background: '#FFF4E0', border: `${u(3)} solid ${palette.navy}`, borderRadius: u(20), padding: `${u(2)} ${u(14)}` }}>Make magic!</div>
                 </>
@@ -419,11 +420,7 @@ export function Zone() {
                   <Button big tone="mint" onClick={again} testId="again" style={{ padding: `${u(12)} ${u(28)}`, fontSize: f(42) }}>
                     Again!
                   </Button>
-                  {storyBricks >= 2 && (
-                    <Button tone="blue" onClick={movieNight} testId="movie-night-button">
-                      🎬 Movie Night challenge
-                    </Button>
-                  )}
+                  <CouponChallengeButton zone="story" onClick={movieNight} testId="movie-night-button" />
                 </>
               )}
               <Sparkles burst={burst} />
@@ -432,11 +429,9 @@ export function Zone() {
         )}
       </div>
       {phase === 'done' && celebOpen && <BrickCelebration count={earned} onClose={() => setCelebOpen(false)} />}
-      {phase !== 'done' && storyBricks >= 2 && phase === 'pick' && step === 0 && (
+      {phase === 'pick' && step === 0 && (
         <div style={{ position: 'absolute', right: u(28), bottom: u(24) }}>
-          <Button tone="blue" onClick={movieNight} testId="movie-night-button">
-            🎬 Movie Night challenge
-          </Button>
+          <CouponChallengeButton zone="story" onClick={movieNight} testId="movie-night-button" />
         </div>
       )}
     </Backdrop>
@@ -506,13 +501,13 @@ function TileButton({ tile, step, selected, onPick }: { tile: Tile; step: StepKe
         cursor: 'pointer',
       }}
     >
-      {tile.image ? <img src={tile.image} alt="" draggable={false} style={{ width: f(72), height: f(72), objectFit: 'contain' }} /> : <span style={{ fontSize: f(60), lineHeight: 1 }}>{tile.icon}</span>}
+      <img src={tile.image ?? iconUrl(tile.icon ?? '')} alt="" draggable={false} style={{ width: f(72), height: f(72), objectFit: 'contain' }} />
       <span style={{ fontSize: f(26), fontWeight: 800, lineHeight: 1.1 }}>{tile.label}</span>
     </button>
   );
 }
 
-const SPARKS = ['✨', '⭐', '💖', '🌟', '💫', '✨', '🎀', '⭐', '✨', '💖', '🌟', '💫'];
+const SPARKS = ['sparkle', 'star', 'heart', 'star', 'sparkle', 'heart', 'sparkle', 'star', 'sparkle', 'heart', 'star', 'sparkle'];
 
 function Sparkles({ burst }: { burst: number }) {
   const bits = useMemo(
@@ -533,7 +528,7 @@ function Sparkles({ burst }: { burst: number }) {
             animation: 'st-burst 1.1s ease-out forwards',
           }}
         >
-          {b.s}
+          <Icon id={b.s} size="1em" />
         </span>
       ))}
     </div>

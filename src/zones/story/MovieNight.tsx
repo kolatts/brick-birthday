@@ -4,6 +4,7 @@ import { safeSfx as sfx } from './ui';
 import { useUi } from '../../state/ui';
 import { Button, palette } from '../../ui/Button';
 import { f, u, useIsPhone } from '../../ui/scale';
+import { Icon, iconUrl } from '../../ui/Icons';
 import { Backdrop, Bubble, MomPortrait, softPanel } from './ui';
 import { TheaterCanvas } from './scene3d';
 import { MOM_MOVIE_CHEER, MOM_MOVIE_DONE, MOM_MOVIE_INTRO, MOM_MOVIE_NEXT, MOM_MOVIE_RETRY, MOM_MOVIE_SILLY } from './lines';
@@ -128,13 +129,13 @@ export function Challenge() {
 
   return (
     <Backdrop testId="challenge-screen-story">
-      <TheaterCanvas icon={current?.icon ?? '🎬'} curtainsOpen={phase === 'curtains' ? curtainsOpen : true} />
+      <TheaterCanvas icon={iconUrl(current?.icon ?? 'clapper')} curtainsOpen={phase === 'curtains' ? curtainsOpen : true} />
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', padding: `calc(${u(16)} + var(--sat)) calc(${u(28)} + var(--sar)) calc(${u(20)} + var(--sab)) calc(${u(28)} + var(--sal))`, gap: u(14) }}>
         <header style={{ display: 'flex', alignItems: 'center', gap: u(18) }}>
           <MomPortrait />
           <div style={{ flex: 1 }}>
             <Bubble testId="movie-title">
-              🎬 Movie Night: {story.title}
+              <Icon id="clapper" size={f(36)} gap={u(8)} />Movie Night: {story.title}
             </Bubble>
           </div>
           <div data-testid="movie-progress" style={progressStyle}>
@@ -168,7 +169,7 @@ export function Challenge() {
                     <span style={{ fontSize: f(phone ? 24 : 56), fontWeight: 900, opacity: 0.5 }}>{i + 1}</span>
                   ) : (
                     <>
-                      <span style={{ fontSize: f(64) }}>{story.scenes[v].icon}</span>
+                      <Icon id={story.scenes[v].icon} size={f(phone ? 40 : 76)} />
                       {!phone && <span style={lineStyle}>{story.scenes[v].line}</span>}
                     </>
                   )}
@@ -189,14 +190,14 @@ export function Challenge() {
                     onClick={() => place(idx)}
                     style={{ ...cardBase, background: '#FFF4E0', boxShadow: `0 ${u(8)} 0 ${palette.navy}` }}
                   >
-                    <span style={{ fontSize: f(64) }}>{story.scenes[idx].icon}</span>
+                    <Icon id={story.scenes[idx].icon} size={f(76)} />
                     <span style={lineStyle}>{story.scenes[idx].line}</span>
                   </button>
                 ),
               )}
             </div>
             <Button big={!phone} tone="yellow" testId="play-movie" disabled={slots.some((s) => s === null)} onClick={() => void play()}>
-              🍿 Play movie!
+              <Icon id="popcorn" size={f(34)} gap={u(8)} />Play movie!
             </Button>
           </section>
         )}
@@ -216,7 +217,7 @@ export function Challenge() {
               )}
               {phase === 'finished' && (
                 <div data-testid="movie-finished" style={{ position: 'absolute', inset: '10% 8%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: u(12), textAlign: 'center', padding: u(24), ...softPanel, background: 'rgba(255,244,224,.92)', animation: 'st-pop .5s ease-out' }}>
-                  <div style={{ fontSize: f(80) }}>🎉🏆🎉</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: u(10) }}><Icon id="party-popper" size={f(80)} /><Icon id="trophy" size={f(100)} /><Icon id="party-popper" size={f(80)} style={{ transform: 'scaleX(-1)' }} /></div>
                   <div style={{ fontSize: f(46), fontWeight: 900, color: palette.red }}>You did it!</div>
                   <div style={{ fontSize: f(34), fontWeight: 800 }}>Something is buried near the Story Tower…</div>
                 </div>

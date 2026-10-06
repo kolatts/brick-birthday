@@ -100,7 +100,7 @@ test('phone layout: tea garden and orders fit', async ({ page }) => {
   await expect(page.getByTestId('brick-celebration')).toBeVisible();
   await page.screenshot({ path: `${SCREENS}/mobile-woods-brick.png` });
   await page.getByTestId('replay-tea').click();
-  await expect(page.getByTestId('guest-fox')).toBeVisible({ timeout: 10000 });
+  await expect(page.getByTestId('guest-luna')).toBeVisible({ timeout: 10000 });
   await page.waitForTimeout(1500);
   await checkLayout(page, 'tea garden');
   await page.getByTestId('challenge-btn').click();

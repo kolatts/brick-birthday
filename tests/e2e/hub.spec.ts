@@ -111,7 +111,8 @@ test('coupon box starts locked; a dug coupon shows its configured password', asy
   for (const id of ['movies', 'videogames', 'shopping', 'icecream']) {
     await expect(page.getByTestId(`coupon-item-${id}`)).toHaveAttribute('data-status', 'locked');
   }
-  await expect(page.getByTestId('coupon-item-movies')).toContainText('Finish the Story Tower challenge!');
+  await expect(page.getByTestId('coupon-item-movies')).toContainText('Story Tower Coupon Challenge');
+  await expect(page.getByTestId('coupon-how-movies')).toContainText('Earn 2 more bricks first');
   await page.screenshot({ path: `${SCREENS}/coupon-box-locked-${info.project.name}.png` });
   await page.getByTestId('coupon-box-close').click();
   await page.evaluate(() => window.__game!.completeChallenge('story'));

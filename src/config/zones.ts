@@ -13,9 +13,9 @@ export interface ZoneDef {
 
 export const zones: Record<ZoneId, ZoneDef> = {
   story: { id: 'story', title: 'Story Tower', host: 'mom', built: true, bricks: 2, coupon: 'movies', color: '#E63946' },
-  science: { id: 'science', title: 'Science Lab', host: 'julian', built: false, bricks: 2, coupon: 'videogames', color: '#7AE582' },
-  tennis: { id: 'tennis', title: 'Tennis Court', host: 'darian', built: false, bricks: 1, coupon: 'shopping', color: '#FFD60A' },
-  music: { id: 'music', title: 'Music Stage', host: 'dad', built: false, bricks: 1, color: '#3A86FF' },
+  science: { id: 'science', title: 'Science Lab', host: 'julian', built: true, bricks: 2, coupon: 'videogames', color: '#7AE582' },
+  tennis: { id: 'tennis', title: 'Tennis Court', host: 'darian', built: true, bricks: 1, coupon: 'shopping', color: '#FFD60A' },
+  music: { id: 'music', title: 'Music Stage', host: 'dad', built: true, bricks: 1, color: '#3A86FF' },
   woods: { id: 'woods', title: 'Whispering Woods', host: 'rudolph', built: true, bricks: 1, coupon: 'icecream', color: '#2E8B57' },
 };
 

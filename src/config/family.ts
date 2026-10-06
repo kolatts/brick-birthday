@@ -95,10 +95,19 @@ export const welcomeMessage = {
   heading: 'A note from Daddy',
   body: "Luna, I am so very proud of your creativity, your kindness, and your ambition. I can't wait to see the mark you make on the world.",
   signoff: 'Love, Daddy',
-  explainer: 'Beat the minigames to earn Daddy-Daughter Date coupons!',
+  explainer: 'Beat the Coupon Challenges to earn Daddy-Daughter Date coupons!',
 } as const;
 
-export const finaleMessage = 'TODO: message from Mom and Dad';
+/**
+ * The note at the very end of the finale. Spoken by `dad` and `mom` (registered in src/config/copy.ts).
+ */
+// Owner: edit me. Rewrite these in your own words, then run `npm run voices:extract && npm run voices:generate`.
+export const finaleMessage = {
+  heading: 'A note from Mom and Dad',
+  dad: 'Luna, you fill our whole family with light, laughter, and big ideas. Watching you grow up is the best part of every single day.',
+  mom: 'We love your stories, your kindness, and the way you care for the world around you. Never stop imagining, sweet girl. We are so proud to be your mom and dad.',
+  signoff: 'Love, Mom and Dad',
+} as const;
 
 export const lunaFacts = {
   loves: ['storytelling', 'science', 'tennis', 'piano and drums', 'tea time (chai lattes)', 'magic', 'dress-up', 'orange chicken'],

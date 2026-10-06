@@ -42,8 +42,8 @@ test('title shows Daddy\'s note, the explainer and the four coupons', async ({ p
     await page.getByTestId('note-close').click();
     await expect(page.getByTestId('note-overlay')).toHaveCount(0);
   }
-  await expect(page.getByTestId('explainer')).toHaveText('Beat the minigames to earn Daddy-Daughter Date coupons!');
-  await expect(page.getByTestId('coupon-row').locator('img, svg')).toHaveCount(4);
+  await expect(page.getByTestId('explainer')).toHaveText('Beat the Coupon Challenges to earn Daddy-Daughter Date coupons!');
+  await expect(page.getByTestId('coupon-row').locator('[data-testid^="coupon-art-"]')).toHaveCount(4);
 });
 
 test('tapping Play opens the hub', async ({ page }, info) => {
@@ -83,17 +83,16 @@ test('portrait viewport shows the rotate screen', async ({ page }) => {
   await expect(page.getByTestId('rotate-screen')).toHaveCount(0);
 });
 
-test('unbuilt zone shows Coming soon; built zone opens and returns', async ({ page }) => {
+test('every zone button opens its zone screen and Back to island returns', async ({ page }) => {
+  test.setTimeout(120_000);
   await toHub(page);
-  await page.getByTestId('zone-science').click();
-  await expect(page.getByText('Coming soon!')).toBeVisible();
-  await page.getByTestId('coming-soon-close').click();
-  await expect(page.getByText('Coming soon!')).toHaveCount(0);
-
-  await page.getByTestId('zone-story').click();
-  await expect(page.getByTestId('zone-screen-story')).toBeVisible();
-  await page.getByTestId('back-to-island').click();
-  await expect(page.getByTestId('hub-screen')).toBeVisible();
+  for (const id of ['story', 'science', 'tennis', 'music', 'woods']) {
+    await page.getByTestId(`zone-${id}`).click();
+    await expect(page.getByTestId(`zone-screen-${id}`)).toBeVisible({ timeout: 20000 });
+    await page.getByTestId('back-to-island').first().click();
+    await expect(page.getByTestId('hub-screen')).toBeVisible();
+    await expect(page.getByTestId('hub-ready')).toBeAttached();
+  }
 });
 
 test('test hooks unlock bricks and ?reset=1 clears progress', async ({ page }) => {
@@ -119,8 +118,10 @@ test('no console errors and no non-localhost network requests', async ({ page })
   });
   await toHub(page);
   await page.waitForTimeout(1500);
-  await page.getByTestId('zone-science').click();
-  await page.getByTestId('coming-soon-close').click();
+  await page.getByTestId('zone-story').click();
+  await expect(page.getByTestId('zone-screen-story')).toBeVisible({ timeout: 20000 });
+  await page.getByTestId('back-to-island').first().click();
+  await expect(page.getByTestId('hub-screen')).toBeVisible();
   expect(errors).toEqual([]);
   expect(external).toEqual([]);
 });

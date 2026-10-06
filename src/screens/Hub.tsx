@@ -13,8 +13,11 @@ import { useSettings } from '../state/settings';
 import { Button, Panel, palette } from '../ui/Button';
 import { f, inset, u } from '../ui/scale';
 import { Confetti } from '../ui/Confetti';
-import { BrickIcon } from '../ui/Icons';
+import { BrickIcon, Icon } from '../ui/Icons';
 import { setMuted, sfx } from '../audio/engine';
+import { say } from '../audio/speech';
+import { COPY } from '../config/copy';
+import { CouponArt } from '../ui/CouponArt';
 import { registerPerf } from '../test/hooks';
 import { canvasProps } from '../three/Brick';
 import { Lights } from '../three/Lights';
@@ -133,6 +136,47 @@ function Scene({ rigRef, birthday, petHats, onZone, onReady, onConfetti, onDug, 
   );
 }
 
+const LEGEND_KEY = 'brick-birthday:hub-legend-seen';
+const legendSeen = (): boolean => {
+  try { return localStorage.getItem(LEGEND_KEY) === '1'; } catch { return false; }
+};
+
+/** One-line explainer shown on the first visit: bricks build the cake, Coupon Challenges win coupons. */
+function Legend({ onDismiss }: { onDismiss: () => void }) {
+  useEffect(() => {
+    void say(COPY.hubLegend, { speaker: 'narrator' });
+  }, []);
+  return (
+    <div
+      data-testid="hub-legend"
+      style={{
+        position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: `calc(${inset('bottom', 10)} + ${u(124)})`, zIndex: 41, width: 'min(94vw, 900px)',
+        display: 'flex', alignItems: 'center', gap: u(12), padding: `${u(8)} ${u(8)} ${u(8)} ${u(16)}`, background: 'rgba(255,244,224,0.96)', border: `${u(4)} solid ${palette.navy}`,
+        borderRadius: u(28), boxShadow: `0 ${u(5)} 0 ${palette.navy}`, color: palette.navy, fontSize: f(19), fontWeight: 800, lineHeight: 1.2,
+      }}
+    >
+      <BrickIcon size={34} />
+      <span style={{ flex: 1 }}>Bricks build the birthday cake. Beat a zone&apos;s Coupon Challenge to dig up a Daddy-Daughter Date coupon!</span>
+      <Button tone="mint" testId="hub-legend-dismiss" onClick={onDismiss} style={{ ...hudBtn, fontSize: f(20) }}>Got it!</Button>
+    </div>
+  );
+}
+
+/** Tiny coupon sticker row on a zone button: grey until its Coupon Challenge can be played, colour when ready, ticked once dug. */
+function ZoneCoupon({ zone }: { zone: ZoneId }) {
+  const z = zones[zone];
+  const id = z.coupon!;
+  const ready = useProgress((s) => s.bricks[zone] >= z.bricks);
+  const won = useCoupons((s) => s.dug.includes(id));
+  const on = ready || won;
+  return (
+    <span data-testid={`zone-coupon-${zone}`} data-state={won ? 'dug' : ready ? 'ready' : 'locked'} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: u(6), fontSize: f(15) }}>
+      <span style={{ display: 'inline-flex', filter: on ? 'none' : 'grayscale(1)', opacity: on ? 1 : 0.55 }}><CouponArt id={id} size={28} /></span>
+      {won ? 'Coupon won!' : ready ? 'Coupon ready!' : 'Coupon challenge'}
+    </span>
+  );
+}
+
 const hudBtn = { minWidth: 'var(--btn-min)', minHeight: 'var(--btn-min)', padding: `${u(6)} ${u(18)}` } as const;
 
 export function Hub() {
@@ -146,10 +190,16 @@ export function Hub() {
   const equipped = useCloset((s) => s.equipped);
   const dug = useCoupons((s) => s.dug);
   const unredeemed = dug.length;
+  const dismissLegend = useCallback(() => {
+    sfx('tap');
+    setLegend(false);
+    try { localStorage.setItem(LEGEND_KEY, '1'); } catch { /* ignore */ }
+  }, []);
 
   const [soon, setSoon] = useState<(typeof zones)[ZoneId] | null>(null);
   const [overlay, setOverlay] = useState<'closet' | 'box' | null>(null);
   const [card, setCard] = useState<CouponId | null>(null);
+  const [legend, setLegend] = useState(() => !legendSeen());
   const [confetti, setConfetti] = useState(0);
   const [ready, setReady] = useState(false);
   const flying = useRef(false);
@@ -207,7 +257,7 @@ export function Hub() {
 
       <div style={{ position: 'absolute', top: inset('top', 12), left: inset('left', 12), display: 'flex', gap: u(12), zIndex: 40, alignItems: 'center' }}>
         <Button tone="cream" testId="home-button" style={hudBtn} onClick={() => setScreen({ kind: 'title' })}>Home</Button>
-        <Button tone="cream" testId="mute-button" style={hudBtn} ariaLabel={muted ? 'Unmute' : 'Mute'} onClick={() => setMuted(!muted)}>{muted ? '🔇' : '🔊'}</Button>
+        <Button tone="cream" testId="mute-button" style={hudBtn} ariaLabel={muted ? 'Unmute' : 'Mute'} onClick={() => setMuted(!muted)}><Icon id={muted ? 'speaker-off' : 'speaker-on'} size={f(30)} /></Button>
         <div
           data-testid="brick-counter"
           style={{
@@ -222,24 +272,26 @@ export function Hub() {
 
       <div style={{ position: 'absolute', top: inset('top', 12), right: inset('right', 12), display: 'flex', gap: u(12), zIndex: 40 }}>
         <Button tone="yellow" testId="coupon-box-open" style={{ ...hudBtn, position: 'relative' }} onClick={() => { sfx('tap'); setOverlay('box'); }}>
-          🎟️ Coupons
+          <Icon id="ticket" size={f(30)} gap={u(8)} />Coupons
           {unredeemed > 0 && (
             <span style={{ position: 'absolute', top: -10, right: -8, minWidth: 26, height: 26, borderRadius: 13, background: palette.red, color: '#fff', fontSize: 16, lineHeight: '20px', border: `3px solid ${palette.navy}` }}>
               {unredeemed}
             </span>
           )}
         </Button>
-        <Button tone="pink" testId="closet-open" style={hudBtn} onClick={() => { sfx('tap'); setOverlay('closet'); }}>👗 Closet</Button>
+        <Button tone="pink" testId="closet-open" style={hudBtn} onClick={() => { sfx('tap'); setOverlay('closet'); }}><Icon id="closet" size={f(30)} gap={u(8)} />Closet</Button>
       </div>
 
-      {goalReached && !finaleSeen && (
-        <div style={{ position: 'absolute', bottom: `calc(${inset('bottom', 12)} + ${u(96)})`, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 40, pointerEvents: 'none' }}>
+      {legend && !goalReached && !paused && <Legend onDismiss={dismissLegend} />}
+
+      {goalReached && (
+        <div style={{ position: 'absolute', bottom: `calc(${inset('bottom', 12)} + ${u(124)})`, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 40, pointerEvents: 'none' }}>
           <Button
             big tone="pink" testId="finale-button"
             style={{ pointerEvents: 'auto', animation: 'finale-pulse 1s ease-in-out infinite' }}
             onClick={() => { sfx('fanfare'); setScreen({ kind: 'finale' }); }}
           >
-            🎂 Time for the party!
+            <Icon id={finaleSeen ? 'party-popper' : 'party-cake'} size={f(34)} gap={u(10)} />{finaleSeen ? 'Party again!' : 'Time for the party!'}
           </Button>
           <style>{'@keyframes finale-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }'}</style>
         </div>
@@ -263,14 +315,16 @@ export function Hub() {
               }}
             >
               {z.title}
-              <br />
               {z.built ? (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: u(6) }}>
-                  <BrickIcon size={22} />
-                  {bricks[id]}/{z.bricks}
-                </span>
+                <>
+                  <span data-testid={`zone-bricks-${id}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: u(6), fontSize: f(16) }}>
+                    <BrickIcon size={20} />
+                    {bricks[id]}/{z.bricks} bricks
+                  </span>
+                  {z.coupon && <ZoneCoupon zone={id} />}
+                </>
               ) : (
-                <span aria-label="Coming soon" style={{ fontSize: f(16) }}>🚧</span>
+                <span aria-label="Coming soon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: u(4), fontSize: f(15) }}><Icon id="construction" size={f(22)} />Coming soon</span>
               )}
             </button>
           );
@@ -282,7 +336,7 @@ export function Hub() {
       {soon && (
         <div className="center-col" style={{ position: 'absolute', inset: 0, background: 'rgba(29,42,68,0.45)', zIndex: 70, padding: 'var(--sat) var(--sar) var(--sab) var(--sal)' }} data-testid="coming-soon-panel">
           <Panel style={{ textAlign: 'center', maxWidth: 520 }}>
-            <div style={{ fontSize: u(72) }} aria-hidden>🏗️</div>
+            <div aria-hidden><Icon id="crane" size={u(96)} /></div>
             <h2 style={{ margin: `0 0 ${u(8)}`, fontSize: f(48) }}>Coming soon!</h2>
             <p style={{ margin: `0 0 ${u(20)}`, fontSize: f(24) }}>The {soon.title} is still being built.</p>
             <Button testId="coming-soon-close" tone="mint" onClick={() => setSoon(null)}>OK!</Button>

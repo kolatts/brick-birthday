@@ -27,7 +27,24 @@ export function registerPerf(p: PerfHooks | null): void {
   if (typeof window !== 'undefined' && window.__game) window.__game.perf = p ?? undefined;
 }
 
+export interface FinaleHooks {
+  /** Jumps to the message card (records finaleSeen). */
+  skipToEnd: () => void;
+}
+
+let finaleHooks: FinaleHooks | null = null;
+/** The finale screen registers its hooks while mounted; exposed as window.__game.finale under ?test=1. Returns an unregister. */
+export function registerFinale(h: FinaleHooks): () => void {
+  finaleHooks = h;
+  if (typeof window !== 'undefined' && window.__game) window.__game.finale = h;
+  return () => {
+    if (finaleHooks === h) finaleHooks = null;
+    if (typeof window !== 'undefined' && window.__game && window.__game.finale === h) window.__game.finale = undefined;
+  };
+}
+
 export interface GameHooks {
+  finale?: FinaleHooks;
   perf?: PerfHooks;
   getState: () => unknown;
   setScreen: (s: Screen) => void;
@@ -79,4 +96,5 @@ export function installTestHooks(): void {
     },
   };
   if (perfHooks) window.__game.perf = perfHooks;
+  if (finaleHooks) window.__game.finale = finaleHooks;
 }

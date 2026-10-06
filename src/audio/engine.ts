@@ -81,10 +81,22 @@ export function installUnlockOnFirstTap(): void {
   document.addEventListener('pointerdown', handler, true);
 }
 
+// Tone throws if a synth is triggered twice at the same instant; sounds must never break game state.
+let lastSfxAt = 0;
 export function sfx(name: SfxName): void {
   if (!rig || useSettings.getState().muted) return;
-  const { tone, blip, poly, noise } = rig;
-  const now = tone.now();
+  try {
+    sfxNow(name);
+  } catch {
+    /* audio glitches are not gameplay errors */
+  }
+}
+
+function sfxNow(name: SfxName): void {
+  const { tone, blip, poly, noise } = rig!;
+  // Nudge each trigger strictly after the previous one so back-to-back taps never collide.
+  const now = Math.max(tone.now(), lastSfxAt + 0.005);
+  lastSfxAt = now;
   switch (name) {
     case 'tap':
       blip.triggerAttackRelease('G5', '32n', now);

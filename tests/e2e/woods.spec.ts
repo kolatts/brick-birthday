@@ -54,6 +54,9 @@ test('plant a tree with real taps, then finish the woods and tea party', async (
   await expect(page.getByTestId('zone-screen-woods')).toBeVisible();
   await expect(page.getByTestId('stump-0')).toBeVisible({ timeout: 15000 });
   await expect(page.getByTestId('tree-counter')).toContainText('0/7');
+  await expect(page.getByTestId('goal-pill')).toContainText('Earn a Birthday Brick: plant 7 trees and host the tea party');
+  await expect(page.getByTestId('challenge-btn')).toBeDisabled();
+  await expect(page.getByTestId('challenge-btn')).toContainText('Earn the bricks first');
   await page.waitForTimeout(800);
   await page.screenshot({ path: `${SCREENS}/woods-start-${proj}.png` });
 
@@ -77,7 +80,8 @@ test('plant a tree with real taps, then finish the woods and tea party', async (
   // Replayable, and the challenge is now offered.
   await page.getByTestId('replay-tea').click();
   await expect(page.getByTestId('brick-celebration')).toHaveCount(0);
-  await expect(page.getByTestId('challenge-btn')).toBeVisible();
+  await expect(page.getByTestId('challenge-btn')).toBeEnabled();
+  await expect(page.getByTestId('challenge-btn')).toContainText('Win the Ice Cream coupon!');
   await page.getByTestId('challenge-btn').click();
   await expect(page.getByTestId('challenge-screen-woods')).toBeVisible();
 
@@ -100,32 +104,66 @@ test('plant a tree with real taps, then finish the woods and tea party', async (
   expect(s.challengesDone.woods).toBe(true);
 });
 
-test('tea garden: pour perfectly, overfill for a splash, serve a treat', async ({ page }, info) => {
+test('tea garden: each family guest needs one thing; friends are auto-served after the last guest', async ({ page }, info) => {
   const proj = info.project.name;
   await seedTrees(page, 7);
   await toHub(page);
   await page.getByTestId('zone-woods').click();
-  await expect(page.getByTestId('guest-fox')).toBeVisible({ timeout: 10000 });
-  await expect(page.getByTestId('tree-counter')).toContainText('7/7');
+  await expect(page.getByTestId('guest-mom')).toBeVisible({ timeout: 10000 });
+  await expect(page.getByTestId('tree-counter')).toHaveText('Tea party!');
+  await expect(page.getByTestId('guest-fox')).toHaveCount(0); // forest friends are not in the guest strip
   await page.waitForTimeout(3000);
   await page.screenshot({ path: `${SCREENS}/woods-tea-garden-${proj}.png` });
 
-  await hold(page, 'pour-btn', 1300); // right level
+  // Mom wants tea: the card says so.
+  await page.getByTestId('guest-mom').click();
+  await expect(page.getByTestId('guest-want')).toHaveAttribute('data-want', 'tea');
+  await hold(page, 'pour-btn', 1300);
   await expect(page.getByTestId('pour-result')).toHaveText(/Perfect!|Nice!|Splash!/); // timing varies by machine; thresholds are unit-tested
   await page.waitForTimeout(1600);
 
+  // Overfill for a splash on the next tea guest (Dad).
   const box = (await page.getByTestId('pour-btn').boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
-  await expect(page.getByTestId('pour-result')).toHaveText('Splash!', { timeout: 10000 }); // keeps holding: overflows
+  await expect(page.getByTestId('pour-result')).toHaveText('Splash!', { timeout: 10000 });
   await expect(page.getByTestId('caption')).toContainText('Whoa, a tea tsunami!');
   await page.waitForTimeout(250);
   await page.screenshot({ path: `${SCREENS}/woods-tea-splash-${proj}.png` });
   await page.mouse.up();
 
+  // Julian wants a treat.
   await page.getByTestId('guest-julian').click();
+  await expect(page.getByTestId('guest-want')).toHaveAttribute('data-want', 'treat');
   await page.getByTestId('treat-cookie').click();
   await expect(page.getByTestId('caption')).toContainText('scientifically the best cookie');
+
+  // Serve everyone left, then the forest friends say thank you and the brick appears.
+  await page.evaluate(() => window.__game!.autoPlay('woods'));
+  await expect(page.getByTestId('brick-celebration')).toBeVisible();
+});
+
+test('serving the last family guest triggers the forest friends thank-you, then the brick', async ({ page }, info) => {
+  const proj = info.project.name;
+  await seedTrees(page, 7);
+  await toHub(page);
+  await page.getByTestId('zone-woods').click();
+  await expect(page.getByTestId('guest-mom')).toBeVisible({ timeout: 10000 });
+  // Tea for mom, dad and jinglebells by real holds (repeat if a pour was too low), treats for the other four.
+  for (let i = 0; i < 9; i++) {
+    const left = await Promise.all(['mom', 'dad', 'jinglebells'].map((g) => page.getByTestId(`guest-${g}-done`).count()));
+    if (left.every((n) => n === 1)) break;
+    await hold(page, 'pour-btn', 1100);
+    await page.waitForTimeout(600);
+  }
+  for (let i = 0; i < 4; i++) {
+    await page.getByTestId('treat-cookie').click();
+    await page.waitForTimeout(250);
+  }
+  await expect(page.getByTestId('caption')).toContainText('The forest friends say thank you!', { timeout: 8000 });
+  await expect(page.getByTestId('brick-celebration')).toBeVisible({ timeout: 15000 });
+  await page.screenshot({ path: `${SCREENS}/woods-brick-real-${proj}.png` });
+  expect((await state(page)).bricks.woods).toBe(1);
 });
 
 test('all five orders by real taps, then the buried-treasure message and hub', async ({ page }, info) => {

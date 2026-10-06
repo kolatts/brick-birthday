@@ -2,16 +2,18 @@ import type { CouponId } from '../types';
 import { coupons, type CouponDef } from '../config/coupons';
 import { zones } from '../config/zones';
 import { useCoupons } from '../state/coupons';
+import { useProgress } from '../state/progress';
 import { Button } from '../ui/Button';
 import { f, scaleForHeight, u } from '../ui/scale';
 import { CouponArt } from '../ui/CouponArt';
-import { LockIcon } from '../ui/Icons';
+import { Icon, LockIcon } from '../ui/Icons';
 import { Password } from './CouponCard';
 
 function Item({ c, onOpen }: { c: CouponDef; onOpen: (id: CouponId) => void }) {
   const status = useCoupons((s) => (s.dug.includes(c.id) ? 'dug' : 'open'));
   const pending = useCoupons((s) => s.challengeComplete.includes(c.id) && !s.dug.includes(c.id));
   const zone = zones[c.zone];
+  const need = useProgress((s) => Math.max(0, zone.bricks - s.bricks[c.zone]));
   const earned = status !== 'open';
   return (
     <div
@@ -37,8 +39,13 @@ function Item({ c, onOpen }: { c: CouponDef; onOpen: (id: CouponId) => void }) {
         ) : pending ? (
           <div style={{ fontSize: f(20), fontWeight: 800 }}>Treasure is buried on the island! Go dig it up!</div>
         ) : (
-          <div style={{ fontSize: f(20), fontWeight: 800 }}>
-            {zone.built ? `Finish the ${zone.title} challenge!` : `The ${zone.title} is still being built`}
+          <div data-testid={`coupon-how-${c.id}`} data-ready={need === 0} style={{ display: 'flex', flexDirection: 'column', gap: u(6), alignItems: 'flex-start' }}>
+            <span style={{ fontSize: f(17), fontWeight: 900, color: zone.color === '#FFD60A' ? '#1D2A44' : '#fff', background: zone.color, border: `${u(3)} solid #1D2A44`, borderRadius: u(16), padding: `${u(1)} ${u(10)}`, textShadow: zone.color === '#FFD60A' ? 'none' : '0 1px 0 rgba(29,42,68,0.6)' }}>
+              Win it: {zone.title} Coupon Challenge
+            </span>
+            <span style={{ fontSize: f(20), fontWeight: 800 }}>
+              {!zone.built ? 'Coming soon!' : need === 0 ? 'Ready to play!' : `Earn ${need} more ${need === 1 ? 'brick' : 'bricks'} first`}
+            </span>
           </div>
         )}
       </div>
@@ -62,7 +69,7 @@ export function CouponBox({ onClose, onOpenCard }: { onClose: () => void; onOpen
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: u(12) }}>
-          <h1 style={{ margin: 0, fontSize: f(44), color: '#FFF4E0', textShadow: `0 ${u(3)} 0 #1D2A44` }}>🧰 Treasure Chest</h1>
+          <h1 style={{ margin: 0, fontSize: f(44), color: '#FFF4E0', textShadow: `0 ${u(3)} 0 #1D2A44` }}><Icon id="treasure-chest" size={f(54)} gap={u(10)} />Treasure Chest</h1>
           <Button tone="cream" testId="coupon-box-close" onClick={onClose}>Close</Button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, ${u(440)}), 1fr))`, gap: u(16) }}>

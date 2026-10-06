@@ -1,5 +1,5 @@
 import type { SpeakerId } from './voices';
-import { welcomeMessage } from './family';
+import { welcomeMessage, finaleMessage } from './family';
 
 export interface CopyLine {
   speaker: SpeakerId;
@@ -19,6 +19,7 @@ export const COPY = {
   hubHintTennis: 'The Tennis Court! Darian wants to play with you.',
   hubHintMusic: 'The Music Stage! Daddy is tuning his guitar.',
   hubHintWoods: 'The Whispering Woods! Rudolph and Jingle Bells are waiting.',
+  hubLegend: "Bricks build the birthday cake. Beat a zone's Coupon Challenge to dig up a Daddy-Daughter Date coupon!",
   hubHintCloset: 'The closet! Pick something sparkly to wear.',
   hubHintCoupons: 'The coupon box! Your prizes will be kept here.',
   comingSoon: 'Coming soon! That building is still getting built.',
@@ -36,6 +37,12 @@ export const COPY = {
   finaleEnd: 'Happy birthday, Luna! We love you so much!',
 } as const;
 
+/** Extra finale lines (the message itself lives in family.ts as finaleMessage). */
+export const finale = {
+  singAlong: 'Everybody, sing along!',
+  cheese: 'Say cheese, everybody!',
+} as const;
+
 /** Spoken when Luna taps a locked closet item: how many Birthday Bricks it needs (1-7) and where to earn them. */
 export const closetLockedLine = (bricks: number): string =>
   `Earn ${bricks} Birthday ${bricks === 1 ? 'Brick' : 'Bricks'} to wear this! Play in the Story Tower and the Whispering Woods.`;
@@ -44,6 +51,10 @@ export const closetLockedLine = (bricks: number): string =>
 export const copyLines: CopyLine[] = [
   ...Object.values(COPY).map((text) => ({ speaker: 'narrator' as const, text })),
   ...[1, 2, 3, 4, 5, 6, 7].map((n) => ({ speaker: 'narrator' as const, text: closetLockedLine(n) })),
+  ...Object.values(finale).map((text) => ({ speaker: 'narrator' as const, text })),
+  // Mom and Dad's note at the end of the finale ("Read it to me")
+  { speaker: 'dad', text: finaleMessage.dad },
+  { speaker: 'mom', text: finaleMessage.mom },
   // Daddy's note on the title screen ("Read it to me")
   { speaker: 'dad', text: welcomeMessage.body },
   { speaker: 'dad', text: welcomeMessage.signoff },

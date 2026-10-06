@@ -1,0 +1,407 @@
+[
+  {
+    "id": "speaker-on",
+    "prompt": "a chunky pink toy speaker with three curved sound waves coming out",
+    "size": 256
+  },
+  {
+    "id": "speaker-off",
+    "prompt": "a pink loudspeaker cone icon with a big red X beside it, mute symbol",
+    "size": 256
+  },
+  {
+    "id": "ticket",
+    "prompt": "a golden-yellow toy-brick ticket with a star on it and scalloped notches",
+    "size": 256
+  },
+  {
+    "id": "closet",
+    "prompt": "a brick-built wardrobe closet, front view, doors open, pink dress hanging inside, large subject filling the frame",
+    "size": 256
+  },
+  {
+    "id": "party-cake",
+    "prompt": "a brick-built birthday cake with pink frosting and three lit candles",
+    "size": 256
+  },
+  {
+    "id": "construction",
+    "prompt": "a brick-built orange-and-white striped construction barrier with a small yellow warning light",
+    "size": 256
+  },
+  {
+    "id": "crane",
+    "prompt": "a brick-built yellow tower crane with a hook and a small red brick, large subject filling the frame",
+    "size": 256
+  },
+  {
+    "id": "gift",
+    "prompt": "a brick-built wrapped present box in blue with a big pink ribbon bow",
+    "size": 256
+  },
+  {
+    "id": "shovel",
+    "prompt": "a brick-built red shovel stuck in a little mound of dirt",
+    "size": 256
+  },
+  {
+    "id": "treasure-chest",
+    "prompt": "a brick-built wooden treasure chest, open, glowing yellow with sparkles inside",
+    "size": 256
+  },
+  {
+    "id": "lock",
+    "prompt": "a chunky yellow toy padlock with a navy keyhole",
+    "size": 256
+  },
+  {
+    "id": "heart",
+    "prompt": "a plump shiny pink heart built from toy brick plastic with a white highlight",
+    "size": 256
+  },
+  {
+    "id": "love-letter",
+    "prompt": "a cream envelope sealed with a pink heart sticker, small hearts floating above",
+    "size": 256
+  },
+  {
+    "id": "sparkle",
+    "prompt": "a big yellow four-point sparkle star with two small sparkle stars beside it",
+    "size": 256
+  },
+  {
+    "id": "star",
+    "prompt": "a chunky yellow five-point star with a white highlight",
+    "size": 256
+  },
+  {
+    "id": "replay",
+    "prompt": "a chunky blue circular replay arrow, two curved arrows chasing each other",
+    "size": 256
+  },
+  {
+    "id": "clapper",
+    "prompt": "a brick-built movie clapperboard with navy and white stripes and a pink star",
+    "size": 256
+  },
+  {
+    "id": "popcorn",
+    "prompt": "a red-and-white striped popcorn bucket overflowing with fluffy popcorn",
+    "size": 256
+  },
+  {
+    "id": "trophy",
+    "prompt": "a golden winner trophy cup with two handles and a pink star",
+    "size": 256
+  },
+  {
+    "id": "party-popper",
+    "prompt": "a pink party popper cone with colorful confetti and streamers bursting out",
+    "size": 256
+  },
+  {
+    "id": "droplet",
+    "prompt": "a big shiny sky-blue water droplet with a white highlight",
+    "size": 256
+  },
+  {
+    "id": "pine-tree",
+    "prompt": "a brick-built green pine tree made of stacked studded layers with a brown trunk",
+    "size": 256
+  },
+  {
+    "id": "teapot",
+    "prompt": "a brick-built pink teapot with a yellow lid knob, chunky toy plastic",
+    "size": 256
+  },
+  {
+    "id": "teacup",
+    "prompt": "a brick-built cream teacup on a saucer with steam curling above",
+    "size": 256
+  },
+  {
+    "id": "cherry",
+    "prompt": "two bright red cherries on a green stem with a leaf, large subject filling the frame",
+    "size": 256
+  },
+  {
+    "id": "cookie",
+    "prompt": "a round chocolate-chip cookie with a bite missing",
+    "size": 256
+  },
+  {
+    "id": "scone",
+    "prompt": "a golden-brown scone with a dollop of pink jam on top",
+    "size": 256
+  },
+  {
+    "id": "cake",
+    "prompt": "a slice of strawberry cake with pink frosting and a red strawberry on top",
+    "size": 256
+  },
+  {
+    "id": "sugar-cube",
+    "prompt": "two white sugar cubes stacked, sparkling",
+    "size": 256
+  },
+  {
+    "id": "lemon",
+    "prompt": "a yellow lemon slice wedge with a green leaf",
+    "size": 256
+  },
+  {
+    "id": "milk",
+    "prompt": "a glass bottle of milk with a blue cap, white milk inside",
+    "size": 256
+  },
+  {
+    "id": "honey",
+    "prompt": "a brown honey jar with golden honey dripping and a small wooden dipper",
+    "size": 256
+  },
+  {
+    "id": "fox",
+    "prompt": "a cute orange fox head with white cheeks and pointy ears, brick-toy style",
+    "size": 256
+  },
+  {
+    "id": "deer",
+    "prompt": "a cute brown deer head with small antlers and a white-spotted nose",
+    "size": 256
+  },
+  {
+    "id": "songbird",
+    "prompt": "a cute little blue songbird with a yellow beak perched, singing with a music note",
+    "size": 256
+  },
+  {
+    "id": "squirrel",
+    "prompt": "a cute brown squirrel holding an acorn, with a big fluffy tail",
+    "size": 256
+  },
+  {
+    "id": "rabbit",
+    "prompt": "a cute cream-white bunny head with long ears, large subject filling the frame",
+    "size": 256
+  },
+  {
+    "id": "island",
+    "prompt": "a small floating grassy island with a palm tree and a little blue pond",
+    "size": 256
+  },
+  {
+    "id": "piano-cloud",
+    "prompt": "a fluffy white cloud with a tiny keyboard of black and white piano keys on it",
+    "size": 256
+  },
+  {
+    "id": "teacup-boat",
+    "prompt": "a giant pink teacup sailing like a boat with a small blue sail on a wavy blue sea",
+    "size": 256
+  },
+  {
+    "id": "tennis-moon",
+    "prompt": "a yellow-green tennis ball with moon craters, a few small stars, large subject filling the frame",
+    "size": 256
+  },
+  {
+    "id": "blanket-fort",
+    "prompt": "a cozy brick-built blanket fort castle with pink and blue blankets draped over it and a flag",
+    "size": 256
+  },
+  {
+    "id": "chai-latte",
+    "prompt": "a big mug of chai latte with creamy foam art and a cinnamon stick",
+    "size": 256
+  },
+  {
+    "id": "chicken-castle",
+    "prompt": "a brick-built orange castle with towers and a little roast orange chicken on top",
+    "size": 256
+  },
+  {
+    "id": "sock",
+    "prompt": "a single striped blue-and-pink toy sock with a sad little tag, lonely",
+    "size": 256
+  },
+  {
+    "id": "dragon",
+    "prompt": "a cute sleepy green baby dragon curled up with Zzz letters, friendly face",
+    "size": 256
+  },
+  {
+    "id": "broccoli",
+    "prompt": "a cute green broccoli floret with a big happy smile",
+    "size": 256
+  },
+  {
+    "id": "glitter-teapot",
+    "prompt": "a pink teapot pouring a stream of sparkling rainbow glitter",
+    "size": 256
+  },
+  {
+    "id": "rainbow",
+    "prompt": "a rainbow arc with a tiny hiccup hop in the middle, ending in two white clouds",
+    "size": 256
+  },
+  {
+    "id": "piano",
+    "prompt": "a small cute grand piano with black and white keys and one music note",
+    "size": 256
+  },
+  {
+    "id": "tennis-ball",
+    "prompt": "a bright yellow-green tennis ball with white curved lines and a giggling smile",
+    "size": 256
+  },
+  {
+    "id": "cloud",
+    "prompt": "a puffy white cloud looking droopy with a small raindrop beneath, cute",
+    "size": 256
+  },
+  {
+    "id": "snowman",
+    "prompt": "a cute snowman with a blue scarf and an empty spot where a nose should be",
+    "size": 256
+  },
+  {
+    "id": "drum",
+    "prompt": "a red toy drum with white zigzag sides and two yellow drumsticks",
+    "size": 256
+  },
+  {
+    "id": "giggle",
+    "prompt": "a bright laughing yellow face with shining beams radiating, joyful",
+    "size": 256
+  },
+  {
+    "id": "time-freeze",
+    "prompt": "a blue hourglass frozen in ice with a pause symbol and snowflake sparkles",
+    "size": 256
+  },
+  {
+    "id": "bubble",
+    "prompt": "a big shiny soap bubble with rainbow reflections and two small bubbles",
+    "size": 256
+  },
+  {
+    "id": "sprout",
+    "prompt": "a magic wand with a yellow star tip and a tiny green sprout growing from it",
+    "size": 256
+  },
+  {
+    "id": "whistle",
+    "prompt": "a rainbow-striped toy whistle with colorful music notes, large subject filling the frame",
+    "size": 256
+  },
+  {
+    "id": "hop",
+    "prompt": "a happy cartoon kangaroo mid-jump, brown with a cream belly",
+    "size": 256
+  },
+  {
+    "id": "cape",
+    "prompt": "a red hero cape with a gold clasp, billowing, blanket-like with stitched patches",
+    "size": 256
+  },
+  {
+    "id": "paw",
+    "prompt": "a pink animal paw print with four toes, chunky and cute",
+    "size": 256
+  },
+  {
+    "id": "sneeze",
+    "prompt": "a cute yellow smiley face sneezing out a burst of rainbow sparkles and stars",
+    "size": 256
+  },
+  {
+    "id": "princess-moon",
+    "prompt": "a cute smiling mermaid princess with a small crown, pink tail, and a crescent moon behind",
+    "size": 256
+  },
+  {
+    "id": "baby-lady",
+    "prompt": "a cute fluffy cream poodle puppy with a pink bow, brick-toy style",
+    "size": 256
+  },
+  {
+    "id": "baby-jag",
+    "prompt": "a cute spotted jaguar cub with golden fur and black spots, sitting",
+    "size": 256
+  },
+  {
+    "id": "moon",
+    "prompt": "a sleepy yellow crescent moon with closed eyes wearing a nightcap, stars around",
+    "size": 256
+  },
+  {
+    "id": "music-notes",
+    "prompt": "three colorful music notes floating, pink and blue and yellow",
+    "size": 256
+  },
+  {
+    "id": "yawn",
+    "prompt": "a cute yellow crescent moon yawning with a wide open mouth and stretching arms",
+    "size": 256
+  },
+  {
+    "id": "glitter-pour",
+    "prompt": "rainbow glitter pouring out of a teapot spout in a big shower of sparkles",
+    "size": 256
+  },
+  {
+    "id": "broom",
+    "prompt": "a toy broom with a red handle and yellow bristles, sweeping up a little pile of sparkles",
+    "size": 256
+  },
+  {
+    "id": "puppy",
+    "prompt": "a tiny fluffy cream puppy sitting with a wagging tail and floppy ears",
+    "size": 256
+  },
+  {
+    "id": "sleep",
+    "prompt": "a soft pink pillow with a blue crescent moon and three Zzz letters",
+    "size": 256
+  },
+  {
+    "id": "closet-bow",
+    "prompt": "a big pink hair bow with a yellow center knot",
+    "size": 256
+  },
+  {
+    "id": "closet-dress",
+    "prompt": "a pink polka-dot party dress with white dots on a tiny hanger",
+    "size": 256
+  },
+  {
+    "id": "closet-cape",
+    "prompt": "a sparkly red cape with gold star sparkles and a yellow clasp",
+    "size": 256
+  },
+  {
+    "id": "closet-pethats",
+    "prompt": "two tiny blue striped party hats with pink pom-poms",
+    "size": 256
+  },
+  {
+    "id": "closet-visor",
+    "prompt": "a red tennis visor cap with a curved brim",
+    "size": 256
+  },
+  {
+    "id": "closet-labcoat",
+    "prompt": "a white scientist lab coat with two pockets and navy buttons",
+    "size": 256
+  },
+  {
+    "id": "closet-boots",
+    "prompt": "a pair of shiny red rain boots",
+    "size": 256
+  },
+  {
+    "id": "closet-sunglasses",
+    "prompt": "blue star-shaped sunglasses with navy frames",
+    "size": 256
+  }
+]

@@ -22,17 +22,20 @@ describe('progress store', () => {
   it('brickGoal counts only built zones', () => {
     const expected = builtZones().reduce((n, z) => n + z.bricks, 0);
     expect(brickGoal()).toBe(expected);
-    expect(brickGoal()).toBe(3); // story 2 + woods 1
+    expect(brickGoal()).toBe(7); // story 2 + science 2 + tennis 1 + music 1 + woods 1
   });
 
   it('goalReached once all built-zone bricks are earned', () => {
     const s = useProgress.getState();
     expect(s.goalReached()).toBe(false);
     s.earnBrick('story', 2);
+    s.earnBrick('science', 2);
+    s.earnBrick('tennis', 1);
+    s.earnBrick('music', 1);
     expect(useProgress.getState().goalReached()).toBe(false);
     s.earnBrick('woods', 1);
     expect(useProgress.getState().goalReached()).toBe(true);
-    expect(useProgress.getState().totalBricks()).toBe(3);
+    expect(useProgress.getState().totalBricks()).toBe(7);
   });
 
   it('unlockAll fills built zones; reset clears', () => {

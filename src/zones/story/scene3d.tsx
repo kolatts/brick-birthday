@@ -347,6 +347,7 @@ function Tower({ picks, hop, burst }: TowerSceneProps) {
 
 /* --------------------------------------------------------------------- theater --- */
 
+/** `icon` is the URL of a sticker icon; it is drawn once the image has loaded. */
 function iconTexture(icon: string): THREE.CanvasTexture {
   const c = document.createElement('canvas');
   c.width = 512;
@@ -358,13 +359,16 @@ function iconTexture(icon: string): THREE.CanvasTexture {
     grad.addColorStop(1, '#101A3D');
     g.fillStyle = grad;
     g.fillRect(0, 0, 512, 320);
-    g.font = '200px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
-    g.textAlign = 'center';
-    g.textBaseline = 'middle';
-    g.fillText(icon, 256, 170);
   }
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
+  const img = new Image();
+  img.onload = () => {
+    if (!g) return;
+    g.drawImage(img, 256 - 140, 170 - 140, 280, 280);
+    t.needsUpdate = true;
+  };
+  img.src = icon;
   return t;
 }
 

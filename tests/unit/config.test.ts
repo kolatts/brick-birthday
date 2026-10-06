@@ -26,8 +26,9 @@ describe('family config', () => {
     expect(family.dad.voice.pitch).toBeLessThan(family.mom.voice.pitch);
     expect(family.luna.voice.pitch).toBeGreaterThan(family.dad.voice.pitch);
   });
-  it('has the finale placeholder and facts', () => {
-    expect(finaleMessage).toMatch(/TODO/);
+  it('has the finale message and facts', () => {
+    expect(finaleMessage.dad.length).toBeGreaterThan(20);
+    expect(finaleMessage.mom.length).toBeGreaterThan(20);
     expect(lunaFacts.loves.length).toBeGreaterThan(5);
   });
 });
@@ -36,11 +37,12 @@ describe('zones and coupons config', () => {
   it('registers all zones with the expected brick counts', () => {
     expect(zoneList.map((z) => z.id)).toEqual(ZONE_IDS);
     expect([zones.story, zones.science, zones.tennis, zones.music, zones.woods].map((z) => z.bricks)).toEqual([2, 2, 1, 1, 1]);
-    expect(zones.story.built && zones.woods.built).toBe(true);
-    expect(zones.science.built || zones.tennis.built || zones.music.built).toBe(false);
+    expect(zoneList.every((z) => z.built)).toBe(true);
   });
-  it('built zones bricks sum to the goal', () => {
+  it('built zones bricks sum to the goal (all five zones: 2+2+1+1+1 = 7)', () => {
+    expect(builtZones()).toHaveLength(5);
     expect(builtZones().reduce((n, z) => n + z.bricks, 0)).toBe(brickGoal());
+    expect(brickGoal()).toBe(7);
   });
   it('maps every coupon to a real zone that points back', () => {
     expect(coupons.map((c) => c.id).sort()).toEqual([...COUPON_IDS].sort());

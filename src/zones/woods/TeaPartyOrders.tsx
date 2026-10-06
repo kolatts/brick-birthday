@@ -8,8 +8,9 @@ import { sfx } from '../../audio/engine';
 import { say } from '../../audio/speech';
 import { Button, palette } from '../../ui/Button';
 import { f, inset, maxDpr, u, ub } from '../../ui/scale';
+import { Icon } from '../../ui/Icons';
 import { FitFov } from '../../three/FitFov';
-import { GUEST_EMOJI, GUEST_NAMES, type GuestId } from './facts';
+import { GUEST_ICON, GUEST_NAMES, type GuestId } from './facts';
 import {
   CHALLENGE_DONE_LINE, HAPPY_LINES, ITEMS, ORDERS, SCOOPS, checkPlate, checkSundae, itemById, scoopById, wrongLine,
   type ItemId, type Scoop,
@@ -19,10 +20,10 @@ import { SKY, WOODS_CSS, hudButton } from './ui';
 
 function GuestFace({ id }: { id: GuestId }) {
   const [bad, setBad] = useState(false);
-  const emoji = GUEST_EMOJI[id];
+  const icon = GUEST_ICON[id];
   return (
     <div style={{ width: u(132), height: u(132), borderRadius: u(66), background: '#fff', border: `${u(5)} solid ${palette.navy}`, boxShadow: `0 ${u(6)} 0 ${palette.navy}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flex: '0 0 auto' }}>
-      {emoji || bad ? <span style={{ fontSize: f(70) }}>{emoji ?? GUEST_NAMES[id][0]}</span> : <img src={faceUrl(id)} alt={GUEST_NAMES[id]} width={120} height={120} style={{ objectFit: 'cover' }} onError={() => setBad(true)} />}
+      {icon || bad ? (icon ? <Icon id={icon} size={f(96)} /> : <span style={{ fontSize: f(70) }}>{GUEST_NAMES[id][0]}</span>) : <img src={faceUrl(id)} alt={GUEST_NAMES[id]} width={120} height={120} style={{ objectFit: 'cover' }} onError={() => setBad(true)} />}
     </div>
   );
 }
@@ -111,7 +112,7 @@ export function Challenge() {
     return (
       <div className="screen center-col" data-testid="challenge-done" style={{ background: BG }}>
         <style>{WOODS_CSS}</style>
-        <div style={{ fontSize: f(84), animation: 'woods-bounce 1s ease-in-out infinite' }}>🧰</div>
+        <div style={{ animation: 'woods-bounce 1s ease-in-out infinite' }}><Icon id="treasure-chest" size={f(120)} /></div>
         <div style={{ background: '#fff', border: `${u(5)} solid ${palette.navy}`, borderRadius: u(40), boxShadow: `0 ${u(8)} 0 ${palette.navy}`, padding: `${u(20)} ${u(36)}`, fontSize: f(40), fontWeight: 900, maxWidth: u(800), color: palette.navy }}>
           {CHALLENGE_DONE_LINE}
         </div>
@@ -142,11 +143,11 @@ export function Challenge() {
           <div data-testid="order-text" style={{ fontSize: f(30), fontWeight: 800, lineHeight: 1.2 }}>{order.line}</div>
           <div data-testid="order-pictogram" style={{ display: 'flex', gap: u(10), alignItems: 'center', marginTop: u(8), flexWrap: 'wrap' }}>
             {order.kind === 'plate'
-              ? order.items.map((id, i) => <span key={i} title={itemById(id).label} style={{ fontSize: f(52), lineHeight: 1 }}>{itemById(id).emoji}</span>)
+              ? order.items.map((id, i) => <Icon key={i} id={itemById(id).icon} size={f(56)} />)
               : (
                 <>
                   {order.scoops.map((s, i) => <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: u(6), fontSize: f(24), fontWeight: 800 }}><span style={{ width: u(44), height: u(44), borderRadius: u(22), background: scoopById(s).color, border: `${u(3)} solid ${palette.navy}` }} />{i + 1}</span>)}
-                  <span style={{ fontSize: f(48) }}>🍒</span>
+                  <Icon id="cherry" size={f(52)} />
                 </>
               )}
           </div>
@@ -165,8 +166,8 @@ export function Challenge() {
           {order.kind === 'plate'
             ? ITEMS.map((it) => (
               <button key={it.id} type="button" data-testid={`item-${it.id}`} aria-label={it.label} onClick={() => addItem(it.id)} style={{ ...hudButton('#FFF4E0'), width: ub(84), height: ub(96), borderRadius: u(24), flexDirection: 'column', fontSize: f(42), gap: u(0) }}>
-                {it.emoji}
-                <span className="phone-hide" style={{ fontSize: f(13), fontWeight: 800 }}>{it.label}</span>
+                <Icon id={it.icon} size={f(50)} />
+                <span className="phone-hide" style={{ fontSize: f(13), fontWeight: 800 }}>{it.label.replace('Strawberry ', '')}</span>
               </button>
             ))
             : (
@@ -178,7 +179,7 @@ export function Challenge() {
                   </button>
                 ))}
                 <button type="button" data-testid="cherry-btn" aria-label="Cherry on top" onClick={() => { sfx('pop'); markBorn(10); setCherry(true); }} disabled={cherry} style={{ ...hudButton('#FFE3EC'), width: ub(96), height: ub(96), borderRadius: u(24), flexDirection: 'column', fontSize: f(44), opacity: cherry ? 0.5 : 1 }}>
-                  🍒<span className="phone-hide" style={{ fontSize: f(15) }}>Cherry</span>
+                  <Icon id="cherry" size={f(48)} /><span className="phone-hide" style={{ fontSize: f(15) }}>Cherry</span>
                 </button>
               </>
             )}

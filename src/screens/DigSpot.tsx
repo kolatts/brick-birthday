@@ -10,6 +10,7 @@ import { Builder } from '../three/prims';
 import { digPos } from '../three/layout';
 import { useDig } from '../three/digStore';
 import { emitSparkles } from '../three/Wand';
+import { Icon } from '../ui/Icons';
 import { playSting, sfx } from '../audio/engine';
 
 export const DIG_TAPS = 5;
@@ -142,7 +143,7 @@ function DigSpot({ id, onConfetti, onDug }: DigSpotProps) {
           <svg width="92" height="92" viewBox="0 0 92 92" style={{ position: 'absolute', inset: -5, pointerEvents: 'none' }}>
             <circle cx="46" cy="46" r="42" fill="none" stroke="#E63946" strokeWidth="7" strokeDasharray={`${pct * 264} 264`} strokeLinecap="round" transform="rotate(-90 46 46)" />
           </svg>
-          <span aria-hidden style={{ display: 'inline-block', animation: 'bob 1s ease-in-out infinite' }}>{phase === 'chest' ? '🎁' : '⛏️'}</span>
+          <span aria-hidden style={{ display: 'inline-block', animation: 'bob 1s ease-in-out infinite' }}><Icon id={phase === 'chest' ? 'gift' : 'shovel'} size={56} /></span>
         </button>
       </Html>
     </group>

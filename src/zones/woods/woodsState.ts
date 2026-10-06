@@ -4,8 +4,8 @@ import { sfx } from '../../audio/engine';
 import { say } from '../../audio/speech';
 import { emit } from './fx';
 import {
-  FRIENDS, GUEST_IDS, GUEST_LINES, GUEST_NAMES, LOW_LINE, SPLASH_LINE, PERFECT_LINE, OK_LINE,
-  factForTree, friendForTree, type FriendId, type GuestId,
+  FAMILY_GUESTS, FRIENDS, FRIENDS_THANKS_LINE, GUEST_LINES, GUEST_NAMES, GUEST_WANTS, LOW_LINE, SPLASH_LINE, PERFECT_LINE, OK_LINE,
+  factForTree, friendForTree, isFamilyGuest, type FamilyGuestId, type FriendId, type GuestId,
 } from './facts';
 import { judgePour, levelAt } from './logic';
 
@@ -23,16 +23,25 @@ export const STUMP_POS: [number, number, number][] = [
 export const TEA_CENTER: [number, number, number] = [0, 0, 8.2];
 
 export type TreatId = 'cookie' | 'scone' | 'cake';
-export const TREATS: { id: TreatId; emoji: string; label: string }[] = [
-  { id: 'cookie', emoji: '🍪', label: 'Cookie' },
-  { id: 'scone', emoji: '🥐', label: 'Scone' },
-  { id: 'cake', emoji: '🍰', label: 'Cake' },
+export const TREATS: { id: TreatId; icon: string; label: string }[] = [
+  { id: 'cookie', icon: 'cookie', label: 'Cookie' },
+  { id: 'scone', icon: 'scone', label: 'Scone' },
+  { id: 'cake', icon: 'cake', label: 'Cake' },
 ];
 
-/** Guests at the tea party: family, pets, and one of each forest friend that has returned. */
+/** Everyone at the table: family and pets, plus one of each forest friend that has returned (they are auto-served). */
 export function guestsFor(trees: number): GuestId[] {
   const friends = FRIENDS.slice(0, Math.min(trees, FRIENDS.length)).map((f) => f.id);
-  return [...GUEST_IDS.filter((g) => !FRIENDS.some((f) => f.id === g)), ...friends];
+  return [...FAMILY_GUESTS, ...friends];
+}
+
+/** The guests Luna serves herself (family and pets), each needing exactly one thing. */
+export const servedGuests = (): FamilyGuestId[] => FAMILY_GUESTS;
+export const wantOf = (g: GuestId): 'tea' | 'treat' | null => (isFamilyGuest(g) ? GUEST_WANTS[g] : null);
+/** True once a family guest has the one thing they wanted. */
+export function isServed(g: GuestId, st: Pick<WoodsState, 'tea' | 'treat'> = get()): boolean {
+  const w = wantOf(g);
+  return w === 'tea' ? !!st.tea[g] : w === 'treat' ? !!st.treat[g] : false;
 }
 
 export interface Caption { id: number; who: string; text: string; kind: 'talk' | 'fact' | 'hint' }
@@ -57,6 +66,8 @@ interface WoodsState {
   selectedTreat: TreatId | null;
   lastPour: PourResultInfo | null;
   celebrating: boolean;
+  /** Group moment: the forest friends' cups fill and they cheer. */
+  friendsCheer: boolean;
   firstBrick: boolean;
 }
 
@@ -64,7 +75,7 @@ const fresh = (): WoodsState => ({
   stage: Array(TREE_COUNT).fill(0), plantedAt: Array(TREE_COUNT).fill(LONG_AGO), wateredAt: Array(TREE_COUNT).fill(LONG_AGO),
   grownAt: Array(TREE_COUNT).fill(LONG_AGO), friends: Array(TREE_COUNT).fill(null), friendAt: Array(TREE_COUNT).fill(LONG_AGO),
   active: -1, caption: null, teaReady: false, teaStartAt: LONG_AGO,
-  tea: {}, treat: {}, pourTarget: null, pouring: null, selectedTreat: null, lastPour: null, celebrating: false, firstBrick: false,
+  tea: {}, treat: {}, pourTarget: null, pouring: null, selectedTreat: null, lastPour: null, celebrating: false, friendsCheer: false, firstBrick: false,
 });
 
 export const useWoods = create<WoodsState>(() => fresh());
@@ -90,6 +101,7 @@ export function showCaption(who: string, text: string, kind: Caption['kind'] = '
 /** Resets scene state from the persisted tree count. Call on mount. */
 export function initWoods(): void {
   gen++;
+  waitingForThanks = false;
   clearTimeout(capTimer);
   const n = useProgress.getState().treesPlanted;
   const s = fresh();
@@ -105,6 +117,7 @@ export function initWoods(): void {
 
 export function disposeWoods(): void {
   gen++;
+  waitingForThanks = false;
   clearTimeout(capTimer);
   set(fresh());
 }
@@ -211,13 +224,22 @@ export function growAllTrees(): void {
 }
 
 // ---- tea party -------------------------------------------------------------------------------
-const guestList = (): GuestId[] => guestsFor(useProgress.getState().treesPlanted);
-
-export const nextTeaTarget = (): GuestId | null => guestList().find((g) => !get().tea[g]) ?? null;
+/** Next family guest still waiting for their one thing (optionally only those wanting `kind`). */
+function nextWaiting(kind?: 'tea' | 'treat'): FamilyGuestId | null {
+  return servedGuests().find((g) => !isServed(g) && (!kind || GUEST_WANTS[g] === kind)) ?? null;
+}
+export const nextTeaTarget = (): FamilyGuestId | null => nextWaiting();
 
 export function selectTarget(g: GuestId): void {
+  if (!isFamilyGuest(g)) return friendTap(g);
   sfx('tap');
   set({ pourTarget: g, selectedTreat: null });
+}
+
+/** Forest friends are served automatically; tapping one just says hello. */
+export function friendTap(g: GuestId): void {
+  sfx('pop');
+  showCaption(GUEST_NAMES[g], 'Hi, Luna! I am just here for the party!', 'talk', 2600);
 }
 
 export function selectTreat(t: TreatId | null): void {
@@ -226,26 +248,40 @@ export function selectTreat(t: TreatId | null): void {
   if (t) showCaption('Hint', 'Now tap who gets the treat!', 'hint', 4000);
 }
 
-/** Select the next/previous guest (wraps around). */
+/** Select the next/previous family guest (wraps around). */
 export function stepTarget(dir: 1 | -1): void {
-  const list = guestsFor(TREE_COUNT);
-  const cur = Math.max(0, list.indexOf(get().pourTarget ?? list[0]));
+  const list = servedGuests();
+  const cur = Math.max(0, list.indexOf((get().pourTarget as FamilyGuestId | null) ?? list[0]));
   selectTarget(list[(cur + dir + list.length) % list.length]);
 }
 
-/** Gives a treat to the selected guest (or the next one still waiting). */
+let waitingForThanks = false; // the last guest was just served; the friends' moment is about to start
+const busy = (): boolean => waitingForThanks || get().celebrating || get().friendsCheer;
+
+/** Gives a treat to the selected guest if they want one, else to the next guest still waiting for a treat. */
 export function giveTreat(t: TreatId): void {
-  const list = guestsFor(TREE_COUNT);
-  const g = get().pourTarget ?? list.find((x) => !get().treat[x]) ?? list[0];
+  if (busy()) return;
+  const sel = get().pourTarget;
+  const g = sel && isFamilyGuest(sel) && GUEST_WANTS[sel] === 'treat' && !isServed(sel) ? sel : nextWaiting('treat');
+  if (!g) {
+    sfx('tap');
+    showCaption('Hint', nextWaiting() ? 'Treats are all served! Pour some tea.' : 'Everybody is served!', 'hint', 3000);
+    return;
+  }
   set({ selectedTreat: t, pourTarget: g });
   serveTreat(g);
   set({ selectedTreat: null });
 }
 
 export function startPour(): void {
-  if (get().pouring || get().celebrating) return;
-  const target = get().pourTarget && !get().tea[get().pourTarget!] ? get().pourTarget : nextTeaTarget();
-  if (!target) return;
+  if (get().pouring || busy()) return;
+  const sel = get().pourTarget;
+  const target = sel && isFamilyGuest(sel) && GUEST_WANTS[sel] === 'tea' && !get().tea[sel] ? sel : nextWaiting('tea');
+  if (!target) {
+    sfx('tap');
+    showCaption('Hint', nextWaiting() ? 'All the tea is poured! Give out the treats.' : 'Everybody is served!', 'hint', 3000);
+    return;
+  }
   sfx('tap');
   set({ pouring: { start: nowMs() }, pourTarget: target, selectedTreat: null });
 }
@@ -257,7 +293,7 @@ export function endPour(): void {
   const level = levelAt((nowMs() - p.start) / 1000);
   const result = judgePour(level);
   set({ pouring: null });
-  if (!target) return;
+  if (!target || !isFamilyGuest(target)) return;
   const cup = cupWorldPos(target);
   if (result === 'low') {
     sfx('oops');
@@ -280,13 +316,19 @@ export function endPour(): void {
     showCaption(GUEST_NAMES[target], text, 'talk', 4200);
     void say(lines.tea, { speaker: target });
   }
-  set({ pourTarget: nextTeaTarget() });
+  set({ pourTarget: nextWaiting() });
   checkDone();
 }
 
 export function serveTreat(g: GuestId): void {
+  if (!isFamilyGuest(g)) return friendTap(g);
   const t = get().selectedTreat;
   if (!t) return selectTarget(g);
+  if (GUEST_WANTS[g] !== 'treat') {
+    sfx('oops');
+    showCaption(GUEST_NAMES[g], 'Just some tea for me, please!', 'talk', 3000);
+    return;
+  }
   if (get().treat[g]) {
     sfx('tap');
     showCaption(GUEST_NAMES[g], 'I already have a yummy treat, thank you!', 'talk', 3000);
@@ -295,7 +337,7 @@ export function serveTreat(g: GuestId): void {
   sfx('pop');
   const c = cupWorldPos(g);
   emit('sparkle', [c[0], 1.2, c[2]], 12);
-  set({ treat: { ...get().treat, [g]: true } });
+  set({ treat: { ...get().treat, [g]: true }, pourTarget: nextWaiting() });
   const line = GUEST_LINES[g].treat;
   showCaption(GUEST_NAMES[g], line, 'talk', 4200);
   void say(line, { speaker: g });
@@ -303,14 +345,40 @@ export function serveTreat(g: GuestId): void {
 }
 
 export function guestTap(g: GuestId): void {
+  if (busy()) return;
   if (get().selectedTreat) serveTreat(g);
   else selectTarget(g);
 }
 
-export const allServed = (): boolean => guestList().every((g) => get().tea[g] && get().treat[g]);
+export const allServed = (): boolean => servedGuests().every((g) => isServed(g));
 
 function checkDone(): void {
-  if (allServed() && !get().celebrating) finishTeaParty();
+  if (allServed() && !busy()) void forestFriendsThankYou();
+}
+
+/** Group moment: every forest friend's cup fills at once and they cheer, then the brick celebration. */
+async function forestFriendsThankYou(): Promise<void> {
+  const my = gen;
+  waitingForThanks = true;
+  set({ pourTarget: null, selectedTreat: null });
+  await wait(1700); // let the last guest's own reaction land first
+  waitingForThanks = false;
+  if (my !== gen) return;
+  set({ friendsCheer: true });
+  const friends = guestsFor(TREE_COUNT).filter((g) => !isFamilyGuest(g));
+  sfx('sparkle');
+  FRIENDS.forEach((_, i) => {
+    setTimeout(() => sfx(i % 2 ? 'pop' : 'sparkle'), 160 + i * 190);
+  });
+  for (const g of friends) {
+    const c = cupWorldPos(g);
+    emit('sparkle', [c[0], 1.3, c[2]], 10);
+  }
+  showCaption('Narrator', FRIENDS_THANKS_LINE, 'talk', 4200);
+  void say(FRIENDS_THANKS_LINE, { speaker: 'narrator' });
+  await wait(3600);
+  if (my !== gen || get().celebrating) return;
+  finishTeaParty();
 }
 
 /** Tea party finished: brick, celebration. Exported for auto-play. */
@@ -319,7 +387,7 @@ export function finishTeaParty(): void {
   const first = pr.bricks.woods < 1;
   pr.setTeaPartyDone();
   pr.earnBrick('woods', 1);
-  set({ celebrating: true, firstBrick: first, pouring: null, selectedTreat: null });
+  set({ celebrating: true, friendsCheer: true, firstBrick: first, pouring: null, selectedTreat: null });
   setTimeout(() => sfx('fanfare'), 500);
   emit('confetti', [0, 2.5, TEA_CENTER[2]], 90);
   setTimeout(() => emit('confetti', [-2, 2.5, TEA_CENTER[2]], 60), 500);
@@ -329,15 +397,17 @@ export function finishTeaParty(): void {
 export function serveAll(): void {
   const tea: WoodsState['tea'] = {};
   const treat: WoodsState['treat'] = {};
-  for (const g of guestsFor(TREE_COUNT)) {
-    tea[g] = true;
-    treat[g] = true;
+  for (const g of servedGuests()) {
+    if (GUEST_WANTS[g] === 'tea') tea[g] = true;
+    else treat[g] = true;
   }
   set({ tea, treat });
 }
 
 export function replayTeaParty(): void {
-  set({ tea: {}, treat: {}, celebrating: false, pouring: null, selectedTreat: null, lastPour: null, pourTarget: guestsFor(TREE_COUNT)[0] });
+  gen++;
+  waitingForThanks = false;
+  set({ tea: {}, treat: {}, celebrating: false, friendsCheer: false, pouring: null, selectedTreat: null, lastPour: null, pourTarget: servedGuests()[0] });
   showCaption('Luna', 'Another tea party! Hold the teapot to pour.', 'hint', 5000);
 }
 

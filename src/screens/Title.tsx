@@ -4,6 +4,7 @@ import { family, welcomeMessage } from '../config/family';
 import { COUPON_IDS } from '../types';
 import { Button, palette } from '../ui/Button';
 import { CouponArt } from '../ui/CouponArt';
+import { Icon } from '../ui/Icons';
 import { f, u, useIsPhone } from '../ui/scale';
 import { useUi } from '../state/ui';
 import { useCoupons } from '../state/coupons';
@@ -33,7 +34,7 @@ function CouponRow({ size }: { size: number }) {
             }}
           >
             <CouponArt id={id} size={size} />
-            {!earned && <span aria-hidden style={{ position: 'absolute', right: 0, bottom: 0, fontSize: f(20), filter: 'none', lineHeight: 1 }}>🔒</span>}
+            {!earned && <span aria-hidden style={{ position: 'absolute', right: 0, bottom: 0, filter: 'none', lineHeight: 1 }}><Icon id="lock" size={f(24)} /></span>}
           </div>
         );
       })}
@@ -75,11 +76,11 @@ function NoteCard({ compact }: { compact: boolean }) {
       )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: u(8), alignItems: 'center', minWidth: 0 }}>
         <div style={{ fontWeight: 900, fontSize: f(26), color: '#E63946' }}>
-          <span aria-hidden>💗 </span>{welcomeMessage.heading}
+          <Icon id="heart" size={f(28)} gap={u(6)} />{welcomeMessage.heading}
         </div>
         <div data-testid="note-body" style={{ fontSize: body, fontWeight: 700, lineHeight: 1.3 }}>{welcomeMessage.body}</div>
-        <div style={{ fontSize: f(22), fontWeight: 900, fontStyle: 'italic' }}>{welcomeMessage.signoff} <span aria-hidden>💗</span></div>
-        <Button tone="pink" testId="read-note" onClick={read} style={{ fontSize: f(20) }}>🔊 Read it to me</Button>
+        <div style={{ fontSize: f(22), fontWeight: 900, fontStyle: 'italic' }}>{welcomeMessage.signoff} <Icon id="heart" size={f(24)} /></div>
+        <Button tone="pink" testId="read-note" onClick={read} style={{ fontSize: f(20) }}><Icon id="speaker-on" size={f(28)} gap={u(8)} />Read it to me</Button>
       </div>
     </div>
   );
@@ -126,7 +127,7 @@ export function Title() {
           <CouponRow size={Math.round(phone ? 46 : Math.min(84, window.innerHeight * 0.1))} />
           {phone && (
             <Button tone="cream" testId="note-open" onClick={() => setNoteOpen(true)} style={{ borderColor: '#FFB3D6' }}>
-              💌 A note from Daddy
+              <Icon id="love-letter" size={f(30)} gap={u(8)} />A note from Daddy
             </Button>
           )}
         </div>

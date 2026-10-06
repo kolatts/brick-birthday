@@ -12,7 +12,6 @@ export type ClosetAnchor = 'crown' | 'brow' | 'eyes' | 'back' | 'torso' | 'waist
 export interface ClosetItem {
   id: string;
   name: string;
-  emoji: string;
   slot: ClosetSlot;
   anchor: ClosetAnchor;
   /** Birthday Bricks needed when all 7 bricks exist (1..7). Scaled down when fewer zones are built. */
@@ -22,14 +21,14 @@ export interface ClosetItem {
 export const FULL_BRICK_COUNT = 7;
 
 export const closetItems: ClosetItem[] = [
-  { id: 'bow', name: 'Big pink hair bow', emoji: '🎀', slot: 'headwear', anchor: 'crown', unlockAt: 1 },
-  { id: 'dress', name: 'Polka-dot dress', emoji: '👗', slot: 'outfit', anchor: 'waist', unlockAt: 2 },
-  { id: 'cape', name: 'Sparkly cape', emoji: '✨', slot: 'outerwear', anchor: 'back', unlockAt: 3 },
-  { id: 'pethats', name: 'Pet party hats', emoji: '🥳', slot: 'pets', anchor: 'pets', unlockAt: 4 },
-  { id: 'visor', name: 'Tennis visor', emoji: '🎾', slot: 'headwear', anchor: 'brow', unlockAt: 5 },
-  { id: 'labcoat', name: 'Lab coat', emoji: '🥼', slot: 'outerwear', anchor: 'torso', unlockAt: 6 },
-  { id: 'boots', name: 'Red rain boots', emoji: '🥾', slot: 'footwear', anchor: 'feet', unlockAt: 7 },
-  { id: 'sunglasses', name: 'Blue star sunglasses', emoji: '😎', slot: 'eyewear', anchor: 'eyes', unlockAt: 7 },
+  { id: 'bow', name: 'Big pink hair bow', slot: 'headwear', anchor: 'crown', unlockAt: 1 },
+  { id: 'dress', name: 'Polka-dot dress', slot: 'outfit', anchor: 'waist', unlockAt: 2 },
+  { id: 'cape', name: 'Sparkly cape', slot: 'outerwear', anchor: 'back', unlockAt: 3 },
+  { id: 'pethats', name: 'Pet party hats', slot: 'pets', anchor: 'pets', unlockAt: 4 },
+  { id: 'visor', name: 'Tennis visor', slot: 'headwear', anchor: 'brow', unlockAt: 5 },
+  { id: 'labcoat', name: 'Lab coat', slot: 'outerwear', anchor: 'torso', unlockAt: 6 },
+  { id: 'boots', name: 'Red rain boots', slot: 'footwear', anchor: 'feet', unlockAt: 7 },
+  { id: 'sunglasses', name: 'Blue star sunglasses', slot: 'eyewear', anchor: 'eyes', unlockAt: 7 },
 ];
 
 /** Bricks needed to unlock `item`, scaled to the adaptive goal (so a 3-brick game can still unlock everything). */

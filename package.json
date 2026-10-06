@@ -18,6 +18,7 @@
     "passwords": "tsx scripts/pack/passwords-cli.ts",
     "faces:build": "tsx scripts/faces/build.ts",
     "models:build": "tsx scripts/models/build.ts",
+    "icons:generate": "tsx scripts/art/generate-icons.ts",
     "portraits": "tsx scripts/portraits/generate.ts",
     "music:generate": "C:/Code/claude-video-editor/venv/Scripts/python.exe scripts/music/generate.py",
     "voices:extract": "tsx scripts/voices/extract.ts",

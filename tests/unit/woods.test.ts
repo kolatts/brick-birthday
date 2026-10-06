@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   LEVEL_OK_MIN, LEVEL_PERFECT_MAX, LEVEL_PERFECT_MIN, ORDERS, POUR_SECONDS, checkPlate, checkSundae, judgePour, levelAt,
 } from '../../src/zones/woods/logic';
-import { FRIENDS, GUEST_IDS, GUEST_LINES, GUEST_NAMES, TREE_FACTS, SPLASH_LINE } from '../../src/zones/woods/facts';
-import { guestsFor } from '../../src/zones/woods/woodsState';
+import { FAMILY_GUESTS, FRIENDS, FRIENDS_THANKS_LINE, GUEST_IDS, GUEST_LINES, GUEST_NAMES, GUEST_WANTS, TREE_FACTS, SPLASH_LINE } from '../../src/zones/woods/facts';
+import { guestsFor, isServed, servedGuests, useWoods } from '../../src/zones/woods/woodsState';
 import { useProgress } from '../../src/state/progress';
 
 describe('tea pouring', () => {
@@ -58,21 +58,42 @@ describe('copy', () => {
       expect(f).not.toMatch(/TODO|undefined/);
     }
   });
-  it('every guest has a tea and treat reaction and a name', () => {
-    for (const id of GUEST_IDS) {
+  it('every family guest has a tea and treat reaction and a name; every guest has a name', () => {
+    for (const id of FAMILY_GUESTS) {
       expect(GUEST_LINES[id].tea.length).toBeGreaterThan(3);
       expect(GUEST_LINES[id].treat.length).toBeGreaterThan(3);
-      expect(GUEST_NAMES[id]).toBeTruthy();
     }
+    for (const id of GUEST_IDS) expect(GUEST_NAMES[id]).toBeTruthy();
     expect(SPLASH_LINE).toBe('Whoa, a tea tsunami!');
     expect(GUEST_LINES.dad.tea).toMatch(/Chai latte/);
     expect(GUEST_LINES.darian.treat).toMatch(/SNACK/);
     expect(JSON.stringify(GUEST_LINES)).not.toMatch(/broccoli/i);
+    expect(FRIENDS_THANKS_LINE).toBe('The forest friends say thank you!');
   });
-  it('invites a friend per returned forest friend', () => {
-    expect(guestsFor(7)).toHaveLength(6 + FRIENDS.length);
-    expect(guestsFor(1)).toHaveLength(7);
+});
+
+describe('tea party guests', () => {
+  it('serves only family and pets, each wanting exactly one thing', () => {
+    expect(servedGuests()).toEqual(['luna', 'mom', 'dad', 'julian', 'darian', 'rudolph', 'jinglebells']);
+    for (const g of servedGuests()) expect(['tea', 'treat']).toContain(GUEST_WANTS[g]);
+    expect(['dad', 'mom', 'jinglebells'].map((g) => GUEST_WANTS[g as 'dad'])).toEqual(['tea', 'tea', 'tea']);
+    expect(['julian', 'darian', 'rudolph', 'luna'].map((g) => GUEST_WANTS[g as 'luna'])).toEqual(['treat', 'treat', 'treat', 'treat']);
+  });
+  it('seats one forest friend per returned tree, but they are never served by hand', () => {
+    expect(guestsFor(7)).toHaveLength(7 + FRIENDS.length);
+    expect(guestsFor(1)).toHaveLength(8);
     for (const g of guestsFor(7)) expect(GUEST_IDS).toContain(g);
+    expect(servedGuests().some((g) => FRIENDS.some((f) => f.id === (g as string)))).toBe(false);
+  });
+  it('a guest is served once they have their one thing', () => {
+    useWoods.setState({ tea: {}, treat: {} });
+    expect(isServed('dad')).toBe(false);
+    useWoods.setState({ treat: { dad: true } }); // a treat does not serve a tea guest
+    expect(isServed('dad')).toBe(false);
+    useWoods.setState({ tea: { dad: true } });
+    expect(isServed('dad')).toBe(true);
+    expect(isServed('fox')).toBe(false);
+    useWoods.setState({ tea: {}, treat: {} });
   });
 });
 

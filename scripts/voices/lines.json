@@ -35,6 +35,11 @@
     "text": "The Whispering Woods! Rudolph and Jingle Bells are waiting."
   },
   {
+    "id": "a210264f751474dc",
+    "speaker": "narrator",
+    "text": "Bricks build the birthday cake. Beat a zone's Coupon Challenge to dig up a Daddy-Daughter Date coupon!"
+  },
+  {
     "id": "c73bc0533dceabc6",
     "speaker": "narrator",
     "text": "The closet! Pick something sparkly to wear."
@@ -145,6 +150,26 @@
     "text": "Earn 7 Birthday Bricks to wear this! Play in the Story Tower and the Whispering Woods."
   },
   {
+    "id": "e66a2004155d3833",
+    "speaker": "narrator",
+    "text": "Everybody, sing along!"
+  },
+  {
+    "id": "bc317ff2310c3491",
+    "speaker": "narrator",
+    "text": "Say cheese, everybody!"
+  },
+  {
+    "id": "8fcc3d725aeb4ec5",
+    "speaker": "dad",
+    "text": "Luna, you fill our whole family with light, laughter, and big ideas. Watching you grow up is the best part of every single day."
+  },
+  {
+    "id": "b47ff8946a884c03",
+    "speaker": "mom",
+    "text": "We love your stories, your kindness, and the way you care for the world around you. Never stop imagining, sweet girl. We are so proud to be your mom and dad."
+  },
+  {
     "id": "2ce7d0b0047db099",
     "speaker": "dad",
     "text": "Luna, I am so very proud of your creativity, your kindness, and your ambition. I can't wait to see the mark you make on the world."
@@ -220,6 +245,16 @@
     "text": "Thank you, Luna! Hop hop hooray!"
   },
   {
+    "id": "622dfbe3986a452c",
+    "speaker": "luna",
+    "text": "Mmm, tea for the host too!"
+  },
+  {
+    "id": "949a9135f4ae6ed2",
+    "speaker": "luna",
+    "text": "A treat for the host? Yes, please!"
+  },
+  {
     "id": "073f65ce9d462973",
     "speaker": "mom",
     "text": "Ahh, just right!"
@@ -278,56 +313,6 @@
     "id": "e7fe2f8f9365e552",
     "speaker": "jinglebells",
     "text": "Purrrfect."
-  },
-  {
-    "id": "bcc9e5361a49a169",
-    "speaker": "fox",
-    "text": "Tea for a fox? Fantastic!"
-  },
-  {
-    "id": "33167222d809e3d7",
-    "speaker": "fox",
-    "text": "Foxy fabulous!"
-  },
-  {
-    "id": "6fd0e3c6075ac1ed",
-    "speaker": "deer",
-    "text": "Oh deer, this is lovely!"
-  },
-  {
-    "id": "dd31aa97ce5f521a",
-    "speaker": "deer",
-    "text": "Deer me, delicious!"
-  },
-  {
-    "id": "8e1bf34fdff5abb8",
-    "speaker": "songbird",
-    "text": "Tweet! Sip-sip-sing!"
-  },
-  {
-    "id": "543b79993e2fa7e4",
-    "speaker": "songbird",
-    "text": "Cheep cheep, crumbs for me!"
-  },
-  {
-    "id": "cceb427b350c9a26",
-    "speaker": "squirrel",
-    "text": "Acorn tea? No? Even better!"
-  },
-  {
-    "id": "0e815e68ad069667",
-    "speaker": "squirrel",
-    "text": "Nuts about this treat!"
-  },
-  {
-    "id": "768437478f75106c",
-    "speaker": "rabbit",
-    "text": "Hop-hop hooray, tea!"
-  },
-  {
-    "id": "055f4eb51b1d134e",
-    "speaker": "rabbit",
-    "text": "Better than a carrot! Do not tell the carrots."
   },
   {
     "id": "b1f233af6f066618",
@@ -468,6 +453,386 @@
     "id": "70dbd043533e991c",
     "speaker": "luna",
     "text": "Something is buried near the Whispering Woods…"
+  },
+  {
+    "id": "a2c289ccb6e5727d",
+    "speaker": "dad",
+    "text": "Hi Luna! Welcome to the Music Stage. Tap the pads and make some music!"
+  },
+  {
+    "id": "ebd5ca7b5f0064c0",
+    "speaker": "dad",
+    "text": "Follow the glowing keys, Luna. Tap the lit one!"
+  },
+  {
+    "id": "606ada4204be3755",
+    "speaker": "dad",
+    "text": "You earned a Birthday Brick! The whole band is so proud of you!"
+  },
+  {
+    "id": "db39ec1a9736678f",
+    "speaker": "darian",
+    "text": "Boom boom! I am on the drums!"
+  },
+  {
+    "id": "1458e57f9f304acc",
+    "speaker": "julian",
+    "text": "Cool keys, Luna! I am on the keyboard!"
+  },
+  {
+    "id": "c49eef4b9678bb3a",
+    "speaker": "mom",
+    "text": "Strum strum! I have my tambourine!"
+  },
+  {
+    "id": "cfaca3ec6283b117",
+    "speaker": "rudolph",
+    "text": "Woof woof! We love the xylophone!"
+  },
+  {
+    "id": "e9bd742c7aa2e461",
+    "speaker": "dad",
+    "text": "Happy birthday to you! That was beautiful, Luna!"
+  },
+  {
+    "id": "ce741824f509b94b",
+    "speaker": "dad",
+    "text": "You hopped all the way across Island Hop!"
+  },
+  {
+    "id": "76b2e42e7b2a6acd",
+    "speaker": "dad",
+    "text": "What a lovely Tea Time Twirl!"
+  },
+  {
+    "id": "9db13d08079f5ef5",
+    "speaker": "julian",
+    "text": "Welcome to my lab, Luna! Pick an experiment. Do two for a Birthday Brick!"
+  },
+  {
+    "id": "dfd93307ed3fa09a",
+    "speaker": "julian",
+    "text": "Great science! Pick another experiment."
+  },
+  {
+    "id": "0d7567151a8f3ea6",
+    "speaker": "julian",
+    "text": "This is red cabbage juice. Stir it with your wand, then add something!"
+  },
+  {
+    "id": "93d1f1b01565595f",
+    "speaker": "julian",
+    "text": "Nice stirring! Now add lemon or baking soda."
+  },
+  {
+    "id": "a1a12b23385aa71a",
+    "speaker": "julian",
+    "text": "Ooh, pink! Lemon is an acid, and acids turn red cabbage juice pink!"
+  },
+  {
+    "id": "235c3b418008f4ee",
+    "speaker": "julian",
+    "text": "Ooh, green! Baking soda is a base, and bases turn red cabbage juice green!"
+  },
+  {
+    "id": "2a5c5fe55f12118e",
+    "speaker": "julian",
+    "text": "Try the other one too!"
+  },
+  {
+    "id": "372f1c718ab2d238",
+    "speaker": "julian",
+    "text": "Stir first, Luna. Hold the flask or tap it!"
+  },
+  {
+    "id": "912f76a962149062",
+    "speaker": "julian",
+    "text": "Pick something, then guess: will it sink or float?"
+  },
+  {
+    "id": "08b66e71de53ff66",
+    "speaker": "julian",
+    "text": "Great guess! Let us see..."
+  },
+  {
+    "id": "7c22fd6b1801caaa",
+    "speaker": "julian",
+    "text": "Ooh, good thinking! Here it goes..."
+  },
+  {
+    "id": "97d988c0d4f2a58d",
+    "speaker": "julian",
+    "text": "Pick an object first!"
+  },
+  {
+    "id": "4f490fe03173f19b",
+    "speaker": "julian",
+    "text": "A solid brick is packed heavier than the water around it, so it sinks!"
+  },
+  {
+    "id": "2fb1008b89334c22",
+    "speaker": "julian",
+    "text": "Cork is full of tiny air pockets, so it is lighter than water and floats!"
+  },
+  {
+    "id": "3ec40c3af782c2db",
+    "speaker": "julian",
+    "text": "Apples have air inside, so they are lighter than water and float!"
+  },
+  {
+    "id": "4df640091c187992",
+    "speaker": "julian",
+    "text": "A coin is metal, which is packed much heavier than water, so it sinks!"
+  },
+  {
+    "id": "7237722d88f645d8",
+    "speaker": "julian",
+    "text": "The duck is hollow and full of air, so it is lighter than water and floats!"
+  },
+  {
+    "id": "4142118b5865d9d8",
+    "speaker": "julian",
+    "text": "Stones are dense, which means very heavy for their size, so they sink!"
+  },
+  {
+    "id": "4fe7e266974e7455",
+    "speaker": "julian",
+    "text": "Tap to add fuel bricks to the rocket. Then LAUNCH!"
+  },
+  {
+    "id": "7c4be65b39157568",
+    "speaker": "julian",
+    "text": "Add at least one fuel brick first!"
+  },
+  {
+    "id": "5cf5defb54064ce6",
+    "speaker": "julian",
+    "text": "1 fuel brick! Three, two, one, blast off!"
+  },
+  {
+    "id": "9d6de68bfa272098",
+    "speaker": "julian",
+    "text": "2 fuel bricks! Three, two, one, blast off!"
+  },
+  {
+    "id": "0bf0979661eabe95",
+    "speaker": "julian",
+    "text": "3 fuel bricks! Three, two, one, blast off!"
+  },
+  {
+    "id": "02bdb755b80674d6",
+    "speaker": "julian",
+    "text": "4 fuel bricks! Three, two, one, blast off!"
+  },
+  {
+    "id": "13cdc8581d5af5cb",
+    "speaker": "julian",
+    "text": "5 fuel bricks! Three, two, one, blast off!"
+  },
+  {
+    "id": "84fd64586378760b",
+    "speaker": "julian",
+    "text": "More fuel means more push, so the rocket goes higher! The parachute slows it down on the way back."
+  },
+  {
+    "id": "9d69b2c11821b8c6",
+    "speaker": "julian",
+    "text": "We will speed up time! Tap to grow sugar crystals on the string."
+  },
+  {
+    "id": "c84a908107914b42",
+    "speaker": "julian",
+    "text": "Sparkle! A new day of growing!"
+  },
+  {
+    "id": "36ce348e1da67701",
+    "speaker": "julian",
+    "text": "Look at those crystals grow!"
+  },
+  {
+    "id": "a56c8b5c3a185c2d",
+    "speaker": "julian",
+    "text": "Tap again, time is zooming!"
+  },
+  {
+    "id": "9adf728c6b6525f9",
+    "speaker": "julian",
+    "text": "So shiny!"
+  },
+  {
+    "id": "2ee4fa52fa5d6265",
+    "speaker": "julian",
+    "text": "Almost full!"
+  },
+  {
+    "id": "7f4ee6967955ac69",
+    "speaker": "julian",
+    "text": "As the water dries up, called evaporation, the sugar stays behind and builds crystals!"
+  },
+  {
+    "id": "8a913f21c4ae1b9e",
+    "speaker": "julian",
+    "text": "Help the seed grow! Give it water, light, and soil. Any order!"
+  },
+  {
+    "id": "bcd2058969e8bad0",
+    "speaker": "julian",
+    "text": "Splash! The seed has water."
+  },
+  {
+    "id": "5c4dc5c10f95e474",
+    "speaker": "julian",
+    "text": "Bright! The seed has light."
+  },
+  {
+    "id": "f828a8a1b4a1ce66",
+    "speaker": "julian",
+    "text": "Cozy! The seed has soil."
+  },
+  {
+    "id": "0206db418a7514c8",
+    "speaker": "julian",
+    "text": "Good! What else does the seed need?"
+  },
+  {
+    "id": "62f10fb027088e5d",
+    "speaker": "julian",
+    "text": "Pop! It sprouted! Seeds need all three: water, light, and soil."
+  },
+  {
+    "id": "84572005e7d47c3a",
+    "speaker": "julian",
+    "text": "Coupon challenge! Match my mystery potion three times and win the Video Game Day coupon!"
+  },
+  {
+    "id": "202a66bee19c02eb",
+    "speaker": "julian",
+    "text": "Perfect match! One more potion!"
+  },
+  {
+    "id": "1dc69f3b3b5f0cc0",
+    "speaker": "julian",
+    "text": "You are a potion master! Last one!"
+  },
+  {
+    "id": "ca4770cc74e5a227",
+    "speaker": "julian",
+    "text": "The lab is glowing like an arcade! You did it, Luna! Something is buried near the Science Lab!"
+  },
+  {
+    "id": "b570a7b4a012e1b9",
+    "speaker": "julian",
+    "text": "Whoa! That potion has opinions!"
+  },
+  {
+    "id": "86219ac64d5cf6f9",
+    "speaker": "julian",
+    "text": "Bloop! Even I did not expect that one."
+  },
+  {
+    "id": "c77effb0775c3203",
+    "speaker": "julian",
+    "text": "Oh no, the goo is escaping! Hee hee!"
+  },
+  {
+    "id": "14847c8b9fac5ed4",
+    "speaker": "julian",
+    "text": "That is not a potion, that is a swamp party!"
+  },
+  {
+    "id": "5605970041c5c22b",
+    "speaker": "julian",
+    "text": "Pick some ingredients first!"
+  },
+  {
+    "id": "0c00891aaa43010f",
+    "speaker": "julian",
+    "text": "I need a purple potion! What goes in?"
+  },
+  {
+    "id": "26656910a8a538cb",
+    "speaker": "julian",
+    "text": "Hint: try red berry and blue flower!"
+  },
+  {
+    "id": "4dd7894376990248",
+    "speaker": "julian",
+    "text": "I need a green potion! What goes in?"
+  },
+  {
+    "id": "025b7de462925659",
+    "speaker": "julian",
+    "text": "Hint: try blue flower and yellow lemon!"
+  },
+  {
+    "id": "b7eaaee60cb7cc67",
+    "speaker": "julian",
+    "text": "I need a orange potion! What goes in?"
+  },
+  {
+    "id": "20e195606ac3f5b1",
+    "speaker": "julian",
+    "text": "Hint: try red berry and yellow lemon!"
+  },
+  {
+    "id": "13cefa3718344914",
+    "speaker": "julian",
+    "text": "I need a pastel pink potion! What goes in?"
+  },
+  {
+    "id": "9af3061cb5fed075",
+    "speaker": "julian",
+    "text": "Hint: try red berry and white salt!"
+  },
+  {
+    "id": "d89d7d87c39d9de8",
+    "speaker": "julian",
+    "text": "I need a pastel blue potion! What goes in?"
+  },
+  {
+    "id": "a0bcdb889d0f42cd",
+    "speaker": "julian",
+    "text": "Hint: try blue flower and white salt!"
+  },
+  {
+    "id": "e8cac33b268238e8",
+    "speaker": "julian",
+    "text": "I need a pastel yellow potion! What goes in?"
+  },
+  {
+    "id": "97fdffe0171e0003",
+    "speaker": "julian",
+    "text": "Hint: try yellow lemon and white salt!"
+  },
+  {
+    "id": "d3ac5c98de398e39",
+    "speaker": "julian",
+    "text": "I need a sparkly purple potion! What goes in?"
+  },
+  {
+    "id": "126fff24204ee93b",
+    "speaker": "julian",
+    "text": "Hint: try red berry and blue flower and glitter!"
+  },
+  {
+    "id": "72ebf54586b02f06",
+    "speaker": "julian",
+    "text": "I need a sparkly green potion! What goes in?"
+  },
+  {
+    "id": "f5caf69063cc014d",
+    "speaker": "julian",
+    "text": "Hint: try blue flower and yellow lemon and glitter!"
+  },
+  {
+    "id": "4e3973089d0f78ad",
+    "speaker": "julian",
+    "text": "I need a sparkly orange potion! What goes in?"
+  },
+  {
+    "id": "445e82940e9cbb55",
+    "speaker": "julian",
+    "text": "Hint: try red berry and yellow lemon and glitter!"
   },
   {
     "id": "b6a3da0dd80585ee",
@@ -2380,6 +2745,81 @@
     "text": "Saves the Day"
   },
   {
+    "id": "3bd723f8ed85c68f",
+    "speaker": "darian",
+    "text": "Woo! Great shot!"
+  },
+  {
+    "id": "8313ad429cfc3267",
+    "speaker": "darian",
+    "text": "Nice one, Luna!"
+  },
+  {
+    "id": "830cc5548be82d01",
+    "speaker": "darian",
+    "text": "Boing! Right back at you!"
+  },
+  {
+    "id": "090a5bc62df369c5",
+    "speaker": "darian",
+    "text": "You are a tennis star!"
+  },
+  {
+    "id": "96be1f625ed0e4e9",
+    "speaker": "darian",
+    "text": "Nice try! Again!"
+  },
+  {
+    "id": "834ec4f7ed6ade4c",
+    "speaker": "darian",
+    "text": "Again!"
+  },
+  {
+    "id": "452ad2a296138cd7",
+    "speaker": "darian",
+    "text": "Oops! Bonked my own head!"
+  },
+  {
+    "id": "5f061d3384d54748",
+    "speaker": "darian",
+    "text": "Whoa! Where did the ball go?"
+  },
+  {
+    "id": "344de943a960248c",
+    "speaker": "darian",
+    "text": "What a rally! Great job, Luna!"
+  },
+  {
+    "id": "1877fffe497920a1",
+    "speaker": "darian",
+    "text": "Fifteen in a row! Ready?"
+  },
+  {
+    "id": "d21482f20ae62a89",
+    "speaker": "darian",
+    "text": "Super Rally! You did it, Luna!"
+  },
+  {
+    "id": "84c509232cc082ae",
+    "speaker": "darian",
+    "text": "Three in a row!"
+  },
+  {
+    "id": "25b1a89df3963140",
+    "speaker": "darian",
+    "text": "Five! Keep going!"
+  },
+  {
+    "id": "f7227dc6e8673525",
+    "speaker": "narrator",
+    "text": "Something is buried near the Tennis Court…"
+  },
+  {
+    "id": "5c0d50e6528cefa5",
+    "speaker": "luna",
+    "text": "Again!"
+  },
+  {
     "id": "86f473cebb5b141b",
     "speaker": "mom",
     "text": "Whoa, a tea tsunami!"
@@ -2390,49 +2830,14 @@
     "text": "Whoa, a tea tsunami!"
   },
   {
-    "id": "ccdf911a826f53ad",
-    "speaker": "julian",
-    "text": "Whoa, a tea tsunami!"
-  },
-  {
-    "id": "89256b6a2906c2cd",
-    "speaker": "darian",
-    "text": "Whoa, a tea tsunami!"
-  },
-  {
-    "id": "8c2bafa777674c7e",
-    "speaker": "rudolph",
-    "text": "Whoa, a tea tsunami!"
-  },
-  {
     "id": "1f77fe584620d359",
     "speaker": "jinglebells",
     "text": "Whoa, a tea tsunami!"
   },
   {
-    "id": "937e0cf0990bde5d",
-    "speaker": "fox",
-    "text": "Whoa, a tea tsunami!"
-  },
-  {
-    "id": "009c3979dd57ff8a",
-    "speaker": "deer",
-    "text": "Whoa, a tea tsunami!"
-  },
-  {
-    "id": "9a6bba0fc49259d4",
-    "speaker": "songbird",
-    "text": "Whoa, a tea tsunami!"
-  },
-  {
-    "id": "31a1b620fa7a2b5b",
-    "speaker": "squirrel",
-    "text": "Whoa, a tea tsunami!"
-  },
-  {
-    "id": "ed35b8e92adb4112",
-    "speaker": "rabbit",
-    "text": "Whoa, a tea tsunami!"
+    "id": "45df93bc4cb501f1",
+    "speaker": "narrator",
+    "text": "The forest friends say thank you!"
   },
   {
     "id": "8c63878d52b627f6",

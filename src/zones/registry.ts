@@ -22,4 +22,16 @@ export const zoneModules: Partial<Record<ZoneId, { Zone: ComponentType; Challeng
     Zone: lazy(() => import('./woods').then((m) => ({ default: m.Zone }))),
     Challenge: lazy(() => import('./woods').then((m) => ({ default: m.Challenge }))),
   },
+  science: {
+    Zone: lazy(() => import('./science').then((m) => ({ default: m.Zone }))),
+    Challenge: lazy(() => import('./science').then((m) => ({ default: m.Challenge }))),
+  },
+  tennis: {
+    Zone: lazy(() => import('./tennis').then((m) => ({ default: m.Zone }))),
+    Challenge: lazy(() => import('./tennis').then((m) => ({ default: m.Challenge }))),
+  },
+  music: {
+    Zone: lazy(() => import('./music').then((m) => ({ default: m.Zone }))),
+    Challenge: lazy(() => import('./music').then((m) => ({ default: m.Challenge }))),
+  },
 };

@@ -3,9 +3,9 @@ import type { Screen, ZoneId } from './types';
 import { useUi, currentOrientation } from './state/ui';
 import { Title } from './screens/Title';
 import { Hub } from './screens/Hub';
+import { Finale } from './screens/Finale';
 import { Rotate } from './screens/Rotate';
 import { ZonePlaceholder } from './screens/ZonePlaceholder';
-import { Button } from './ui/Button';
 import { zoneModules } from './zones/registry';
 import { playMusic, setSpeaking, type TrackId } from './audio/engine';
 import { onSpeaking } from './audio/speech';
@@ -29,16 +29,6 @@ function useMusicForScreen(): void {
     if (track) void playMusic(track);
   }, [track]);
   useEffect(() => onSpeaking(setSpeaking), []);
-}
-
-function FinalePlaceholder() {
-  const setScreen = useUi((s) => s.setScreen);
-  return (
-    <div className="screen center-col" style={{ background: '#FF5CA8' }} data-testid="finale-screen">
-      <h1 style={{ fontSize: 56, color: '#fff', margin: 0 }}>Finale (coming soon)</h1>
-      <Button tone="cream" onClick={() => setScreen({ kind: 'hub' })}>Back to island</Button>
-    </div>
-  );
 }
 
 function ZoneRoute({ zone, challenge = false }: { zone: ZoneId; challenge?: boolean }) {
@@ -77,7 +67,7 @@ export default function App() {
       {screen.kind === 'hub' && <Hub />}
       {screen.kind === 'zone' && <ZoneRoute zone={screen.zone} />}
       {screen.kind === 'challenge' && <ZoneRoute zone={screen.zone} challenge />}
-      {screen.kind === 'finale' && <FinalePlaceholder />}
+      {screen.kind === 'finale' && <Finale />}
       {orientation === 'portrait' && <Rotate />}
     </>
   );

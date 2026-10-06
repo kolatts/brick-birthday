@@ -1,4 +1,4 @@
-import { FRIENDS, GUEST_IDS, GUEST_LINES, PET_LINES, SPLASH_LINE, TREE_FACTS } from './facts';
+import { FAMILY_GUESTS, FRIENDS, FRIENDS_THANKS_LINE, GUEST_LINES, GUEST_WANTS, PET_LINES, SPLASH_LINE, TREE_FACTS } from './facts';
 import { CHALLENGE_DONE_LINE, HAPPY_LINES, ORDERS, WRONG_LINES } from './logic';
 
 export interface Line { speaker: string; text: string }
@@ -9,11 +9,12 @@ export const lines: Line[] = [
   ...FRIENDS.map((f) => ({ speaker: f.id, text: f.thanks })),
   { speaker: 'rudolph', text: PET_LINES.rudolph.sound },
   { speaker: 'jinglebells', text: PET_LINES.jinglebells.sound },
-  ...GUEST_IDS.flatMap((g) => [
-    { speaker: g, text: GUEST_LINES[g].tea },
-    { speaker: g, text: GUEST_LINES[g].treat },
-    { speaker: g, text: SPLASH_LINE },
+  // Each family guest only ever says the line for the one thing they want (plus the splash if it is tea).
+  ...FAMILY_GUESTS.flatMap((g) => [
+    { speaker: g, text: GUEST_LINES[g][GUEST_WANTS[g]] },
+    ...(GUEST_WANTS[g] === 'tea' ? [{ speaker: g, text: SPLASH_LINE }] : []),
   ]),
+  { speaker: 'narrator', text: FRIENDS_THANKS_LINE },
   { speaker: 'luna', text: 'Another tea party!' },
   ...ORDERS.flatMap((o, i) => [
     { speaker: o.guest, text: o.line },

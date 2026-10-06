@@ -7,7 +7,9 @@ import { useUi } from '../../state/ui';
 import { sfx } from '../../audio/engine';
 import { say } from '../../audio/speech';
 import { Button, palette } from '../../ui/Button';
+import { CouponChallengeButton, GoalPill } from '../../ui/ZoneHud';
 import { f, inset, maxDpr, u, ub } from '../../ui/scale';
+import { Icon } from '../../ui/Icons';
 import { FitFov } from '../../three/FitFov';
 import { B, CYL8, Cy, Particles, mat } from './fx';
 import { BrickTree, Cat, Dog, HoppingFriend, StumpSpot } from './models';
@@ -217,7 +219,7 @@ function PlantingHud() {
           onClick={() => doWater()}
           style={{ ...hudButton('#9BE0FF'), width: ub(104), height: ub(104), borderRadius: '50%', fontSize: f(52), animation: hasSap ? 'woods-ring 1.2s ease-in-out infinite' : undefined }}
         >
-          💧
+          <Icon id="droplet" size="62%" />
         </button>
         <span style={{ fontWeight: 900, fontSize: f(22), color: palette.navy }}>Water</span>
       </div>
@@ -229,7 +231,7 @@ function PlantingHud() {
           onClick={() => doWand()}
           style={{ ...hudButton('#FFE65C'), width: ub(112), height: ub(112), borderRadius: '50%', fontSize: f(62), animation: 'woods-glow 1.4s ease-in-out infinite', outline: hasWet ? '6px solid #FF5CA8' : 'none' }}
         >
-          ⭐
+          <Icon id="star" size="68%" />
         </button>
         <span style={{ fontWeight: 900, fontSize: f(22), color: palette.navy }}>Magic wand</span>
       </div>
@@ -240,7 +242,6 @@ function PlantingHud() {
 export function Zone() {
   const setScreen = useUi((s) => s.setScreen);
   const trees = useProgress((s) => s.treesPlanted);
-  const bricks = useProgress((s) => s.bricks.woods);
   const teaReady = useWoods((s) => s.teaReady);
   useEffect(() => {
     initWoods();
@@ -253,11 +254,14 @@ export function Zone() {
         <FitFov base={46} />
         <Scene />
       </Canvas>
-      <div style={{ position: 'absolute', top: inset('top', 14), left: inset('left', 18), zIndex: 60, display: 'flex', alignItems: 'center', gap: u(10) }}>
-        <div data-testid="tree-counter" style={{ background: palette.cream, border: `${u(4)} solid ${palette.navy}`, borderRadius: u(28), boxShadow: `0 ${u(5)} 0 ${palette.navy}`, padding: `${u(8)} ${u(22)}`, fontSize: f(30), fontWeight: 900, color: palette.navy, minHeight: u(64), display: 'flex', alignItems: 'center' }}>
-          🌳 {Math.min(trees, TREE_COUNT)}/{TREE_COUNT} trees
+      <div style={{ position: 'absolute', top: inset('top', 14), left: inset('left', 18), zIndex: 60, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: u(10) }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: u(10) }}>
+          <div data-testid="tree-counter" style={{ background: palette.cream, border: `${u(4)} solid ${palette.navy}`, borderRadius: u(28), boxShadow: `0 ${u(5)} 0 ${palette.navy}`, padding: `${u(8)} ${u(22)}`, fontSize: f(30), fontWeight: 900, color: palette.navy, minHeight: u(64), display: 'flex', alignItems: 'center' }}>
+            {teaReady ? (<><Icon id="teapot" size={f(40)} gap={u(10)} />Tea party!</>) : (<><Icon id="pine-tree" size={f(40)} gap={u(10)} />{Math.min(trees, TREE_COUNT)}/{TREE_COUNT} trees</>)}
+          </div>
+          <CouponChallengeButton zone="woods" onClick={() => setScreen({ kind: 'challenge', zone: 'woods' })} />
         </div>
-        {bricks >= 1 && <Button testId="challenge-btn" tone="yellow" onClick={() => setScreen({ kind: 'challenge', zone: 'woods' })}>Tea Party Orders challenge</Button>}
+        <GoalPill text="plant 7 trees and host the tea party" />
       </div>
       <div style={{ position: 'absolute', top: inset('top', 14), right: inset('right', 18), zIndex: 60 }}>
         <Button testId="back-to-island" tone="cream" onClick={() => setScreen({ kind: 'hub' })}>Back to island</Button>
